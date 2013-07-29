@@ -1,3 +1,4 @@
+from functools import wraps
 import inspect
 from exceptions import NoArgumentFound
 
@@ -89,6 +90,7 @@ class ContextAware(object):
         return len(self.real_args)-1
 
     def __call__(self, function):
+        @wraps(function)
         def context_aware_function(context, *args):
             real_args = inspect.getargspec(function).args
             if not self.context_parameter_name in real_args:
@@ -103,7 +105,7 @@ class ContextAware(object):
         f = context_aware_function
         f.is_context_aware = True
         f.context_aware = self
-        if hasattr(function, 'arg_requirements'):
-            f.arg_requirements = function.arg_requirements
+        # if hasattr(function, 'arg_requirements'):
+        #     f.arg_requirements = function.arg_requirements
         return f
 
