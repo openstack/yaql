@@ -13,6 +13,7 @@
 #    under the License.
 
 import ply.lex as lex
+from yaql.exceptions import YaqlLexicalException
 
 keywords = {
     'true': 'TRUE',
@@ -145,8 +146,7 @@ def t_QUOTED_STRING(t):
 
 
 def t_error(t):
-    print "Illegal character '%s'" % t.value[0]
-    t.lexer.skip(1)
+    raise YaqlLexicalException(t.value[0], t.lexpos)
 
 
 lexer = lex.lex()

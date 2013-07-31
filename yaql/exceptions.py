@@ -40,9 +40,23 @@ class NoArgumentFound(YaqlException):
 
 
 class YaqlParsingException(YaqlException):
-    def __init__(self, value, position):
+    def __init__(self, value, position, message):
         self.value = value
         self.position = position
-        message = "Parse error: unexpected '{0}' at position {1}"\
-            .format(self.value, self.position)
+        self.message = message
         super(YaqlParsingException, self).__init__(message)
+
+
+class YaqlGrammarException(YaqlParsingException):
+    def __init__(self, value, position):
+        msg = "Parse error: unexpected '{0}' at position {1}"\
+            .format(value, position)
+        super(YaqlGrammarException, self).__init__(value, position, msg)
+
+
+class YaqlLexicalException(YaqlParsingException):
+    def __init__(self, value, position):
+        msg = "Lexical error: illegal character '{0}' at position {1}"\
+            .format(value, position)
+        super(YaqlLexicalException, self).__init__(value, position, msg)
+

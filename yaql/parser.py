@@ -185,7 +185,10 @@ def p_val_tuple(p):
 
 
 def p_error(p):
-    raise exceptions.YaqlParsingException(p.value, p.lexpos)
+    if p:
+        raise exceptions.YaqlGrammarException(p.value, p.lexpos)
+    else:
+        raise exceptions.YaqlGrammarException(None, None)
 
 
 precedence = (
