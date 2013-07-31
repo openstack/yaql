@@ -13,9 +13,10 @@
 #    under the License.
 
 import collections
+from examples import testdata, ns_functions
 import yaql
-import ns_functions
-import testdata
+
+# DEPRECATED. Use cli to run samples
 
 context = yaql.create_context()
 ns_functions.register_in_context(context)

@@ -12,7 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import ns.definition
+import examples.ns.definition
+
+# DEPRECATED. Use cli to run samples
 
 
 class Customer():
@@ -65,13 +67,13 @@ services = [
 
 data = {'users': users, 'services': services}
 
-ns.definition.register_shortening('yaql', 'com.mirantis.murano.yaql')
-ns.definition.register_shortening('ex', 'com.mirantis.murano.examples')
-ns.definition.register_symbol('com.mirantis.murano.yaql', 'version')
-ns.definition.register_symbol('com.mirantis.murano.yaql', 'name')
-ns.definition.register_symbol('com.mirantis.murano.yaql', 'position')
-ns.definition.register_symbol('com.mirantis.murano.yaql', 'description')
-ns.definition.register_symbol('com.mirantis.murano.yaql', 'owner')
-ns.definition.register_symbol('com.mirantis.murano.yaql', 'parent_service')
-ns.definition.register_symbol('com.mirantis.murano.examples', 'Service0')
-ns.definition.register_symbol('com.mirantis.murano.examples', 'Service1')
+examples.ns.definition.register_shortening('yaql', 'com.mirantis.murano.yaql')
+examples.ns.definition.register_shortening('ex', 'com.mirantis.murano.examples')
+examples.ns.definition.register_symbol('com.mirantis.murano.yaql', 'version')
+examples.ns.definition.register_symbol('com.mirantis.murano.yaql', 'name')
+examples.ns.definition.register_symbol('com.mirantis.murano.yaql', 'position')
+examples.ns.definition.register_symbol('com.mirantis.murano.yaql', 'description')
+examples.ns.definition.register_symbol('com.mirantis.murano.yaql', 'owner')
+examples.ns.definition.register_symbol('com.mirantis.murano.yaql', 'parent_service')
+examples.ns.definition.register_symbol('com.mirantis.murano.examples', 'Service0')
+examples.ns.definition.register_symbol('com.mirantis.murano.examples', 'Service1')
