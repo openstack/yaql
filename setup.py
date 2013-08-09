@@ -21,4 +21,12 @@ setup(name='yaql',
       author_email='info@mirantis.com',
       url='http://mirantis.com',
       install_requires=['ply'],
-      packages=find_packages())
+      entry_points={
+          'console_scripts': [
+              'yaql-cli = yaql.cli.run:main',
+          ]
+      },
+      packages=find_packages(),
+      package_data={
+          'examples': ['*.json'],
+      },)
