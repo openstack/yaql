@@ -59,9 +59,12 @@ def main(context):
             if isinstance(res, types.GeneratorType):
                 res = list(res)
             print json.dumps(res, indent=4)
-        except YaqlException as ex:
+        except Exception as ex:
             print "Execution exception:"
-            print ex.message
+            if hasattr(ex, 'message'):
+                print ex.message
+            else:
+                print "Unknown"
 
 
 def load_data(data_file, context):
