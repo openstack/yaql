@@ -61,7 +61,10 @@ def main(context):
             print json.dumps(res, indent=4)
         except StandardError as ex:
             print "Execution exception:"
-            print ex.message
+            if hasattr(ex, 'message'):
+                print ex.message
+            else:
+                print "Unknown"
 
 
 def load_data(data_file, context):
