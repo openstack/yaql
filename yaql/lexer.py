@@ -42,6 +42,7 @@ tokens = [
     'AND',
     'NOT',
     'IS',
+    'IN',
     'DOLLAR'
 ] + list(keywords.values())
 
@@ -95,6 +96,13 @@ def t_NOT(t):
 def t_IS(t):
     """
     \\bis\\b
+    """
+    return t
+
+
+def t_IN(t):
+    """
+    \\bin\\b
     """
     return t
 

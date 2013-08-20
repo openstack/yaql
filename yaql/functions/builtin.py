@@ -97,6 +97,10 @@ def not_equals(a, b):
     return a() != b()
 
 
+def is_in(a, b):
+    return a() in b()
+
+
 # arithmetic actions
 
 def plus(a, b):
@@ -168,6 +172,7 @@ def add_to_context(context):
     context.register_function(less_or_equals, 'operator_<=')
     context.register_function(equals, 'operator_=')
     context.register_function(not_equals, 'operator_!=')
+    context.register_function(is_in, 'operator_in')
 
     # arithmetic actions
     context.register_function(plus, 'operator_+')

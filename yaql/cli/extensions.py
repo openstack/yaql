@@ -59,7 +59,7 @@ def main(context):
             if isinstance(res, types.GeneratorType):
                 res = list(res)
             print json.dumps(res, indent=4)
-        except YaqlException as ex:
+        except StandardError as ex:
             print "Execution exception:"
             print ex.message
 
