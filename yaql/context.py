@@ -58,6 +58,8 @@ class Context():
 
     def set_data(self, data, path='$'):
         self.data[path] = data
+        if path == '$':
+            self.data['$1'] = data
 
     def get_data(self, path='$'):
         if path in self.data:
