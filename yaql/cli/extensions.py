@@ -59,7 +59,7 @@ def main(context):
             if isinstance(res, types.GeneratorType):
                 res = list(res)
             print json.dumps(res, indent=4)
-        except Exception as ex:
+        except StandardError as ex:
             print "Execution exception:"
             if hasattr(ex, 'message'):
                 print ex.message

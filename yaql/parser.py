@@ -152,6 +152,7 @@ def p_val_with_binary_op(p):
           | value OR value
           | value AND value
           | value IS value
+          | value IN value
     """
     p[0] = expressions.BinaryOperator(p[2], p[1], p[3])
 
@@ -196,7 +197,7 @@ precedence = (
     ('left', 'OR'),
     ('left', 'AND'),
     ('left', 'NOT'),
-    ('nonassoc', '>', '<', '=', 'NE', 'LE', 'GE', 'IS'),
+    ('nonassoc', '>', '<', '=', 'NE', 'LE', 'GE', 'IS', 'IN'),
     ('left', '+', '-'),
     ('left', '*', '/'),
     ('left', ','),
