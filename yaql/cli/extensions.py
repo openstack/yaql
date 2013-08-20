@@ -39,6 +39,8 @@ def main(context):
             comm = raw_input(PROMPT)
         except EOFError:
             return
+        if not comm:
+            continue
         if comm[0] == '@':
             funcName, args = parse_service_command(comm)
             if funcName not in SERVICE_FUNCTIONS:
