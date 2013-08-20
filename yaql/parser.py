@@ -197,7 +197,7 @@ precedence = (
     ('left', 'OR'),
     ('left', 'AND'),
     ('left', 'NOT'),
-    ('nonassoc', '>', '<', '=', 'NE', 'LE', 'GE', 'IS'),
+    ('nonassoc', '>', '<', '=', 'NE', 'LE', 'GE', 'IS', 'IN'),
     ('left', '+', '-'),
     ('left', '*', '/'),
     ('left', ','),
