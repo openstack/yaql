@@ -1,22 +1,53 @@
 {
-    "glossary": {
-        "title": "example glossary",
-		"GlossDiv": {
-            "title": "S",
-			"GlossList": {
-                "GlossEntry": {
-                    "ID": "SGML",
-					"SortAs": "SGML",
-					"GlossTerm": "Standard Generalized Markup Language",
-					"Acronym": "SGML",
-					"Abbrev": "ISO 8879:1986",
-					"GlossDef": {
-                        "para": "A meta-markup language, used to create markup languages such as DocBook.",
-						"GlossSeeAlso": ["GML", "XML"]
-                    },
-					"GlossSee": "markup"
-                }
-            }
-        }
-    }
+    "test" : {
+	"Name" : "root entity",
+	"Child" : {
+		"Name" : "child entity level 1",
+		"Child" : {
+			"Name" : "child entity level 2",
+			"Child": {
+				"Name" : "Last child",
+				"Child" : null
+			}
+		}
+	}
+    },
+	"name" : "Env",
+	"services" :
+[{
+	"ServiceName" : "service1",
+    "MajorVersion" : 1,
+    "MinorVersion" : 0,
+	"units" : [{
+		"Name" : "Unit1",
+		"Number" :  1
+		},
+		{
+		"Name" : "Unit2",
+		"Number" :  2
+		},
+		{
+		"Name" : "Unit3",
+		"Number" :  3
+		}
+	]
+},
+{
+	"ServiceName" : "service2",
+    "MajorVersion" : 1,
+    "MinorVersion" : 1,
+	"units" : [{
+		"Name" : "Unit10",
+		"Number" :  10
+		},
+		{
+		"Name" : "Unit20",
+		"Number" :  20
+		},
+		{
+		"Name" : "Unit30",
+		"Number" :  30
+		}
+	]
+}]
 }
