@@ -38,7 +38,13 @@ def get_context_data(context, path):
          custom_validator=lambda v: not isinstance(v, types.DictionaryType))
 def collection_attribution(self, att_name):
     for item in self:
-        yield _get_att_or_key(item, att_name())
+        val = _get_att_or_key(item, att_name())
+        if isinstance(val, collections.Iterable) and \
+                not isinstance(val, types.StringTypes):
+            for v in val:
+                yield v
+        else:
+            yield val
 
 
 @EvalArg('self', arg_type=types.DictionaryType)
