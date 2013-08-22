@@ -17,7 +17,7 @@
 import optparse
 from json import JSONDecoder
 import yaql
-from yaql.cli import extensions
+from yaql.cli import cli_functions
 
 
 def main():
@@ -36,7 +36,7 @@ def main():
         data = None
 
     context = yaql.create_context()
-    extensions.register_in_context(context)
+    cli_functions.register_in_context(context)
     yaql.parse('__main()').evaluate(data, context)
 
 
