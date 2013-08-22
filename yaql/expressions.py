@@ -20,8 +20,9 @@ import yaql
 
 class Expression(object):
     class Callable(object):
-        def __init__(self, wrapped_object):
+        def __init__(self, wrapped_object, context):
             self.wrapped_object = wrapped_object
+            self.yaql_context = context
 
     def evaluate(self, data=None, context=None):
         if not context:
@@ -45,24 +46,33 @@ class Function(Expression):
 
     class Callable(Expression.Callable):
         def __init__(self, wrapped, context, function_name, obj, args):
-            super(Function.Callable, self).__init__(wrapped)
-            self.yaql_context = context
+            super(Function.Callable, self).__init__(wrapped, None)
             self.function_name = function_name
             self.obj = obj
             self.args = args
+            if obj:
+                self.obj_wrapper = self.obj.create_callable(context)
+                if self.obj_wrapper.yaql_context:
+                    self.yaql_context = Context(self.obj_wrapper.yaql_context)
+                else:
+                    self.yaql_context = context
+            else:
+                self.yaql_context = context
+                self.obj_wrapper = None
 
         def __call__(self, *f_params):
             args_to_pass = []
-            if self.obj:
-                wrapped_self = self.obj.create_callable(self.yaql_context)
-                args_to_pass.append(wrapped_self)
-            for arg in self.args:
-                childContext = Context(self.yaql_context)
-                if f_params:
-                    childContext.set_data(f_params[0])
+            context = self.yaql_context
+            if f_params:
+                param_context = self._find_param_context()
+                param_context.set_data(f_params[0])
                 for i in range(0, len(f_params)):
-                    childContext.set_data(f_params[i], '$' + str(i + 1))
-                wrapped_arg = arg.create_callable(childContext)
+                    param_context.set_data(f_params[i], '$' + str(i + 1))
+            if self.obj_wrapper:
+                args_to_pass.append(self.obj_wrapper)
+            for arg in self.args:
+                argContext = Context(context)
+                wrapped_arg = arg.create_callable(argContext)
                 args_to_pass.append(wrapped_arg)
 
             numArg = len(args_to_pass)
@@ -73,12 +83,23 @@ class Function(Expression):
                 try:
                     args_to_pass = pre_process_args(func, args_to_pass)
                     if hasattr(func, "is_context_aware"):
-                        return func(self.yaql_context, *args_to_pass)
+                        return func(context, *args_to_pass)
                     else:
                         return func(*args_to_pass)
                 except YaqlExecutionException:
                     continue
             raise YaqlExecutionException("Unable to run " + self.function_name)
+
+        def _find_param_context(self):
+            context = self.yaql_context
+            wrapper = self.obj_wrapper
+            while wrapper:
+                context = wrapper.yaql_context
+                wrapper = getattr(wrapper, 'obj_wrapper', None)
+            if context.parent_context:
+                context = context.parent_context
+            return context
+
 
     def create_callable(self, context):
         return Function.Callable(self, context, self.name, self.object,
@@ -145,7 +166,7 @@ class Constant(Expression):
 
     class Callable(Expression.Callable):
         def __init__(self, wrapped, value):
-            super(Constant.Callable, self).__init__(wrapped)
+            super(Constant.Callable, self).__init__(wrapped, None)
             self.value = value
 
         # noinspection PyUnusedLocal
@@ -184,8 +205,8 @@ def pre_process_args(func, args):
                 ok = ok and custom_validator(arg_val)
 
             if not ok:
-                    raise YaqlExecutionException(
-                        "Argument {0} is invalid".format(arg_name))
+                raise YaqlExecutionException(
+                    "Argument {0} is invalid".format(arg_name))
             args[args.index(arg_func)] = arg_val
 
     return args
