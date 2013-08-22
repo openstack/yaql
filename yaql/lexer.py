@@ -67,7 +67,7 @@ def t_SYMBOL(t):
 
 def t_DOLLAR(t):
     """
-    \\$\\d*
+    \\$\\w*
     """
     return t
 
