@@ -17,6 +17,7 @@ import ply.yacc as yacc
 import expressions
 import exceptions
 import lexer
+import tempfile
 
 
 tokens = lexer.tokens
@@ -206,7 +207,7 @@ precedence = (
     ('left', 'SYMBOL')
 )
 
-parser = yacc.yacc(debug=False, outputdir='/tmp', tabmodule='parser_table')
+parser = yacc.yacc(debug=False, outputdir=tempfile.gettempdir(), tabmodule='parser_table')
 
 
 def parse(expression):
