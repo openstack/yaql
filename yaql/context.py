@@ -32,8 +32,13 @@ class Context():
     def register_function(self, function, name):
         if hasattr(function, "is_context_aware"):
             num_params = function.context_aware.get_num_callable_args()
+            if function.context_aware.varargs:
+                num_params = 0
         else:
-            num_params = len(inspect.getargspec(function).args)
+            argspec = inspect.getargspec(function)
+            num_params = len(argspec.args)
+            if argspec.varargs:
+                num_params = 0
         if not num_params:
             num_params = '*'
         if not name in self.functions:
@@ -57,9 +62,12 @@ class Context():
         return result
 
     def set_data(self, data, path='$'):
+        if not path.startswith('$'):
+            path = '$' + path
         self.data[path] = data
         if path == '$':
             self.data['$1'] = data
+
 
     def get_data(self, path='$'):
         if path in self.data:
@@ -117,7 +125,10 @@ class ContextAware(object):
             args_to_pass.insert(index, context)
             return function(*args_to_pass)
 
-        self.real_args = inspect.getargspec(function).args
+        argspec = inspect.getargspec(function)
+        self.varargs = argspec.varargs
+        self.kwargs = argspec.keywords
+        self.real_args = argspec.args
         f = context_aware_function
         f.is_context_aware = True
         f.context_aware = self
