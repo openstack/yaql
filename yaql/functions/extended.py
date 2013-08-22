@@ -16,7 +16,7 @@ import collections
 import random
 import types
 import itertools
-from yaql.context import EvalArg
+from yaql.context import EvalArg, ContextAware
 
 
 def join(self, others, join_predicate, composer):
@@ -63,6 +63,51 @@ def _list(self):
     return list(self)
 
 
+@ContextAware()
+@EvalArg('levels', types.IntType)
+def parent(context, levels, func):
+    con = context
+    traversed = 0
+    while con:
+        if con.data:
+            traversed += 1
+        if traversed > levels:
+            break
+        con = con.parent_context
+    if con:
+        context.data = con.data
+    else:
+        return None
+    return func()
+
+
+@ContextAware()
+def direct_parent(context, func):
+    return parent(context, 1, func)
+
+@ContextAware()
+def _as(self, context, *tuples):
+    self = self()
+    for t in tuples:
+        tup = t(self)
+        val = tup[0]
+        key_name = tup[1]
+        context.set_data(val, key_name)
+    return self
+
+@ContextAware()
+def root(context, func):
+    def get_not_null_data(context):
+        if context.parent_context:
+            data = get_not_null_data(context.parent_context)
+            if data:
+                return data
+        return context.data
+    first_data = get_not_null_data(context)
+    context.data = first_data
+    return func()
+
+
 def add_to_context(context):
     context.register_function(join, 'join')
     context.register_function(select, 'select')
@@ -72,3 +117,7 @@ def add_to_context(context):
     context.register_function(rand, 'random')
     context.register_function(_list, 'list')
     context.register_function(take_while, 'takeWhile')
+    context.register_function(parent, 'parent')
+    context.register_function(direct_parent, 'parent')
+    context.register_function(root, 'root')
+    context.register_function(_as, 'as')
