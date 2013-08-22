@@ -206,7 +206,7 @@ precedence = (
     ('left', 'SYMBOL')
 )
 
-parser = yacc.yacc(debug=False, outputdir='./yaql', tabmodule='parser_table')
+parser = yacc.yacc(debug=False, outputdir='/tmp', tabmodule='parser_table')
 
 
 def parse(expression):
