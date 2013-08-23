@@ -128,19 +128,19 @@ def divide(a, b):
 
 # Boolean operations
 
-@EvalArg('a', arg_type=types.BooleanType)
-@EvalArg('b', arg_type=types.BooleanType)
+# @EvalArg('a', arg_type=types.BooleanType)
+# @EvalArg('b', arg_type=types.BooleanType)
 def _and(a, b):
-    return a and b
+    return a() and b()
 
-@EvalArg('a', arg_type=types.BooleanType)
-@EvalArg('b', arg_type=types.BooleanType)
+# @EvalArg('a', arg_type=types.BooleanType)
+# @EvalArg('b', arg_type=types.BooleanType)
 def _or(a, b):
-    return a or b
+    return a() or b()
 
-@EvalArg('self', arg_type=types.BooleanType)
+# @EvalArg('self', arg_type=types.BooleanType)
 def _not(self):
-    return not self
+    return not self()
 
 
 #data structure creations
