@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 class YaqlException(Exception):
     def __init__(self, message):
         super(YaqlException, self).__init__(message)
@@ -60,3 +61,9 @@ class YaqlLexicalException(YaqlParsingException):
             .format(value, position)
         super(YaqlLexicalException, self).__init__(value, position, msg)
 
+
+class YaqlSequenceException(YaqlException):
+    def __init__(self, size):
+        self.size = size
+        super(YaqlSequenceException, self).\
+            __init__("Generator sequence too long ({0})".format(self.size))

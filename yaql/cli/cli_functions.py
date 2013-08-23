@@ -21,6 +21,7 @@ import readline
 from json import JSONDecoder
 from yaql.context import ContextAware, Context
 from yaql.exceptions import YaqlParsingException, YaqlException
+from yaql.utils import limit
 
 PROMPT = "yaql> "
 
@@ -60,7 +61,7 @@ def main(context):
         try:
             res = expr.evaluate(context=Context(context))
             if isinstance(res, types.GeneratorType):
-                res = list(res)
+                res = limit(res)
             print json.dumps(res, indent=4)
         except Exception as ex:
             print "Execution exception:"
