@@ -88,25 +88,9 @@ def load_data(data_file, context):
     print "Data from file '{0}' loaded into context".format(data_file)
 
 
-def x(self, arg):
-    self = self()
-    data = self['Child']
-    print "> " + str(arg(data))
-    return data
-
-
-def y(self, arg1, arg2):
-    self = self()
-    data = self['Child']
-    print ">>1: " + str(arg1(data))
-    print ">>2: " + str(arg2(data))
-    return data
-
 
 def register_in_context(context):
     context.register_function(main, '__main')
-    context.register_function(x, 'x')
-    context.register_function(y, 'y')
 
 
 def parse_service_command(comm):
