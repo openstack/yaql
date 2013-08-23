@@ -13,6 +13,9 @@
 	}
     },
 	"name" : "Env",
+    "helper":{
+        "num" : 2
+    },
 	"services" :
 [{
 	"ServiceName" : "service1",

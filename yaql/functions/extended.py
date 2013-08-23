@@ -17,6 +17,7 @@ import random
 import types
 import itertools
 from yaql.context import EvalArg, ContextAware
+from yaql.utils import limit
 
 
 def join(self, others, join_predicate, composer):
@@ -60,7 +61,7 @@ def take_while(self, predicate):
 
 @EvalArg('self', types.GeneratorType)
 def _list(self):
-    return list(self)
+    return limit(self)
 
 
 @ContextAware()
@@ -96,7 +97,7 @@ def _as(self, context, *tuples):
     return self
 
 @ContextAware()
-def root(context, func):
+def root(context):
     def get_not_null_data(context):
         if context.parent_context:
             data = get_not_null_data(context.parent_context)
@@ -104,8 +105,7 @@ def root(context, func):
                 return data
         return context.data
     first_data = get_not_null_data(context)
-    context.data = first_data
-    return func()
+    return first_data.get('$')
 
 
 def add_to_context(context):
@@ -117,7 +117,5 @@ def add_to_context(context):
     context.register_function(rand, 'random')
     context.register_function(_list, 'list')
     context.register_function(take_while, 'takeWhile')
-    context.register_function(parent, 'parent')
-    context.register_function(direct_parent, 'parent')
     context.register_function(root, 'root')
     context.register_function(_as, 'as')
