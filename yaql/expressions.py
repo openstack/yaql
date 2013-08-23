@@ -96,8 +96,6 @@ class Function(Expression):
             while wrapper:
                 context = wrapper.yaql_context
                 wrapper = getattr(wrapper, 'obj_wrapper', None)
-            if context.parent_context:
-                context = context.parent_context
             return context
 
 
