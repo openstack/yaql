@@ -16,6 +16,7 @@ import collections
 import types
 from yaql.context import EvalArg
 from yaql.context import ContextAware
+from yaql.utils import limit
 
 
 def _get_att_or_key(item, value):
@@ -127,16 +128,19 @@ def divide(a, b):
 
 # Boolean operations
 
+@EvalArg('a', arg_type=types.BooleanType)
+@EvalArg('b', arg_type=types.BooleanType)
 def _and(a, b):
-    return a() and b()
+    return a and b
 
-
+@EvalArg('a', arg_type=types.BooleanType)
+@EvalArg('b', arg_type=types.BooleanType)
 def _or(a, b):
-    return a() or b()
+    return a or b
 
-
+@EvalArg('self', arg_type=types.BooleanType)
 def _not(self):
-    return not self()
+    return not self
 
 
 #data structure creations
@@ -147,7 +151,13 @@ def build_tuple(*args):
 
 
 def build_list(*args):
-    return [arg() for arg in args]
+    res = []
+    for arg in args:
+        arg = arg()
+        if isinstance(arg, types.GeneratorType):
+            arg = limit(arg)
+        res.append(arg)
+    return res
 
 
 def build_dict(*tuples):
@@ -156,6 +166,24 @@ def build_dict(*tuples):
         tt = t()
         res[tt[0]] = tt[1]
     return res
+
+
+# type conversions
+
+def to_int(value):
+    return int(value())
+
+
+def to_float(value):
+    return float(value())
+
+
+@EvalArg('value')
+def to_bool(value):
+    if isinstance(value, types.StringTypes):
+        if value.lower() == 'false':
+            return False
+    return bool(value)
 
 
 def add_to_context(context):
@@ -199,3 +227,8 @@ def add_to_context(context):
     #stubs for namespace resolving
     context.register_function(lambda a, b: a() + "." + b(), 'validate')
     context.register_function(lambda a: a(), 'operator_:')
+
+    #type conversions
+    context.register_function(to_bool, 'bool')
+    context.register_function(to_int, 'int')
+    context.register_function(to_float, 'float')
