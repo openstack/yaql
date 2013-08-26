@@ -19,9 +19,11 @@ import yaql
 import readline
 
 from json import JSONDecoder
+from yaql import __version__ as version
 from yaql.context import ContextAware, Context
-from yaql.exceptions import YaqlParsingException, YaqlException
+from yaql.exceptions import YaqlParsingException
 from yaql.utils import limit
+
 
 PROMPT = "yaql> "
 
@@ -29,12 +31,16 @@ PROMPT = "yaql> "
 @ContextAware()
 def main(context):
     print "Yet Another Query Language - command-line query tool"
+    print "Version {0}".format(version)
     print "Copyright (c) 2013 Mirantis, Inc"
     print
     if not context.get_data():
         print "No data loaded into context "
         print "Type '@load data-file.json' to load data"
         print
+
+    readline.parse_and_bind('')
+
     comm = True
     while comm != 'exit':
         try:
