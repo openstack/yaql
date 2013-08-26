@@ -17,6 +17,7 @@ import random
 import types
 import itertools
 from yaql.context import EvalArg, ContextAware
+from yaql.exceptions import YaqlExecutionException
 from yaql.utils import limit
 
 
@@ -108,6 +109,19 @@ def root(context):
     return first_data.get('$')
 
 
+def switch(self, *conditions):
+    self = self()
+    for cond in conditions:
+        res = cond(self)
+        if not isinstance(res, types.TupleType):
+            raise YaqlExecutionException("Switch must have tuple parameters")
+        if len(res) != 2:
+            raise YaqlExecutionException("Switch tuples must be of size 2")
+        if res[0]:
+            return res[1]
+    return None
+
+
 def add_to_context(context):
     context.register_function(join, 'join')
     context.register_function(select, 'select')
@@ -119,3 +133,4 @@ def add_to_context(context):
     context.register_function(take_while, 'takeWhile')
     context.register_function(root, 'root')
     context.register_function(_as, 'as')
+    context.register_function(switch, 'switch')
