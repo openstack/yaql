@@ -12,9 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from functools import wraps
 import inspect
-from exceptions import NoArgumentFound
 
 
 class Context():
@@ -74,65 +72,3 @@ class Context():
             return self.data[path]
         if self.parent_context:
             return self.parent_context.get_data(path)
-
-
-class EvalArg(object):
-    def __init__(self, arg_name, arg_type=None, custom_validator=None):
-        self.arg_name = arg_name
-        self.arg_type = arg_type
-        self.custom_validator = custom_validator
-
-    def __call__(self, function):
-        if getattr(function, 'is_context_aware', False):
-            real_args = function.context_aware.real_args
-        else:
-            real_args = inspect.getargspec(function).args
-        if not self.arg_name in real_args:
-            raise NoArgumentFound(function.__name__,
-                                  self.arg_name)
-        if not hasattr(function, 'arg_requirements'):
-            function.arg_requirements = {self.arg_name: self}
-        else:
-            function.arg_requirements[self.arg_name] = self
-        return function
-
-
-class ContextAware(object):
-    def __init__(self, context_parameter_name='context'):
-        self.context_parameter_name = context_parameter_name
-
-    def map_args(self, arg_list):
-        res = {}
-        i = 0
-        for real_arg in getattr(self, 'real_args', []):
-            if real_arg != self.context_parameter_name:
-                res[real_arg] = arg_list[i]
-                i += 1
-        return res
-
-    def get_num_callable_args(self):
-        return len(self.real_args)-1
-
-    def __call__(self, function):
-        @wraps(function)
-        def context_aware_function(context, *args):
-            real_args = inspect.getargspec(function).args
-            if not self.context_parameter_name in real_args:
-                raise NoArgumentFound(function.__name__,
-                                      self.context_parameter_name)
-            index = real_args.index(self.context_parameter_name)
-            args_to_pass = list(args)
-            args_to_pass.insert(index, context)
-            return function(*args_to_pass)
-
-        argspec = inspect.getargspec(function)
-        self.varargs = argspec.varargs
-        self.kwargs = argspec.keywords
-        self.real_args = argspec.args
-        f = context_aware_function
-        f.is_context_aware = True
-        f.context_aware = self
-        # if hasattr(function, 'arg_requirements'):
-        #     f.arg_requirements = function.arg_requirements
-        return f
-
