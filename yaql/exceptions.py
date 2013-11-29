@@ -32,11 +32,25 @@ class YaqlExecutionException(YaqlException):
     pass
 
 
+class DuplicateArgumentDecoratorException(YaqlException):
+    def __init__(self, function_name, argument_name):
+        message = "Function '{0}' has multiple decorators for argument '{1}'".\
+            format(function_name, argument_name)
+        super(DuplicateArgumentDecoratorException, self).__init__(message)
+
+
+class DuplicateContextDecoratorException(YaqlException):
+    def __init__(self, function_name):
+        message = "Function '{0}' has multiple context-arg decorators".\
+            format(function_name)
+        super(DuplicateContextDecoratorException, self).__init__(message)
+
+
 class NoArgumentFound(YaqlException):
     def __init__(self, function_name, argument_name):
         message = \
             "Function '{0}' has no argument called '{1}'". \
-            format(function_name, argument_name)
+                format(function_name, argument_name)
         super(NoArgumentFound, self).__init__(message)
 
 
@@ -50,14 +64,14 @@ class YaqlParsingException(YaqlException):
 
 class YaqlGrammarException(YaqlParsingException):
     def __init__(self, value, position):
-        msg = "Parse error: unexpected '{0}' at position {1}"\
+        msg = "Parse error: unexpected '{0}' at position {1}" \
             .format(value, position)
         super(YaqlGrammarException, self).__init__(value, position, msg)
 
 
 class YaqlLexicalException(YaqlParsingException):
     def __init__(self, value, position):
-        msg = "Lexical error: illegal character '{0}' at position {1}"\
+        msg = "Lexical error: illegal character '{0}' at position {1}" \
             .format(value, position)
         super(YaqlLexicalException, self).__init__(value, position, msg)
 
@@ -65,5 +79,5 @@ class YaqlLexicalException(YaqlParsingException):
 class YaqlSequenceException(YaqlException):
     def __init__(self, size):
         self.size = size
-        super(YaqlSequenceException, self).\
+        super(YaqlSequenceException, self). \
             __init__("Generator sequence too long ({0})".format(self.size))

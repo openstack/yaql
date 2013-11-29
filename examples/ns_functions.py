@@ -14,10 +14,10 @@
 
 import types
 import examples.ns.definition
-from yaql.context import EvalArg
+from yaql.functions.decorators import arg
 
 
-@EvalArg('short_name', arg_type=types.StringType)
+@arg('short_name', type=types.StringType)
 def expand_namespace(short_name):
     fqns = examples.ns.definition.get_fqns(short_name)
     if not fqns:
@@ -27,8 +27,8 @@ def expand_namespace(short_name):
         return fqns
 
 
-@EvalArg('fqns', arg_type=types.StringType)
-@EvalArg('value', arg_type=types.StringType)
+@arg('fqns', type=types.StringType)
+@arg('value', type=types.StringType)
 def validate(fqns, value):
     if not examples.ns.definition.validate(fqns, value):
         raise Exception(

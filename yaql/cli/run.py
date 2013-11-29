@@ -23,6 +23,8 @@ from yaql.cli import cli_functions
 def main():
     p = optparse.OptionParser()
     p.add_option('--data', '-d')
+    p.add_option('-t', action='store_true', dest='tokens')
+
     options, arguments = p.parse_args()
     if options.data:
         try:
@@ -37,7 +39,10 @@ def main():
 
     context = yaql.create_context()
     cli_functions.register_in_context(context)
-    yaql.parse('__main()').evaluate(data, context)
+    if options.tokens:
+        yaql.parse('__main(true)').evaluate(data, context)
+    else:
+        yaql.parse('__main(false)').evaluate(data, context)
 
 
 if __name__ == "__main__":

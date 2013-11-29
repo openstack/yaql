@@ -42,38 +42,9 @@ def p_value_to_dollar(p):
     p[0] = expressions.GetContextValue(expressions.Constant(p[1]))
 
 
-def p_value_to_symbol(p):
-    """
-    symbol : SYMBOL
-    """
-    symbol_parts = p[1].split(':')
-    sns = symbol_parts[0]
-    name = symbol_parts[1]
-    expanding = expressions.UnaryOperator(':', expressions.Constant(sns))
-
-    p[0] = expressions.Function('validate', None, expanding,
-                                expressions.Constant(name))
-
-
-def p_attribution(p):
-    """
-    value : value '.' STRING
-          | value '.' QUOTED_STRING
-    """
-    p[0] = expressions.Att(p[1], expressions.Constant(p[3]))
-
-
-def p_attribution_to_symbol(p):
-    """
-    value : value '.' symbol
-    """
-    p[0] = expressions.Att(p[1], p[3])
-
-
 def p_val_to_function(p):
     """
     value : func
-          | symbol
     """
     p[0] = p[1]
 
@@ -90,6 +61,23 @@ def p_arg_definition(p):
     arg : value
     """
     p[0] = p[1]
+
+
+def p_arg_list(p):
+    """
+    arg : arg ',' arg
+    """
+    val_list = []
+    if isinstance(p[1], types.ListType):
+        val_list += p[1]
+    else:
+        val_list.append(p[1])
+    if isinstance(p[3], types.ListType):
+        val_list += p[3]
+    else:
+        val_list.append(p[3])
+
+    p[0] = val_list
 
 
 def p_method_w_args(p):
@@ -118,44 +106,36 @@ def p_function_w_args(p):
         arg = p[2]
     else:
         arg = [p[2]]
-    p[0] = expressions.Function(p[1], None, *arg)
+    p[0] = expressions.Function(p[1], *arg)
 
 
-def p_arg_list(p):
+def p_binary(p):
     """
-    arg : arg ',' arg
-    """
-    val_list = []
-    if isinstance(p[1], types.ListType):
-        val_list += p[1]
-    else:
-        val_list.append(p[1])
-    if isinstance(p[3], types.ListType):
-        val_list += p[3]
-    else:
-        val_list.append(p[3])
-
-    p[0] = val_list
-
-
-def p_val_with_binary_op(p):
-    """
-    value : value '+' value
-          | value '-' value
-          | value '*' value
-          | value '/' value
-          | value '>' value
-          | value '<' value
-          | value '=' value
-          | value NE value
-          | value LE value
-          | value GE value
-          | value OR value
-          | value AND value
-          | value IS value
-          | value IN value
+    value : value STRING value
+          | value LVL0_LEFT value
+          | value LVL0_RIGHT value
+          | value LVL1_LEFT value
+          | value LVL1_RIGHT value
+          | value LVL2_LEFT value
+          | value LVL2_RIGHT value
+          | value LVL3_LEFT value
+          | value LVL3_RIGHT value
+          | value LVL4_LEFT value
+          | value LVL4_RIGHT value
+          | value LVL5_LEFT value
+          | value LVL5_RIGHT value
+          | value LVL6_LEFT value
+          | value LVL6_RIGHT value
+          | value LVL7_LEFT value
+          | value LVL7_RIGHT value
+          | value LVL8_LEFT value
+          | value LVL8_RIGHT value
+          | value LVL9_LEFT value
+          | value LVL9_RIGHT value
     """
     p[0] = expressions.BinaryOperator(p[2], p[1], p[3])
+
+
 
 
 def p_val_with_unary_op(p):
@@ -179,11 +159,11 @@ def p_val_w_filter(p):
     p[0] = expressions.Filter(p[1], p[3])
 
 
-def p_val_tuple(p):
-    """
-    value : value TUPLE value
-    """
-    p[0] = expressions.Tuple.create_tuple(p[1], p[3])
+# def p_val_tuple(p):
+#     """
+#     value : value TUPLE value
+#     """
+#     p[0] = expressions.Tuple.create_tuple(p[1], p[3])
 
 
 def p_error(p):
@@ -194,20 +174,31 @@ def p_error(p):
 
 
 precedence = (
-    ('left', 'TUPLE'),
-    ('left', 'OR'),
-    ('left', 'AND'),
-    ('left', 'NOT'),
-    ('nonassoc', '>', '<', '=', 'NE', 'LE', 'GE', 'IS', 'IN'),
-    ('left', '+', '-'),
-    ('left', '*', '/'),
-    ('left', ','),
-    ('left', 'FILTER', ']'),
-    ('left', '.'),
-    ('left', 'SYMBOL')
+    ('left', lexer.ops[(0, 'l')], 'STRING', ','),
+    ('right', lexer.ops[(0, 'r')]),
+    ('left', lexer.ops[(1, 'l')]),
+    ('right', lexer.ops[(1, 'r')]),
+    ('left', lexer.ops[(2, 'l')]),
+    ('right', lexer.ops[(2, 'r')]),
+    ('left', lexer.ops[(3, 'l')]),
+    ('right', lexer.ops[(3, 'r')]),
+    ('left', lexer.ops[(4, 'l')]),
+    ('right', lexer.ops[(4, 'r')]),
+    ('left', lexer.ops[(5, 'l', )], 'NOT'),
+    ('right', lexer.ops[(5, 'r')]),
+    ('left', lexer.ops[(6, 'l')]),
+    ('right', lexer.ops[(6, 'r')]),
+    ('left', lexer.ops[(7, 'l')]),
+    ('right', lexer.ops[(7, 'r')]),
+    ('left', lexer.ops[(8, 'l')]),
+    ('right', lexer.ops[(8, 'r')]),
+    ('left', lexer.ops[(9, 'l')]),
+    ('right', lexer.ops[(9, 'r')]),
+
 )
 
-parser = yacc.yacc(debug=False, outputdir=tempfile.gettempdir(), tabmodule='parser_table')
+# parser = yacc.yacc(debug=False, outputdir=tempfile.gettempdir(), tabmodule='parser_table')
+parser = yacc.yacc()
 
 
 def parse(expression):

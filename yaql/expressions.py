@@ -20,9 +20,13 @@ import yaql
 
 class Expression(object):
     class Callable(object):
-        def __init__(self, wrapped_object, context):
+        def __init__(self, wrapped_object, context, key=None):
             self.wrapped_object = wrapped_object
             self.yaql_context = context
+            self.key = key
+
+        def __str__(self):
+            return str(self.key)
 
     def evaluate(self, data=None, context=None):
         if not context:
@@ -39,39 +43,35 @@ class Expression(object):
 
 
 class Function(Expression):
-    def __init__(self, name, obj, *args):
+    def __init__(self, name, *args):
         self.name = name
-        self.object = obj
         self.args = args
 
     class Callable(Expression.Callable):
-        def __init__(self, wrapped, context, function_name, obj, args):
-            super(Function.Callable, self).__init__(wrapped, None)
+        def __init__(self, wrapped, context, function_name, args):
+            super(Function.Callable, self).__init__(wrapped, None,
+                                                    key=function_name)
             self.function_name = function_name
-            self.obj = obj
             self.args = args
-            if obj:
-                self.obj_wrapper = self.obj.create_callable(context)
-                if self.obj_wrapper.yaql_context:
-                    self.yaql_context = Context(self.obj_wrapper.yaql_context)
-                else:
-                    self.yaql_context = context
-            else:
-                self.yaql_context = context
-                self.obj_wrapper = None
+            self.yaql_context = context
+            self.obj_wrapper = None
 
         def __call__(self, *f_params):
             args_to_pass = []
-            context = self.yaql_context
             if f_params:
-                param_context = self._find_param_context()
-                param_context.set_data(f_params[0])
-                for i in range(0, len(f_params)):
-                    param_context.set_data(f_params[i], '$' + str(i + 1))
+                if len(f_params) == 1 and isinstance(f_params[0],
+                                                     Expression.Callable):
+                    self.obj_wrapper = f_params[0]
+                    self.yaql_context = Context(self.obj_wrapper.yaql_context)
+                else:
+                    param_context = self._find_param_context()
+                    param_context.set_data(f_params[0])
+                    for i in range(0, len(f_params)):
+                        param_context.set_data(f_params[i], '$' + str(i + 1))
             if self.obj_wrapper:
                 args_to_pass.append(self.obj_wrapper)
             for arg in self.args:
-                argContext = Context(context)
+                argContext = Context(self.yaql_context)
                 wrapped_arg = arg.create_callable(argContext)
                 args_to_pass.append(wrapped_arg)
 
@@ -81,11 +81,11 @@ class Function(Expression):
                 raise NoFunctionRegisteredException(self.function_name, numArg)
             for func in fs:
                 try:
-                    args_to_pass = pre_process_args(func, args_to_pass)
+                    processed_args = pre_process_args(func, args_to_pass)
                     if hasattr(func, "is_context_aware"):
-                        return func(context, *args_to_pass)
+                        return func(self.yaql_context, *processed_args)
                     else:
-                        return func(*args_to_pass)
+                        return func(*processed_args)
                 except YaqlExecutionException:
                     continue
             raise YaqlExecutionException("Unable to run " + self.function_name)
@@ -98,15 +98,13 @@ class Function(Expression):
                 wrapper = getattr(wrapper, 'obj_wrapper', None)
             return context
 
-
     def create_callable(self, context):
-        return Function.Callable(self, context, self.name, self.object,
-                                 self.args)
+        return Function.Callable(self, context, self.name, self.args)
 
 
 class BinaryOperator(Function):
     def __init__(self, op, obj1, obj2):
-        super(BinaryOperator, self).__init__("operator_" + op, None, obj1,
+        super(BinaryOperator, self).__init__("operator_" + op, obj1,
                                              obj2)
 
 
@@ -115,19 +113,14 @@ class UnaryOperator(Function):
         super(UnaryOperator, self).__init__("operator_" + op, obj)
 
 
-class Att(Function):
-    def __init__(self, obj, att):
-        super(Att, self).__init__('operator_.', obj, att)
-
-
 class Filter(Function):
-    def __init__(self, obj, expression):
-        super(Filter, self).__init__("where", obj, expression)
+    def __init__(self, expression):
+        super(Filter, self).__init__("where", expression)
 
 
 class Tuple(Function):
     def __init__(self, left, right):
-        super(Tuple, self).__init__('tuple', None, left, right)
+        super(Tuple, self).__init__('tuple', left, right)
 
     @staticmethod
     def create_tuple(left, right):
@@ -142,13 +135,12 @@ class Tuple(Function):
 
 class Wrap(Function):
     def __init__(self, content):
-        super(Wrap, self).__init__('wrap', None, content)
+        super(Wrap, self).__init__('wrap', content)
 
 
 class GetContextValue(Function):
     def __init__(self, path):
-        super(GetContextValue, self).__init__("get_context_data", None,
-                                              path)
+        super(GetContextValue, self).__init__("get_context_data", path)
         self.path = path
 
     def __str__(self):
@@ -164,7 +156,7 @@ class Constant(Expression):
 
     class Callable(Expression.Callable):
         def __init__(self, wrapped, value):
-            super(Constant.Callable, self).__init__(wrapped, None)
+            super(Constant.Callable, self).__init__(wrapped, None, key=value)
             self.value = value
 
         # noinspection PyUnusedLocal
@@ -176,6 +168,7 @@ class Constant(Expression):
 
 
 def pre_process_args(func, args):
+    res = list(args)
     if hasattr(func, 'arg_requirements'):
         if hasattr(func, 'is_context_aware'):
             ca = func.context_aware
@@ -187,11 +180,24 @@ def pre_process_args(func, args):
                 att_map[arg_name] = args[i]
         for arg_name in func.arg_requirements:
             arg_func = att_map[arg_name]
-            try:
-                arg_val = arg_func()
-            except:
-                raise YaqlExecutionException(
-                    "Unable to evaluate argument {0}".format(arg_name))
+            if func.arg_requirements[arg_name].eval_arg:
+                try:
+                    arg_val = arg_func()
+                except:
+                    raise YaqlExecutionException(
+                        "Unable to evaluate argument {0}".format(arg_name))
+            else:
+                arg_val = arg_func
+
+            if func.arg_requirements[arg_name].constant_only:
+                if not isinstance(arg_func, Constant.Callable):
+                    raise YaqlExecutionException(
+                        "{0} needs to be a constant".format(arg_name))
+            if func.arg_requirements[arg_name].function_only:
+                if not isinstance(arg_func, Function.Callable):
+                    raise YaqlExecutionException(
+                        "{0} needs to be a function".format(arg_name))
+
             arg_type = func.arg_requirements[arg_name].arg_type
             custom_validator = func.arg_requirements[arg_name].custom_validator
             ok = True
@@ -205,6 +211,6 @@ def pre_process_args(func, args):
             if not ok:
                 raise YaqlExecutionException(
                     "Argument {0} is invalid".format(arg_name))
-            args[args.index(arg_func)] = arg_val
+            res[args.index(arg_func)] = arg_val
 
-    return args
+    return res

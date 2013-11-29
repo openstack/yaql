@@ -14,17 +14,10 @@
 
 import collections
 import types
-from yaql.context import EvalArg
-from yaql.context import ContextAware
+from yaql.exceptions import YaqlExecutionException
+from yaql.expressions import Constant, Function
+from yaql.functions.decorators import arg, ContextAware, argument, context_aware
 from yaql.utils import limit
-
-
-def _get_att_or_key(item, value):
-    if hasattr(item, value):
-        return getattr(item, value)
-    if isinstance(item, types.DictionaryType):
-        return item.get(value)
-    return None
 
 
 # basic language operations:
@@ -35,11 +28,20 @@ def get_context_data(context, path):
     return context.get_data(path())
 
 
-@EvalArg('self', arg_type=collections.Iterable,
-         custom_validator=lambda v: not isinstance(v, types.DictionaryType))
+@arg('self', type=collections.Iterable,
+     custom_validator=lambda v: not isinstance(v, types.DictionaryType))
+@arg('att_name', constant_only=True)
 def collection_attribution(self, att_name):
+    def get_att_or_key(item):
+        value = att_name
+        if hasattr(item, value):
+            return getattr(item, value)
+        if isinstance(item, types.DictionaryType):
+            return item.get(value)
+        return None
+
     for item in self:
-        val = _get_att_or_key(item, att_name())
+        val = get_att_or_key(item)
         if isinstance(val, collections.Iterable) and \
                 not isinstance(val, types.StringTypes):
             for v in val:
@@ -48,13 +50,23 @@ def collection_attribution(self, att_name):
             yield val
 
 
-@EvalArg('self', arg_type=types.DictionaryType)
-def dict_attribution(self, arg_name):
-    return self.get(arg_name())
+@arg('self', type=types.DictionaryType)
+@arg('att_name', constant_only=True)
+def dict_attribution(self, att_name):
+    return self.get(att_name)
 
 
-def obj_attribution(self, arg_name):
-    return getattr(self(), arg_name(), None)
+@arg('att_name', constant_only=True)
+def obj_attribution(self, att_name):
+    return getattr(self(), att_name, None)
+
+@arg('method', eval_arg=False, function_only=True)
+def method_call(self, method):
+    return method(self)
+
+@context_aware
+def testtt(context):
+    pass
 
 
 def wrap(value):
@@ -63,7 +75,7 @@ def wrap(value):
 
 # Collection filtering
 
-@EvalArg("index", types.IntType)
+@arg("index", types.IntType)
 def get_by_index(this, index):
     this = this()
     if isinstance(this, types.GeneratorType):
@@ -145,8 +157,13 @@ def _not(self):
 
 #data structure creations
 
-def build_tuple(*args):
-    _list = [t() for t in args]
+def build_tuple(left, right):
+    _list = []
+    if left.key == 'operator_=>':
+        _list.extend(left())
+    else:
+        _list.append(left())
+    _list.append(right())
     return tuple(_list)
 
 
@@ -178,7 +195,7 @@ def to_float(value):
     return float(value())
 
 
-@EvalArg('value')
+@arg('value')
 def to_bool(value):
     if isinstance(value, types.StringTypes):
         if value.lower() == 'false':
@@ -187,13 +204,19 @@ def to_bool(value):
 
 
 def add_to_context(context):
+    context.register_function(testtt, 'test')
+
+
     # basic language operations:
     # retrieving data from context, attribution and wrapping in parenthesis
     context.register_function(get_context_data, 'get_context_data')
     context.register_function(collection_attribution, 'operator_.')
     context.register_function(dict_attribution, 'operator_.')
     context.register_function(obj_attribution, 'operator_.')
+    context.register_function(method_call, 'operator_.')
     context.register_function(wrap, 'wrap')
+
+
 
     # collection filtering
     context.register_function(get_by_index, "where")
@@ -222,7 +245,8 @@ def add_to_context(context):
     #data structure creations
     context.register_function(build_list, 'list')
     context.register_function(build_dict, 'dict')
-    context.register_function(build_tuple, 'tuple')
+    context.register_function(build_tuple, 'operator_=>')
+    context.register_function(build_tuple, 'operator_=>:')
 
     #stubs for namespace resolving
     context.register_function(lambda a, b: a() + "." + b(), 'validate')

@@ -27,82 +27,71 @@ keywords_to_val = {
     'NULL': None
 }
 
+right_associative = [':']
+
+op_to_level = {
+    'abc': 0,
+    '|' : 1,
+    '^' : 2,
+    '&' : 3,
+    '<' : 4,
+    '>' : 4,
+    '=' : 5,
+    '!' : 5,
+    ':' : 6,
+    '+' : 7,
+    '-' : 7,
+    '*' : 8,
+    '/' : 8,
+    '%' : 8
+}
+
+ops = {
+    (0, 'l'): "LVL0_LEFT",
+    (0, 'r'): "LVL0_RIGHT",
+    (1, 'l'): "LVL1_LEFT",
+    (1, 'r'): "LVL1_RIGHT",
+    (2, 'l'): "LVL2_LEFT",
+    (2, 'r'): "LVL2_RIGHT",
+    (3, 'l'): "LVL3_LEFT",
+    (3, 'r'): "LVL3_RIGHT",
+    (4, 'l'): "LVL4_LEFT",
+    (4, 'r'): "LVL4_RIGHT",
+    (5, 'l'): "LVL5_LEFT",
+    (5, 'r'): "LVL5_RIGHT",
+    (6, 'l'): "LVL6_LEFT",
+    (6, 'r'): "LVL6_RIGHT",
+    (7, 'l'): "LVL7_LEFT",
+    (7, 'r'): "LVL7_RIGHT",
+    (8, 'l'): "LVL8_LEFT",
+    (8, 'r'): "LVL8_RIGHT",
+    (9, 'l'): "LVL9_LEFT",
+    (9, 'r'): "LVL9_RIGHT"
+}
+
+
 tokens = [
-    'SYMBOL',
     'STRING',
     'QUOTED_STRING',
     'NUMBER',
     'FUNC',
-    'GE',
-    'LE',
-    'NE',
     'FILTER',
-    'TUPLE',
-    'OR',
-    'AND',
+    # 'TUPLE',
     'NOT',
-    'IS',
-    'IN',
-    'DOLLAR'
-] + list(keywords.values())
+    'DOLLAR',
+] + list(keywords.values())+list(ops.values())
 
-literals = "+-*/.()]><=,"
+literals = "()],"
 
 t_ignore = ' \t'
 
 
-t_GE = '>='
-t_LE = '<='
-t_NE = '!='
-
-t_TUPLE = '=>'
-
-
-def t_SYMBOL(t):
-    """
-    \\b\\w+\\:\\w+\\b
-    """
-    return t
+# t_TUPLE = '=>'
 
 
 def t_DOLLAR(t):
     """
     \\$\\w*
-    """
-    return t
-
-
-def t_AND(t):
-    """
-    \\band\\b
-    """
-    return t
-
-
-def t_OR(t):
-    """
-    \\bor\\b
-    """
-    return t
-
-
-def t_NOT(t):
-    """
-    \\bnot\\b
-    """
-    return t
-
-
-def t_IS(t):
-    """
-    \\bis\\b
-    """
-    return t
-
-
-def t_IN(t):
-    """
-    \\bin\\b
     """
     return t
 
@@ -125,12 +114,17 @@ def t_FUNC(t):
     t.value = t.value[:-1]
     return t
 
-#  (?<=\\w)\\[|(?<=\\])\\[|(?<=\\$)\\[
-
 
 def t_FILTER(t):
     """
    (?<!\\s)\\[
+    """
+    return t
+
+
+def t_NOT(t):
+    """
+    \\bnot\\b
     """
     return t
 
@@ -149,8 +143,26 @@ def t_QUOTED_STRING(t):
     '(?:[^'\\\\]|\\\\.)*'
     """
     t.value = t.value[1:-1].replace('\\', '')
-
     return t
+
+
+def t_CHAR_ORB(t):
+    """
+    [!@#%^&*=.:;`~\\-><+/]+
+    """
+    t.type = get_orb_op_type(t.value[0], t.value[-1])
+    return t
+
+
+
+def get_orb_op_type(first_char, last_char):
+    if first_char.isalpha() or first_char == '_':
+        level = op_to_level['abc']
+    else:
+        level = op_to_level.get(first_char, max(op_to_level.values())+1)
+    asc = 'r' if last_char in right_associative else 'l'
+    return ops.get((level, asc))
+
 
 
 def t_error(t):

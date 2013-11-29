@@ -14,20 +14,24 @@
 
 import json
 import os
+import re
 import types
 import yaql
 import readline
 
 from json import JSONDecoder
-from yaql.context import ContextAware, Context
+from yaql.context import Context
 from yaql.exceptions import YaqlParsingException, YaqlException
+from yaql.functions.decorators import arg, ContextAware
+from yaql.lexer import lexer
 from yaql.utils import limit
 
 PROMPT = "yaql> "
 
 
 @ContextAware()
-def main(context):
+@arg('show_tokens')
+def main(context, show_tokens):
     print "Yet Another Query Language - command-line query tool"
     print "Copyright (c) 2013 Mirantis, Inc"
     print
@@ -51,6 +55,15 @@ def main(context):
                 SERVICE_FUNCTIONS[funcName](args, context)
             continue
         try:
+            if show_tokens:
+                lexer.input(comm)
+                tokens = []
+                while True:
+                    tok = lexer.token()
+                    if not tok:
+                        break
+                    tokens.append(tok)
+                print "Tokens: "+str(tokens)
             expr = yaql.parse(comm)
         except YaqlParsingException as ex:
             if ex.position:
@@ -88,9 +101,17 @@ def load_data(data_file, context):
     print "Data from file '{0}' loaded into context".format(data_file)
 
 
+def regexp(self, pattern):
+    match =  re.match(pattern(), self())
+    if match:
+        return match.groups()
+    else:
+        return None
+
 
 def register_in_context(context):
     context.register_function(main, '__main')
+    context.register_function(regexp, 'regexp')
 
 
 def parse_service_command(comm):

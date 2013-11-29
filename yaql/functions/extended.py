@@ -16,8 +16,8 @@ import collections
 import random
 import types
 import itertools
-from yaql.context import EvalArg, ContextAware
 from yaql.exceptions import YaqlExecutionException
+from yaql.functions.decorators import arg, ContextAware
 from yaql.utils import limit
 
 
@@ -51,7 +51,7 @@ def rand():
     return random.random()
 
 
-@EvalArg('self', collections.Iterable)
+@arg('self', collections.Iterable)
 def take_while(self, predicate):
     for item in self:
         if predicate(item):
@@ -60,13 +60,13 @@ def take_while(self, predicate):
             return
 
 
-@EvalArg('self', types.GeneratorType)
+@arg('self', types.GeneratorType)
 def _list(self):
     return limit(self)
 
 
 @ContextAware()
-@EvalArg('levels', types.IntType)
+@arg('levels', types.IntType)
 def parent(context, levels, func):
     con = context
     traversed = 0
