@@ -114,8 +114,8 @@ class UnaryOperator(Function):
 
 
 class Filter(Function):
-    def __init__(self, expression):
-        super(Filter, self).__init__("where", expression)
+    def __init__(self, value, expression):
+        super(Filter, self).__init__("where", value, expression)
 
 
 class Tuple(Function):
