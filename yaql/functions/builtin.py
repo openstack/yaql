@@ -16,15 +16,14 @@ import collections
 import types
 from yaql.context import EvalArg
 from yaql.context import ContextAware
+from yaql.exceptions import YaqlExecutionException
 from yaql.utils import limit
 
 
 def _get_att_or_key(item, value):
-    if hasattr(item, value):
-        return getattr(item, value)
     if isinstance(item, types.DictionaryType):
         return item.get(value)
-    return None
+    return getattr(item, value)
 
 
 # basic language operations:
@@ -36,7 +35,8 @@ def get_context_data(context, path):
 
 
 @EvalArg('self', arg_type=collections.Iterable,
-         custom_validator=lambda v: not isinstance(v, types.DictionaryType))
+         custom_validator=lambda v: not isinstance(v, types.DictionaryType)
+         and not isinstance(v, types.StringTypes))
 def collection_attribution(self, att_name):
     for item in self:
         val = _get_att_or_key(item, att_name())
@@ -54,7 +54,7 @@ def dict_attribution(self, arg_name):
 
 
 def obj_attribution(self, arg_name):
-    return getattr(self(), arg_name(), None)
+    return getattr(self(), arg_name())
 
 
 def wrap(value):
@@ -71,10 +71,14 @@ def get_by_index(this, index):
     return this[index]
 
 
+@EvalArg("self", arg_type=collections.Iterable,
+         custom_validator=lambda v: not isinstance(v, types.StringTypes))
 def filter_by_predicate(self, predicate):
-    for item in self():
+    for item in self:
         r = predicate(item)
-        if r:
+        if not isinstance(r, types.BooleanType):
+            raise YaqlExecutionException()
+        if r is True:
             yield item
 
 
