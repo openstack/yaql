@@ -15,7 +15,7 @@
 from setuptools import setup, find_packages
 
 setup(name='yaql',
-      version='0.2',
+      version='0.2.1',
       description="Yet Another Query Language",
       author='Mirantis, Inc.',
       author_email='info@mirantis.com',
@@ -23,7 +23,7 @@ setup(name='yaql',
       install_requires=['ply'],
       entry_points={
           'console_scripts': [
-              'yaql-cli = yaql.cli.run:main',
+              'yaql=yaql.cli.run:main',
           ]
       },
       packages=find_packages(),
