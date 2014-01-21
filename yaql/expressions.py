@@ -68,27 +68,52 @@ class Function(Expression):
                 param_context.set_data(f_params[0])
                 for i in range(0, len(f_params)):
                     param_context.set_data(f_params[i], '$' + str(i + 1))
+            this = None
             if self.obj_wrapper:
-                args_to_pass.append(self.obj_wrapper)
+                this = self.obj_wrapper()
+                args_to_pass.append(lambda: this)
             for arg in self.args:
                 argContext = Context(context)
                 wrapped_arg = arg.create_callable(argContext)
                 args_to_pass.append(wrapped_arg)
 
             numArg = len(args_to_pass)
-            fs = self.yaql_context.get_functions(self.function_name, numArg)
+            fs = []
+
+            if not self.function_name.startswith('#'):
+                resolvers = self.yaql_context.get_functions('#resolve', 2)
+                if resolvers:
+                    try:
+                        fs = self._try_invoke(
+                            resolvers,
+                            [self.function_name, this], context) or []
+                        if not isinstance(fs, types.ListType):
+                            fs = [fs]
+                    except YaqlExecutionException:
+                        fs = []
+
+            fs.extend(self.yaql_context.get_functions(
+                self.function_name, numArg))
             if not fs:
                 raise NoFunctionRegisteredException(self.function_name, numArg)
-            for func in fs:
+            try:
+                return self._try_invoke(fs, args_to_pass, context)
+            except YaqlExecutionException:
+                raise YaqlExecutionException(
+                    'Unable to run ' + self.function_name)
+
+        def _try_invoke(self, funcs, args, context):
+            for func in funcs:
                 try:
-                    args_to_pass = pre_process_args(func, args_to_pass)
-                    if hasattr(func, "is_context_aware"):
+                    args_to_pass = pre_process_args(func, args)
+                    if hasattr(func, 'is_context_aware'):
                         return func(context, *args_to_pass)
                     else:
                         return func(*args_to_pass)
                 except YaqlExecutionException:
                     continue
-            raise YaqlExecutionException("Unable to run " + self.function_name)
+            raise YaqlExecutionException()
+
 
         def _find_param_context(self):
             context = self.yaql_context
@@ -106,18 +131,18 @@ class Function(Expression):
 
 class BinaryOperator(Function):
     def __init__(self, op, obj1, obj2):
-        super(BinaryOperator, self).__init__("operator_" + op, None, obj1,
+        super(BinaryOperator, self).__init__("#operator_" + op, None, obj1,
                                              obj2)
 
 
 class UnaryOperator(Function):
     def __init__(self, op, obj):
-        super(UnaryOperator, self).__init__("operator_" + op, obj)
+        super(UnaryOperator, self).__init__("#operator_" + op, obj)
 
 
 class Att(Function):
     def __init__(self, obj, att):
-        super(Att, self).__init__('operator_.', obj, att)
+        super(Att, self).__init__('#operator_.', obj, att)
 
 
 class Filter(Function):
@@ -142,12 +167,12 @@ class Tuple(Function):
 
 class Wrap(Function):
     def __init__(self, content):
-        super(Wrap, self).__init__('wrap', None, content)
+        super(Wrap, self).__init__('#wrap', None, content)
 
 
 class GetContextValue(Function):
     def __init__(self, path):
-        super(GetContextValue, self).__init__("get_context_data", None,
+        super(GetContextValue, self).__init__("#get_context_data", None,
                                               path)
         self.path = path
 
@@ -176,6 +201,7 @@ class Constant(Expression):
 
 
 def pre_process_args(func, args):
+    result = args[:]
     if hasattr(func, 'arg_requirements'):
         if hasattr(func, 'is_context_aware'):
             ca = func.context_aware
@@ -205,6 +231,6 @@ def pre_process_args(func, args):
             if not ok:
                 raise YaqlExecutionException(
                     "Argument {0} is invalid".format(arg_name))
-            args[args.index(arg_func)] = arg_val
+            result[args.index(arg_func)] = arg_val
 
-    return args
+    return tuple(result)
