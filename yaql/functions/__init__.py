@@ -11,3 +11,14 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import system
+import strings
+import containers
+from yaql.functions import arithmetic
+
+
+def register(context):
+    system.add_to_context(context)
+    strings.add_to_context(context)
+    containers.add_to_context(context)
+    arithmetic.add_to_context(context)

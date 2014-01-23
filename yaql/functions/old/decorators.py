@@ -14,13 +14,13 @@
 from functools import wraps
 import inspect
 import types
-from yaql.exceptions import NoArgumentFound
-from yaql.exceptions import DuplicateArgumentDecoratorException
-from yaql.exceptions import YaqlExecutionException
-from yaql.exceptions import DuplicateContextDecoratorException
-from yaql.expressions import Expression
-from yaql.expressions import Constant
-from yaql.expressions import Function
+from yaql.language.exceptions import NoParameterFoundException
+from yaql.language.exceptions import DuplicateParameterDecoratorException
+from yaql.language.exceptions import YaqlExecutionException
+from yaql.language.exceptions import DuplicateContextDecoratorException
+from yaql.language.expressions import Expression
+from yaql.language.expressions import Constant
+from yaql.language.expressions import Function
 
 
 class ArgDef(object):
@@ -100,7 +100,7 @@ def _attach_arg_data(func, arg):
     if not hasattr(func, 'func_arg_validate'):
         func.func_arg_validate = _validate_func
     if arg.arg_name in func.func_arg_rules:
-        raise DuplicateArgumentDecoratorException(func.__name__, arg.arg_name)
+        raise DuplicateParameterDecoratorException(func.__name__, arg.arg_name)
 
     if arg.is_context:
         if hasattr(func, 'func_is_context_aware') and \
@@ -131,11 +131,11 @@ def argument(arg_name,
     return get_wrapper
 
 
-def context_aware(arg=None):
-    if callable(arg):  # no-arg decorator case
-        return _attach_arg_data(arg, ArgDef('context', is_context=True))
-    else:
-        return argument(arg, is_context=True)
+# def context_aware(arg=None):
+#     if callable(arg):  # no-arg decorator case
+#         return _attach_arg_data(arg, ArgDef('context', is_context=True))
+#     else:
+#         return argument(arg, is_context=True)
 
 
 class arg(object):
@@ -154,7 +154,7 @@ class arg(object):
         else:
             real_args = inspect.getargspec(function).args
         if not self.arg_name in real_args:
-            raise NoArgumentFound(function.__name__,
+            raise NoParameterFoundException(function.__name__,
                                   self.arg_name)
         if not hasattr(function, 'arg_requirements'):
             function.arg_requirements = {self.arg_name: self}
@@ -184,7 +184,7 @@ class ContextAware(object):
         def context_aware_function(context, *args):
             real_args = inspect.getargspec(function).args
             if not self.context_parameter_name in real_args:
-                raise NoArgumentFound(function.__name__,
+                raise NoParameterFoundException(function.__name__,
                                       self.context_parameter_name)
             index = real_args.index(self.context_parameter_name)
             args_to_pass = list(args)

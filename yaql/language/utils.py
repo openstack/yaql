@@ -11,20 +11,16 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from yaql.language.exceptions import YaqlSequenceException
 
-import functions
-from yaql.language import parser, context
-
-__versioninfo__ = (0, 3, 0)
-__version__ = '.'.join(map(str, __versioninfo__))
+MAX_GENERATOR_ITEMS = 100000
 
 
-def parse(expression):
-    return parser.parse(expression)
-
-
-def create_context(register_functions=True):
-    cont = context.Context()
-    if register_functions:
-        functions.register(cont)
-    return context.Context(cont)
+def limit(generator, limit=MAX_GENERATOR_ITEMS):
+    res = []
+    for i in xrange(limit):
+        try:
+            res.append(generator.next())
+        except StopIteration:
+            return res
+    raise YaqlSequenceException(limit)

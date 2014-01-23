@@ -16,15 +16,16 @@ import json
 import os
 import re
 import types
-import yaql
-import readline
-
 from json import JSONDecoder
+
 from yaql.context import Context
-from yaql.exceptions import YaqlParsingException, YaqlException
-from yaql.functions.decorators import arg, ContextAware
-from yaql.lexer import lexer
-from yaql.utils import limit
+from yaql.exceptions import YaqlParsingException
+
+import yaql
+from yaql.functions.old.decorators import arg, ContextAware
+from yaql.language import lexer
+from yaql.language.utils import limit
+
 
 PROMPT = "yaql> "
 

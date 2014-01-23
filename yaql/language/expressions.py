@@ -11,10 +11,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import inspect
 
 import types
-from context import *
-from exceptions import YaqlExecutionException, NoFunctionRegisteredException
+from yaql.language.context import Context
+from yaql.language.exceptions import (YaqlExecutionException,
+                                      NoFunctionRegisteredException,
+                                      YaqlException)
 import yaql
 
 
@@ -54,49 +57,36 @@ class Function(Expression):
             self.function_name = function_name
             self.args = args
             self.yaql_context = context
-            self.obj_wrapper = None
 
-        def __call__(self, *f_params):
-            args_to_pass = []
-            if f_params:
-                if len(f_params) == 1 and isinstance(f_params[0],
-                                                     Expression.Callable):
-                    self.obj_wrapper = f_params[0]
-                    self.yaql_context = Context(self.obj_wrapper.yaql_context)
-                else:
-                    param_context = self._find_param_context()
-                    param_context.set_data(f_params[0])
-                    for i in range(0, len(f_params)):
-                        param_context.set_data(f_params[i], '$' + str(i + 1))
-            if self.obj_wrapper:
-                args_to_pass.append(self.obj_wrapper)
-            for arg in self.args:
-                argContext = Context(self.yaql_context)
-                wrapped_arg = arg.create_callable(argContext)
-                args_to_pass.append(wrapped_arg)
+        def __call__(self, *context_args, **context_kwargs):
+            sender = context_kwargs.get('sender')
 
-            numArg = len(args_to_pass)
-            fs = self.yaql_context.get_functions(self.function_name, numArg)
+            if context_args:  # passed args have to be placed in the context
+                self.yaql_context.set_data(context_args[0])
+                for i, param in enumerate(context_args):
+                    self.yaql_context.set_data(param, '$' + str(i + 1))
+            for arg_name, arg_value in context_kwargs.items():
+                self.yaql_context.set_data(arg_value, '$' + arg_name)
+
+            num_args = len(self.args) + 1 if sender else len(self.args)
+
+            fs = self.yaql_context.get_functions(self.function_name, num_args)
             if not fs:
-                raise NoFunctionRegisteredException(self.function_name, numArg)
+                raise NoFunctionRegisteredException(self.function_name,
+                                                    num_args)
+            snapshot = self.yaql_context.take_snapshot()
             for func in fs:
                 try:
-                    processed_args = pre_process_args(func, args_to_pass)
-                    if hasattr(func, "is_context_aware"):
-                        return func(self.yaql_context, *processed_args)
-                    else:
-                        return func(*processed_args)
+                    result, res_context = func(self.yaql_context, sender,
+                                               *self.args)
+                    self.yaql_context = res_context
+                    return result
                 except YaqlExecutionException:
+                    self.yaql_context.restore(snapshot)
                     continue
-            raise YaqlExecutionException("Unable to run " + self.function_name)
-
-        def _find_param_context(self):
-            context = self.yaql_context
-            wrapper = self.obj_wrapper
-            while wrapper:
-                context = wrapper.yaql_context
-                wrapper = getattr(wrapper, 'obj_wrapper', None)
-            return context
+            raise YaqlException(
+                "Registered function(s) matched but none"
+                " could run successfully")
 
     def create_callable(self, context):
         return Function.Callable(self, context, self.name, self.args)
@@ -110,7 +100,7 @@ class BinaryOperator(Function):
 
 class UnaryOperator(Function):
     def __init__(self, op, obj):
-        super(UnaryOperator, self).__init__("operator_" + op, obj)
+        super(UnaryOperator, self).__init__("unary_" + op, obj)
 
 
 class Filter(Function):
@@ -155,8 +145,9 @@ class Constant(Expression):
         return str(self.value)
 
     class Callable(Expression.Callable):
-        def __init__(self, wrapped, value):
-            super(Constant.Callable, self).__init__(wrapped, None, key=value)
+        def __init__(self, wrapped, value, context):
+            super(Constant.Callable, self).__init__(wrapped, context,
+                                                    key=value)
             self.value = value
 
         # noinspection PyUnusedLocal
@@ -164,7 +155,7 @@ class Constant(Expression):
             return self.value
 
     def create_callable(self, context):
-        return Constant.Callable(self, self.value)
+        return Constant.Callable(self, self.value, context)
 
 
 def pre_process_args(func, args):

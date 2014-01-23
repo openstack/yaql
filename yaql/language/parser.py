@@ -13,11 +13,11 @@
 #    under the License.
 
 import types
-import ply.yacc as yacc
-import expressions
-import exceptions
-import lexer
 import tempfile
+
+import ply.yacc as yacc
+
+from yaql.language import lexer, expressions, exceptions
 
 
 tokens = lexer.tokens
@@ -95,7 +95,7 @@ def p_function_no_args(p):
     """
     func : FUNC ')'
     """
-    p[0] = expressions.Function(p[1], None)
+    p[0] = expressions.Function(p[1])
 
 
 def p_function_w_args(p):
@@ -132,15 +132,28 @@ def p_binary(p):
           | value LVL8_RIGHT value
           | value LVL9_LEFT value
           | value LVL9_RIGHT value
+          | value UNARY_PLUS value
+          | value UNARY_MINUS value
+          | value UNARY_NOT value
+          | value UNARY_TILDE value
     """
     p[0] = expressions.BinaryOperator(p[2], p[1], p[3])
-
 
 
 
 def p_val_with_unary_op(p):
     """
     value : NOT value
+    """
+    p[0] = expressions.UnaryOperator(p[1], p[2])
+
+
+def p_unary_prefix(p):
+    """
+    value : UNARY_TILDE value
+          | UNARY_PLUS value
+          | UNARY_NOT value
+          | UNARY_MINUS value
     """
     p[0] = expressions.UnaryOperator(p[1], p[2])
 
@@ -184,21 +197,21 @@ precedence = (
     ('right', lexer.ops[(3, 'r')]),
     ('left', lexer.ops[(4, 'l')]),
     ('right', lexer.ops[(4, 'r')]),
-    ('left', lexer.ops[(5, 'l', )], 'NOT'),
+    ('left', lexer.ops[(5, 'l', )], 'NOT', 'UNARY_NOT'),
     ('right', lexer.ops[(5, 'r')]),
-    ('left', lexer.ops[(6, 'l')]),
+    ('left', lexer.ops[(6, 'l')], 'UNARY_PLUS', 'UNARY_MINUS'),
     ('right', lexer.ops[(6, 'r')]),
     ('left', lexer.ops[(7, 'l')]),
     ('right', lexer.ops[(7, 'r')]),
     ('left', lexer.ops[(8, 'l')]),
     ('right', lexer.ops[(8, 'r')]),
-    ('left', lexer.ops[(9, 'l')]),
+    ('left', lexer.ops[(9, 'l')], 'UNARY_TILDE'),
     ('right', lexer.ops[(9, 'r')]),
 
 )
 
-# parser = yacc.yacc(debug=False, outputdir=tempfile.gettempdir(), tabmodule='parser_table')
-parser = yacc.yacc()
+parser = yacc.yacc(debug=False, outputdir=tempfile.gettempdir(), tabmodule='parser_table')
+# parser = yacc.yacc()
 
 
 def parse(expression):

@@ -13,7 +13,7 @@
 #    under the License.
 
 import ply.lex as lex
-from yaql.exceptions import YaqlLexicalException
+from yaql.language.exceptions import YaqlLexicalException
 
 keywords = {
     'true': 'TRUE',
@@ -29,6 +29,14 @@ keywords_to_val = {
 
 right_associative = [':']
 
+
+unary_prefix = {
+    '-': "UNARY_MINUS",
+    '+': "UNARY_PLUS",
+    '~': "UNARY_TILDE",
+    '!': "UNARY_NOT"
+}
+
 op_to_level = {
     'abc': 0,
     '|' : 1,
@@ -38,12 +46,12 @@ op_to_level = {
     '>' : 4,
     '=' : 5,
     '!' : 5,
-    ':' : 6,
-    '+' : 7,
-    '-' : 7,
-    '*' : 8,
-    '/' : 8,
-    '%' : 8
+    '+' : 6,
+    '-' : 6,
+    '*' : 7,
+    '/' : 7,
+    '%' : 7,
+    '.' : 8
 }
 
 ops = {
@@ -78,8 +86,8 @@ tokens = [
     'FILTER',
     # 'TUPLE',
     'NOT',
-    'DOLLAR',
-] + list(keywords.values())+list(ops.values())
+    'DOLLAR'
+] + list(keywords.values())+list(ops.values()) + list(unary_prefix.values())
 
 literals = "()],"
 
@@ -150,12 +158,18 @@ def t_CHAR_ORB(t):
     """
     [!@#%^&*=.:;`~\\-><+/]+
     """
-    t.type = get_orb_op_type(t.value[0], t.value[-1])
+    if t.value in unary_prefix:
+        t.type = unary_prefix[t.value]
+    else:
+        t.type = get_orb_op_type(t.value[0], t.value[-1])
     return t
 
 
 
 def get_orb_op_type(first_char, last_char):
+
+
+
     if first_char.isalpha() or first_char == '_':
         level = op_to_level['abc']
     else:

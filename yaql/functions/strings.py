@@ -1,4 +1,4 @@
-#    Copyright (c) 2013 Mirantis, Inc.
+#    Copyright (c) 2014 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -11,16 +11,20 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from yaql.exceptions import YaqlSequenceException
 
-MAX_GENERATOR_ITEMS = 100000
+import types
+from yaql.language.engine import parameter
 
 
-def limit(generator, limit=MAX_GENERATOR_ITEMS):
-    res = []
-    for i in xrange(limit):
-        try:
-            res.append(generator.next())
-        except StopIteration:
-            return res
-    raise YaqlSequenceException(limit)
+@parameter('a', arg_type=types.StringTypes)
+@parameter('b', arg_type=types.StringTypes)
+def string_concatenation(a, b):
+    return a + b
+
+@parameter('self', arg_type=types.StringTypes, is_self=True)
+def as_list(self):
+    return list(self)
+
+def add_to_context(context):
+    context.register_function(string_concatenation, 'operator_+')
+    context.register_function(as_list, 'asList')

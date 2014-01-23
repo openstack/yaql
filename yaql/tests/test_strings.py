@@ -1,4 +1,4 @@
-#    Copyright (c) 2013 Mirantis, Inc.
+#    Copyright (c) 2014 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,19 +12,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functions
-from yaql.language import parser, context
 
-__versioninfo__ = (0, 3, 0)
-__version__ = '.'.join(map(str, __versioninfo__))
+from yaql.tests import YaqlTest
 
 
-def parse(expression):
-    return parser.parse(expression)
+import unittest
 
 
-def create_context(register_functions=True):
-    cont = context.Context()
-    if register_functions:
-        functions.register(cont)
-    return context.Context(cont)
+class TestStrings(YaqlTest):
+    def test_string_concat(self):
+        expression = "abc + cdef + ' qw er'"
+        self.assertEquals('abccdef qw er', self.eval(expression))
+
+    def test_string_to_list(self):
+        expression = "abc.asList()"
+        expression2 = "abc.asList()[1]"
+        self.assertEquals(['a', 'b', 'c'], self.eval(expression))
+        self.assertEquals('b', self.eval(expression2))
+
+if __name__ == '__main__':
+    unittest.main()

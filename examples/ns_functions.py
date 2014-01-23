@@ -14,28 +14,37 @@
 
 import types
 import examples.ns.definition
-from yaql.functions.decorators import arg
+from yaql.functions.old.decorators import arg
 
 
 @arg('short_name', type=types.StringType)
-def expand_namespace(short_name):
+@arg('value', type=types.StringType)
+def expand_property_namespace(short_name, value):
     fqns = examples.ns.definition.get_fqns(short_name)
     if not fqns:
         raise Exception(
             "Namespace with alias '{0}' is unknown".format(short_name))
-    else:
-        return fqns
-
-
-@arg('fqns', type=types.StringType)
-@arg('value', type=types.StringType)
-def validate(fqns, value):
     if not examples.ns.definition.validate(fqns, value):
         raise Exception(
             "Namespace '{0}' does not contain name '{1}'".format(fqns, value))
     return "{0}.{1}".format(fqns, value)
 
+@arg('short_name', type=types.StringType)
+@arg('value', eval_arg=False, function_only=True)
+def expand_function_namespace(short_name, value):
+    fqns = examples.ns.definition.get_fqns(short_name)
+    if not fqns:
+        raise Exception(
+            "Namespace with alias '{0}' is unknown".format(short_name))
+    if not examples.ns.definition.validate(fqns, value.function_name):
+        raise Exception(
+            "Namespace '{0}' does not contain name '{1}'".format(fqns, value))
+    value.function_name = "{0}.{1}".format(fqns, value.function_name)
+    return value
+
+
 
 def register_in_context(context):
-    context.register_function(expand_namespace, 'operator_:')
-    context.register_function(validate, 'validate')
+    context.register_function(expand_property_namespace, 'operator_:')
+    context.register_function(expand_function_namespace, 'operator_:')
+

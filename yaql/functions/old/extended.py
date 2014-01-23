@@ -11,14 +11,16 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
 import collections
 import random
 import types
 import itertools
+
 from yaql.exceptions import YaqlExecutionException
-from yaql.functions.decorators import arg, ContextAware
-from yaql.utils import limit
+
+import containers
+from yaql.functions.old.decorators import arg, ContextAware
+from yaql.language.utils import limit
 
 
 def join(self, others, join_predicate, composer):
@@ -123,6 +125,10 @@ def switch(self, *conditions):
 
 
 def add_to_context(context):
+    pass
+
+
+def add_to_context_old(context):
     context.register_function(join, 'join')
     context.register_function(select, 'select')
     context.register_function(_sum, 'sum')

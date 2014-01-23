@@ -11,20 +11,20 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-import functions
-from yaql.language import parser, context
-
-__versioninfo__ = (0, 3, 0)
-__version__ = '.'.join(map(str, __versioninfo__))
+import types
+import unittest
+import yaql
+from yaql.language.utils import limit
 
 
-def parse(expression):
-    return parser.parse(expression)
+class YaqlTest(unittest.TestCase):
+    def setUp(self):
+        self.context = yaql.create_context()
 
-
-def create_context(register_functions=True):
-    cont = context.Context()
-    if register_functions:
-        functions.register(cont)
-    return context.Context(cont)
+    def eval(self, expression, data=None, context=None):
+        res = yaql.parse(expression).evaluate(data=data,
+                                              context=context or self.context)
+        if isinstance(res, types.GeneratorType):
+            return limit(res)
+        else:
+            return res

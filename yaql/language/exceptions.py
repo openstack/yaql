@@ -32,26 +32,32 @@ class YaqlExecutionException(YaqlException):
     pass
 
 
-class DuplicateArgumentDecoratorException(YaqlException):
-    def __init__(self, function_name, argument_name):
-        message = "Function '{0}' has multiple decorators for argument '{1}'".\
-            format(function_name, argument_name)
-        super(DuplicateArgumentDecoratorException, self).__init__(message)
+class DuplicateParameterDecoratorException(YaqlException):
+    def __init__(self, function_name, param_name):
+        message = "Function '{0}' has multiple decorators for parameter '{1}'". \
+            format(function_name, param_name)
+        super(DuplicateParameterDecoratorException, self).__init__(message)
 
 
 class DuplicateContextDecoratorException(YaqlException):
     def __init__(self, function_name):
-        message = "Function '{0}' has multiple context-arg decorators".\
+        message = "Function '{0}' has multiple context-param decorators". \
             format(function_name)
         super(DuplicateContextDecoratorException, self).__init__(message)
 
 
-class NoArgumentFound(YaqlException):
-    def __init__(self, function_name, argument_name):
-        message = \
-            "Function '{0}' has no argument called '{1}'". \
-                format(function_name, argument_name)
-        super(NoArgumentFound, self).__init__(message)
+class DuplicateContextOwnerDecoratorException(YaqlException):
+    def __init__(self, function_name):
+        message = "Function '{0}' has multiple context-owner decorators". \
+            format(function_name)
+        super(DuplicateContextOwnerDecoratorException, self).__init__(message)
+
+
+class NoParameterFoundException(YaqlException):
+    def __init__(self, function_name, param_name):
+        message = "Function '{0}' has no parameter called '{1}'". \
+            format(function_name, param_name)
+        super(NoParameterFoundException, self).__init__(message)
 
 
 class YaqlParsingException(YaqlException):
