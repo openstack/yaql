@@ -28,3 +28,6 @@ class YaqlTest(unittest.TestCase):
             return limit(res)
         else:
             return res
+
+    def assertEval(self, value, expression):
+        self.assertEquals(value, self.eval(expression))
