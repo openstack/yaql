@@ -11,8 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import types
 
-from yaql.language.exceptions import YaqlException, YaqlExecutionException
+from yaql.language.exceptions import YaqlException, YaqlExecutionException, YaqlSequenceException
 
 from yaql.tests import YaqlTest
 import yaql.tests.testdata
@@ -90,3 +91,48 @@ class TestCollections(YaqlTest):
         self.assertEqual('user1@example.com', value[1]['user_name'])
         self.assertEqual('user2@example.com', value[2]['user_name'])
         self.assertEqual('user3@example.com', value[3]['user_name'])
+
+    def test_select(self):
+        data = [1, 2, 3, 4]
+        expression = "$.select($*10)"
+        self.assertEval([10, 20, 30, 40], expression, data)
+
+    def test_data_sum(self):
+        data = [1, 2, 3, 4]
+        expression = "$.sum()"
+        self.assertEval(10, expression, data)
+
+    def test_method_sum(self):
+        expression = "list(1,2,3,4).sum()"
+        self.assertEval(10, expression)
+
+    def test_function_sum(self):
+        expression = "sum(list(1,2,3,4))"
+        self.assertEval(10, expression)
+
+    def test_range_const(self):
+        expression = "range(0,4)"
+        self.assertEval([0, 1, 2, 3], expression)
+
+    def test_range_computed(self):
+        expression = "range(1+2, 10-4)"
+        self.assertEval([3, 4, 5], expression)
+
+    def test_take_while(self):
+        data = [1, 2, 3, 4]
+        self.assertEval([1, 2], "$.take_while($<3)", data)
+
+    def test_infinite_random_loop(self):
+        val = self.eval("range(0).select(random()).take_while($<0.99)")
+        for v in val:
+            self.assertTrue(0 < v < 0.99)
+
+    def test_generator_limiting(self):
+        # do not use self.eval here as it uses limiting on its own
+        v = yaql.parse('range(0, 10)').evaluate()
+        self.assertTrue(isinstance(v, types.GeneratorType))
+        v2 = yaql.parse('range(0, 10).list()').evaluate()
+        self.assertTrue(isinstance(v2, types.ListType))
+        v3 = yaql.parse('range(0).list()')
+        self.assertRaises(YaqlSequenceException, v3.evaluate)
+

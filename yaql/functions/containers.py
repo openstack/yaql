@@ -14,6 +14,7 @@
 
 import collections
 import types
+import itertools
 from yaql.language.exceptions import YaqlExecutionException
 
 from yaql.language.engine import parameter
@@ -103,8 +104,56 @@ def build_dict(*tuples):
 def join(self, others, join_predicate, composer):
     for self_item in self:
         for other_item in others:
-            if join_predicate(self_item, other_item):
+            res = join_predicate(self_item, other_item)
+            if not isinstance(res, types.BooleanType):
+                raise YaqlExecutionException("Not a predicate")
+            if res:
                 yield composer(self_item, other_item)
+
+
+@collection_parameter('self')
+@parameter('composer', lazy=True, function_only=True)
+def select(self, composer):
+    for item in self:
+        yield composer(item)
+
+
+@collection_parameter('self')
+def _sum(self):
+    try:
+        return sum(self)
+    except TypeError as e:
+        raise YaqlExecutionException("Not a collection of numbers", e)
+
+
+@parameter('start', arg_type=types.IntType)
+@parameter('end', arg_type=types.IntType)
+def _range_limited(start, end):
+    for i in xrange(int(start), int(end)):
+        yield i
+
+
+@parameter('start', arg_type=types.IntType)
+def _range_infinite(start):
+    for i in itertools.count(start):
+        yield i
+
+
+@collection_parameter('self')
+@parameter('predicate', lazy=True, function_only=True)
+def take_while(self, predicate):
+    for item in self:
+        res = predicate(item)
+        if not isinstance(res, types.BooleanType):
+            raise YaqlExecutionException("Not a predicate")
+        if res:
+            yield item
+        else:
+            return
+
+@parameter('self', arg_type=types.GeneratorType)
+def _list(self):
+    return limit(self)
 
 
 def add_to_context(context):
@@ -117,3 +166,9 @@ def add_to_context(context):
     context.register_function(build_new_tuple, 'operator_=>')
     context.register_function(append_tuple, 'operator_=>')
     context.register_function(join)
+    context.register_function(select)
+    context.register_function(_sum, 'sum')
+    context.register_function(_range_limited, 'range')
+    context.register_function(_range_infinite, 'range')
+    context.register_function(take_while)
+    context.register_function(_list, 'list')
