@@ -29,5 +29,5 @@ class YaqlTest(unittest.TestCase):
         else:
             return res
 
-    def assertEval(self, value, expression):
-        self.assertEquals(value, self.eval(expression))
+    def assertEval(self, value, expression, data=None, context=None):
+        self.assertEquals(value, self.eval(expression, data, context))
