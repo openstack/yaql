@@ -47,6 +47,7 @@ def build_list(*args):
         res.append(arg)
     return res
 
+
 @parameter("b", arg_type=collections.Iterable,
            custom_validator=lambda v: not isinstance(v, types.StringTypes))
 def is_in(a, b):
@@ -74,6 +75,7 @@ def collection_attribution(self, att_name):
 def build_new_tuple(arg1, arg2):
     return arg1(), arg2
 
+
 @parameter('arg1', lazy=True,
            custom_validator=lambda v: v.key == 'operator_=>')
 def append_tuple(arg1, arg2):
@@ -83,10 +85,19 @@ def append_tuple(arg1, arg2):
     res.append(arg2)
     return tuple(res)
 
+
+def build_dict(*tuples):
+    try:
+        return {key: value for key, value in tuples}
+    except ValueError as e:
+        raise YaqlExecutionException("Not a valid dictionary", e)
+
+
 def add_to_context(context):
     context.register_function(get_by_index, 'where')
     context.register_function(filter_by_predicate, 'where')
     context.register_function(build_list, 'list')
+    context.register_function(build_dict, 'dict')
     context.register_function(is_in, 'operator_in')
     context.register_function(collection_attribution, 'operator_.')
     context.register_function(build_new_tuple, 'operator_=>')

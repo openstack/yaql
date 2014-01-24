@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from yaql.language.exceptions import YaqlException
+from yaql.language.exceptions import YaqlException, YaqlExecutionException
 
 from yaql.tests import YaqlTest
 import yaql.tests.testdata
@@ -37,6 +37,15 @@ class TestCollections(YaqlTest):
 
     def test_list_definition(self):
         self.assertEquals([1, 2, 3], self.eval('list(1,2,3)'))
+
+    def test_dict_definition(self):
+        self.assertEval({'key1': 'value', 'key2': 100},
+                        'dict(key1=>value, key2=>100)')
+
+    def test_wrong_dict_definition(self):
+        self.assertRaises(YaqlExecutionException, self.eval, 'dict(a,b,c)')
+        self.assertRaises(YaqlExecutionException, self.eval,
+                          'dict(a=>b=>c, a=>d=>e)')
 
     def test_in(self):
         int_list = [1, 2, 3, 4, 5, 6]
