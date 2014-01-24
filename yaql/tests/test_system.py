@@ -164,7 +164,6 @@ class TestSystem(YaqlTest):
         self.context.register_function(foo, 'foo')
         self.assertEquals('bar', self.eval('bar.foo()'))
 
-
     def test_self_reordering(self):
         def concat_right(self, arg):
             return self + ',' + arg
@@ -181,6 +180,18 @@ class TestSystem(YaqlTest):
     def test_parenthesis(self):
         expression = '(2+3)*2'
         self.assertEquals(10, self.eval(expression))
+
+    def test_as(self):
+
+        @parameter('f', lazy=True)
+        def foo(self, f):
+            return (self, f())
+
+        self.context.register_function(foo)
+        expression = "(random()).as($*10=>random_by_ten).foo($random_by_ten)"
+        v = self.eval(expression)
+        self.assertTrue(v[1] == v[0] * 10)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -54,11 +54,22 @@ def dict_attribution(self, att_name):
 def method_call(self, method):
     return method(sender=self)
 
+@context_aware
+@parameter('tuple_preds', lazy=True)
+def _as(self, context, *tuple_preds):
+    self = self
+    for t in tuple_preds:
+        tup = t(self)
+        val = tup[0]
+        key_name = tup[1]
+        context.set_data(val, key_name)
+    return self
 
 def add_to_context(context):
     context.register_function(get_context_data)
     context.register_function(obj_attribution, 'operator_.')
     context.register_function(dict_attribution, 'operator_.')
     context.register_function(method_call, 'operator_.')
+    context.register_function(_as, 'as')
 
     context.register_function(lambda val: val, 'wrap')

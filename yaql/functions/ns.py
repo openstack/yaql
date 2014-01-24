@@ -70,10 +70,10 @@ def resolve_function(self, alias, symbol, context):
 
 
 def add_to_context(context, resolver=None):
-    context.set_data(resolver or NamespaceResolver(), '__ns_resolver')
+    context.set_data(resolver or NamespaceResolver(), '$__ns_resolver')
     context.register_function(resolve_prop, 'operator_:')
     context.register_function(resolve_function, 'operator_:')
 
 
 def get_resolver(context):
-    return context.get_data('__ns_resolver')
+    return context.get_data('$__ns_resolver')
