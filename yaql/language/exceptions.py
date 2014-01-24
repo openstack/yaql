@@ -15,7 +15,8 @@
 
 class YaqlException(Exception):
     def __init__(self, message):
-        super(YaqlException, self).__init__(message)
+        super(YaqlException, self).__init__()
+        self.message = message
 
 
 class NoFunctionRegisteredException(YaqlException):
@@ -29,12 +30,15 @@ class NoFunctionRegisteredException(YaqlException):
 
 
 class YaqlExecutionException(YaqlException):
-    pass
+    def __init__(self, message, inner=None):
+        super(YaqlExecutionException, self).__init__(message)
+        self.inner_exception = inner
 
 
 class DuplicateParameterDecoratorException(YaqlException):
     def __init__(self, function_name, param_name):
-        message = "Function '{0}' has multiple decorators for parameter '{1}'". \
+        message = "Function '{0}' has multiple " \
+                  "decorators for parameter '{1}'". \
             format(function_name, param_name)
         super(DuplicateParameterDecoratorException, self).__init__(message)
 

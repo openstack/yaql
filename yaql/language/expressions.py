@@ -14,6 +14,7 @@
 import inspect
 
 import types
+import sys
 from yaql.language.context import Context
 from yaql.language.exceptions import (YaqlExecutionException,
                                       NoFunctionRegisteredException,
@@ -75,18 +76,20 @@ class Function(Expression):
                 raise NoFunctionRegisteredException(self.function_name,
                                                     num_args)
             snapshot = self.yaql_context.take_snapshot()
+            errors = []
             for func in fs:
                 try:
                     result, res_context = func(self.yaql_context, sender,
                                                *self.args)
                     self.yaql_context = res_context
                     return result
-                except YaqlExecutionException:
+                except YaqlExecutionException as e:
                     self.yaql_context.restore(snapshot)
+                    errors.append(e)
                     continue
-            raise YaqlException(
+            raise YaqlExecutionException(
                 "Registered function(s) matched but none"
-                " could run successfully")
+                " could run successfully", errors)
 
     def create_callable(self, context):
         return Function.Callable(self, context, self.name, self.args)
@@ -156,52 +159,3 @@ class Constant(Expression):
 
     def create_callable(self, context):
         return Constant.Callable(self, self.value, context)
-
-
-def pre_process_args(func, args):
-    res = list(args)
-    if hasattr(func, 'arg_requirements'):
-        if hasattr(func, 'is_context_aware'):
-            ca = func.context_aware
-            att_map = ca.map_args(args)
-        else:
-            att_map = {}
-            arg_names = inspect.getargspec(func).args
-            for i, arg_name in enumerate(arg_names):
-                att_map[arg_name] = args[i]
-        for arg_name in func.arg_requirements:
-            arg_func = att_map[arg_name]
-            if func.arg_requirements[arg_name].eval_arg:
-                try:
-                    arg_val = arg_func()
-                except:
-                    raise YaqlExecutionException(
-                        "Unable to evaluate argument {0}".format(arg_name))
-            else:
-                arg_val = arg_func
-
-            if func.arg_requirements[arg_name].constant_only:
-                if not isinstance(arg_func, Constant.Callable):
-                    raise YaqlExecutionException(
-                        "{0} needs to be a constant".format(arg_name))
-            if func.arg_requirements[arg_name].function_only:
-                if not isinstance(arg_func, Function.Callable):
-                    raise YaqlExecutionException(
-                        "{0} needs to be a function".format(arg_name))
-
-            arg_type = func.arg_requirements[arg_name].arg_type
-            custom_validator = func.arg_requirements[arg_name].custom_validator
-            ok = True
-            if arg_type:
-                ok = ok and isinstance(arg_val, arg_type)
-                if type(arg_val) == types.BooleanType:
-                    ok = ok and type(arg_val) == arg_type
-            if custom_validator:
-                ok = ok and custom_validator(arg_val)
-
-            if not ok:
-                raise YaqlExecutionException(
-                    "Argument {0} is invalid".format(arg_name))
-            res[args.index(arg_func)] = arg_val
-
-    return res
