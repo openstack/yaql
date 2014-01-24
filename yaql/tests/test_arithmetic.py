@@ -11,26 +11,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import types
 
 import unittest
 from yaql.tests import YaqlTest
 
 
-class TestSystemFunctions(YaqlTest):
-    def test_string_constant(self):
-        self.assertEquals("abc", self.eval("abc"))
-        self.assertEquals("100", self.eval("'100'"))
-        self.assertEquals('some mw const', self.eval("'some mw const'"))
-
-    def test_numeric_constant(self):
-        self.assertEquals(0, self.eval('0'))
-        self.assertEquals(100, self.eval('100'))
-        self.assertEquals(0, self.eval("0"))
-        self.assertEquals(100, self.eval("100"))
-
-    def test_negative_constant(self):
-        self.assertEquals(-10, self.eval('-10'))
-
+class TestArithmetic(YaqlTest):
     def test_int_arithmetic(self):
         self.assertEquals(20, self.eval('15+5'))
         self.assertEquals(20, self.eval('15+10-5'))
@@ -48,6 +35,15 @@ class TestSystemFunctions(YaqlTest):
         self.assertEquals(15, self.eval('20 + -5'))
         self.assertEquals(-25, self.eval('-20 + -5'))
         self.assertEquals(-25, self.eval('-20 - +5'))
+
+    def test_int_conversion(self):
+        self.assertNotEquals(types.IntType, type(self.eval('123.45')))
+        self.assertEquals(types.IntType, type(self.eval('int(123.45)')))
+
+    def test_float_conversion(self):
+        self.assertNotEquals(types.FloatType, type(self.eval('123')))
+        self.assertEquals(types.FloatType, type(self.eval('float(123)')))
+
 
 
 if __name__ == '__main__':
