@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import random
 from yaql.language.engine import parameter
 from yaql.language.exceptions import YaqlExecutionException
 
@@ -90,6 +91,10 @@ def to_float(value):
         raise YaqlExecutionException("Unable to convert to float", e)
 
 
+def rand():
+    return random.random()
+
+
 def add_to_context(context):
     # prefix unary
     context.register_function(unary_minus, 'unary_-')
@@ -112,3 +117,6 @@ def add_to_context(context):
     #conversion
     context.register_function(to_int, 'int')
     context.register_function(to_float, 'float')
+
+    #random
+    context.register_function(rand, 'random')

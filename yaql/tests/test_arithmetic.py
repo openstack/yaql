@@ -44,6 +44,8 @@ class TestArithmetic(YaqlTest):
         self.assertNotEquals(types.FloatType, type(self.eval('123')))
         self.assertEquals(types.FloatType, type(self.eval('float(123)')))
 
+    def test_random(self):
+        self.assertTrue(0 < self.eval('random()') < 1)
 
 
 if __name__ == '__main__':
