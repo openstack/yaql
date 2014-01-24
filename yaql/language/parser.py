@@ -134,26 +134,20 @@ def p_binary(p):
           | value LVL9_RIGHT value
           | value UNARY_PLUS value
           | value UNARY_MINUS value
-          | value UNARY_NOT value
+          | value UNARY_EXPL value
           | value UNARY_TILDE value
     """
     p[0] = expressions.BinaryOperator(p[2], p[1], p[3])
 
 
 
-def p_val_with_unary_op(p):
-    """
-    value : NOT value
-    """
-    p[0] = expressions.UnaryOperator(p[1], p[2])
-
-
 def p_unary_prefix(p):
     """
     value : UNARY_TILDE value
           | UNARY_PLUS value
-          | UNARY_NOT value
+          | UNARY_EXPL value
           | UNARY_MINUS value
+          | NOT value
     """
     p[0] = expressions.UnaryOperator(p[1], p[2])
 
@@ -197,7 +191,7 @@ precedence = (
     ('right', lexer.ops[(3, 'r')]),
     ('left', lexer.ops[(4, 'l')]),
     ('right', lexer.ops[(4, 'r')]),
-    ('left', lexer.ops[(5, 'l', )], 'NOT', 'UNARY_NOT'),
+    ('left', lexer.ops[(5, 'l', )], 'NOT', 'UNARY_EXPL'),
     ('right', lexer.ops[(5, 'r')]),
     ('left', lexer.ops[(6, 'l')], 'UNARY_PLUS', 'UNARY_MINUS'),
     ('right', lexer.ops[(6, 'r')]),
