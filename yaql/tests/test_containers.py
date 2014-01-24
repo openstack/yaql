@@ -74,3 +74,19 @@ class TestCollections(YaqlTest):
         expression = "$.services.'com.mirantis.murano.yaql.name'"
         self.assertEquals(['Service1', 'Service2', 'Service3', 'Service4'],
                           self.eval(expression, data))
+
+    def test_join(self):
+        data = yaql.tests.testdata.data
+        expression = "$.services.join($.users, " \
+                     "$1.'com.mirantis.murano.yaql.owner'=$2.id, " \
+                     "dict(service_name=>$1.'com.mirantis.murano.yaql.name', " \
+                     "user_name=>$2.email))"
+        value = self.eval(expression, data=data)
+        self.assertEqual('Service1', value[0]['service_name'])
+        self.assertEqual('Service2', value[1]['service_name'])
+        self.assertEqual('Service3', value[2]['service_name'])
+        self.assertEqual('Service4', value[3]['service_name'])
+        self.assertEqual('user1@example.com', value[0]['user_name'])
+        self.assertEqual('user1@example.com', value[1]['user_name'])
+        self.assertEqual('user2@example.com', value[2]['user_name'])
+        self.assertEqual('user3@example.com', value[3]['user_name'])

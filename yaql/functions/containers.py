@@ -93,6 +93,19 @@ def build_dict(*tuples):
         raise YaqlExecutionException("Not a valid dictionary", e)
 
 
+@parameter('self', arg_type=collections.Iterable,
+           custom_validator=lambda v: not isinstance(v, types.DictionaryType))
+@parameter('others', arg_type=collections.Iterable,
+           custom_validator=lambda v: not isinstance(v, types.DictionaryType))
+@parameter('join_predicate', lazy=True, function_only=True)
+@parameter('composer', lazy=True, function_only=True)
+def join(self, others, join_predicate, composer):
+    for self_item in self:
+        for other_item in others:
+            if join_predicate(self_item, other_item):
+                yield composer(self_item, other_item)
+
+
 def add_to_context(context):
     context.register_function(get_by_index, 'where')
     context.register_function(filter_by_predicate, 'where')
@@ -102,3 +115,4 @@ def add_to_context(context):
     context.register_function(collection_attribution, 'operator_.')
     context.register_function(build_new_tuple, 'operator_=>')
     context.register_function(append_tuple, 'operator_=>')
+    context.register_function(join)
