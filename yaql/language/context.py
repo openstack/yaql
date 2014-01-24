@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import types
 
 import yaql.language
 
@@ -41,6 +42,8 @@ class Context():
     def register_function(self, function, name=None):
         func_def = yaql.language.engine.yaql_function(function)
         func_def.build()
+        if isinstance(function, types.MethodType):
+            func_def.restrict_to_class(function.im_class)
         num_params = func_def.get_num_params()
         if not name:
             name = func_def.function.func_name
@@ -66,8 +69,6 @@ class Context():
         return result
 
     def set_data(self, data, path='$'):
-        if not path.startswith('$'):
-            path = '$' + path
         self.data[path] = data
         if path == '$':
             self.data['$1'] = data
