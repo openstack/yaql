@@ -60,8 +60,7 @@ class Function(Expression):
             self.yaql_context = context
 
         def __call__(self, *context_args, **context_kwargs):
-            sender = context_kwargs.get('sender')
-
+            sender = context_kwargs.pop('sender', None)
             if context_args:  # passed args have to be placed in the context
                 self.yaql_context.set_data(context_args[0])
                 for i, param in enumerate(context_args):
