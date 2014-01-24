@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 from yaql.language.engine import parameter
+from yaql.language.exceptions import YaqlExecutionException
 
 
 def _is_a_number(value):
@@ -75,6 +76,20 @@ def not_equals(a, b):
     return a != b
 
 
+def to_int(value):
+    try:
+        return int(value)
+    except Exception as e:
+        raise YaqlExecutionException("Unable to convert to integer", e)
+
+
+def to_float(value):
+    try:
+        return float(value)
+    except Exception as e:
+        raise YaqlExecutionException("Unable to convert to float", e)
+
+
 def add_to_context(context):
     # prefix unary
     context.register_function(unary_minus, 'unary_-')
@@ -93,3 +108,7 @@ def add_to_context(context):
     context.register_function(less_or_equals, 'operator_<=')
     context.register_function(equals, 'operator_=')
     context.register_function(not_equals, 'operator_!=')
+
+    #conversion
+    context.register_function(to_int, 'int')
+    context.register_function(to_float, 'float')
