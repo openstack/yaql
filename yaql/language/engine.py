@@ -13,6 +13,7 @@
 #    under the License.
 import inspect
 import types
+import sys
 
 from yaql.language.exceptions import *
 import yaql.language.context
@@ -22,6 +23,8 @@ import yaql.language.expressions
 
 def yaql_function(function):
     if not hasattr(function, "__yaql__"):
+        if isinstance(function, types.MethodType):
+            function = function.im_func
         function.__yaql__ = YaqlFunctionDefinition(function)
     return function.__yaql__
 
@@ -36,6 +39,7 @@ class YaqlFunctionDefinition(object):
         self.param_definitions = {}
         self._arg_spec = inspect.getargspec(function)
         self._inverse_context = False
+        self.class_restriction = None
         if self._arg_spec.keywords:
             raise YaqlException("Keyword parameters are not supported")
 
@@ -65,7 +69,6 @@ class YaqlFunctionDefinition(object):
             self.self_param_name = param.name
             if param.lazy:
                 raise YaqlException("Self parameter cannot be lazy")
-
 
     def get_num_params(self):
         if self._arg_spec.varargs or self._arg_spec.keywords:
@@ -97,6 +100,12 @@ class YaqlFunctionDefinition(object):
             raise YaqlExecutionException(
                 "The function cannot be run as a method")
 
+        if sender and self.class_restriction \
+                and not isinstance(sender, self.class_restriction):
+            raise YaqlExecutionException(
+                "{0} is not an instance of {1}".format(sender,
+                                                       self.class_restriction))
+
         num_args = len(args) + 1 if sender else len(args)
 
         if 0 <= self.get_num_params() != num_args:
@@ -125,9 +134,11 @@ class YaqlFunctionDefinition(object):
                         arg.create_callable(context_to_pass))
                     prepared_list.append(value)
                     if self._inverse_context:
-                        context_to_pass = yaql.language.context.Context(base_context)
+                        context_to_pass = yaql.language.context.Context(
+                            base_context)
                     else:
-                        context_to_pass = yaql.language.context.Context(context)
+                        context_to_pass = yaql.language.context.Context(
+                            context)
 
         else:
             for arg in args:
@@ -136,7 +147,8 @@ class YaqlFunctionDefinition(object):
                 base_context = c.yaql_context
                 prepared_list.append(val)
                 if self._inverse_context:
-                    context_to_pass = yaql.language.context.Context(base_context)
+                    context_to_pass = yaql.language.context.Context(
+                        base_context)
                 else:
                     context_to_pass = yaql.language.context.Context(context)
 
@@ -146,6 +158,9 @@ class YaqlFunctionDefinition(object):
             final_context = context
 
         return self.function(*prepared_list), final_context
+
+    def restrict_to_class(self, class_type):
+        self.class_restriction = class_type
 
 
 class ParameterDefinition(object):
@@ -170,19 +185,22 @@ class ParameterDefinition(object):
 
     def validate(self, value):
         if self.constant_only:
-            if not isinstance(value, yaql.language.expressions.Constant.Callable):
+            if not isinstance(value,
+                              yaql.language.expressions.Constant.Callable):
                 raise YaqlExecutionException(
                     "Parameter {0} has to be a constant".format(self.name))
         if self.function_only:
-            if not isinstance(value, yaql.language.expressions.Function.Callable):
+            if not isinstance(value,
+                              yaql.language.expressions.Function.Callable):
                 raise YaqlExecutionException(
                     "Parameter {0} has to be a function".format(self.name))
         if not self.lazy:
             try:
                 res = value()
-            except:
+            except Exception as e:
                 raise YaqlExecutionException(
-                    "Unable to evaluate parameter {0}".format(self.name))
+                    "Unable to evaluate parameter {0}".format(self.name),
+                    sys.exc_info())
         else:
             res = value
 
