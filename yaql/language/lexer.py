@@ -34,7 +34,7 @@ unary_prefix = {
     '-': "UNARY_MINUS",
     '+': "UNARY_PLUS",
     '~': "UNARY_TILDE",
-    '!': "UNARY_NOT"
+    '!': "UNARY_EXPL"
 }
 
 op_to_level = {
@@ -84,17 +84,13 @@ tokens = [
     'NUMBER',
     'FUNC',
     'FILTER',
-    # 'TUPLE',
     'NOT',
     'DOLLAR'
 ] + list(keywords.values())+list(ops.values()) + list(unary_prefix.values())
 
 literals = "()],"
 
-t_ignore = ' \t'
-
-
-# t_TUPLE = '=>'
+t_ignore = ' \t\r\n'
 
 
 def t_DOLLAR(t):
@@ -117,9 +113,10 @@ def t_NUMBER(t):
 
 def t_FUNC(t):
     """
-    \\b\\w+\\(
+    \\b\\w+\\(|'(?:[^'\\\\]|\\\\.)*'\\(
     """
-    t.value = t.value[:-1]
+    val = t.value[:-1].replace('\\', '').strip('\'')
+    t.value = val
     return t
 
 
@@ -167,9 +164,6 @@ def t_CHAR_ORB(t):
 
 
 def get_orb_op_type(first_char, last_char):
-
-
-
     if first_char.isalpha() or first_char == '_':
         level = op_to_level['abc']
     else:
@@ -178,9 +172,7 @@ def get_orb_op_type(first_char, last_char):
     return ops.get((level, asc))
 
 
-
 def t_error(t):
     raise YaqlLexicalException(t.value[0], t.lexpos)
-
 
 lexer = lex.lex()
