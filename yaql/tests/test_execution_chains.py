@@ -11,11 +11,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import types
 import unittest
 
-from yaql.language.exceptions import YaqlException
+from yaql.language.exceptions import YaqlException, YaqlExecutionException
 from yaql.tests import YaqlTest
-from yaql.language.engine import context_aware
+from yaql.language.engine import context_aware, parameter
 
 
 def f4(self):
@@ -48,6 +49,10 @@ def override_with_caps(self, context):
 
 def _print(self):
     return "data is: %s" % self
+
+@parameter('self', arg_type=types.StringType)
+def print_string(self):
+    return "print %s" % self
 
 
 class TestExecutionChain(YaqlTest):
@@ -89,6 +94,15 @@ class TestExecutionChain(YaqlTest):
         expression = "abc.caps_on().print() + ', but ' + abc.print()"
         self.assertEquals("data is: ABC, but data is: abc",
                           self.eval(expression))
+
+    def test_self_validation(self):
+        good_expression = "abc.print_string()"
+        wrong_expression = "123.print_string()"
+        self.context.register_function(print_string)
+        self.assertEval("print abc", good_expression)  # self is valid string
+        self.assertRaises(YaqlExecutionException, self.eval, wrong_expression)
+
+
 
 
 if __name__ == '__main__':

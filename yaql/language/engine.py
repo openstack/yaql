@@ -39,12 +39,12 @@ class YaqlFunctionDefinition(object):
         self.param_definitions = {}
         self._arg_spec = inspect.getargspec(function)
         self._inverse_context = False
-        self.class_restriction = None
         if self._arg_spec.keywords:
             raise YaqlException("Keyword parameters are not supported")
 
     def register_param_constraint(self, param):
-        if param.name not in self._arg_spec.args:
+        if param.name not in self._arg_spec.args \
+            and self._arg_spec.varargs != param.name:
             raise NoParameterFoundException(
                 function_name=self.function.func_name,
                 param_name=param.name)
@@ -63,8 +63,9 @@ class YaqlFunctionDefinition(object):
             self.is_context_aware = True
             self.context_param_name = param.name
         if param.is_self is None:
-            param.is_self = self._arg_spec.args.index(
-                param.name) == 0 and param.name == 'self'
+            if param.name in self._arg_spec.args:
+                param.is_self = self._arg_spec.args.index(
+                    param.name) == 0 and param.name == 'self'
         if param.is_self:
             self.self_param_name = param.name
             if param.lazy:
@@ -88,6 +89,10 @@ class YaqlFunctionDefinition(object):
         for arg_name in self._arg_spec.args:
             if arg_name not in self.param_definitions:
                 self.register_param_constraint(ParameterDefinition(arg_name))
+        if self._arg_spec.varargs and\
+                self._arg_spec.varargs not in self.param_definitions:
+            self.register_param_constraint(
+                ParameterDefinition(self._arg_spec.varargs))
 
     def inverse_context(self):
         self._inverse_context = True
@@ -99,12 +104,6 @@ class YaqlFunctionDefinition(object):
         if sender and not self.self_param_name:
             raise YaqlExecutionException(
                 "The function cannot be run as a method")
-
-        if sender and self.class_restriction \
-                and not isinstance(sender, self.class_restriction):
-            raise YaqlExecutionException(
-                "{0} is not an instance of {1}".format(sender,
-                                                       self.class_restriction))
 
         num_args = len(args) + 1 if sender else len(args)
 
@@ -120,30 +119,33 @@ class YaqlFunctionDefinition(object):
         else:
             context_to_pass = yaql.language.context.Context(context)
 
-        if self.get_num_params() >= 0:
-            for arg_name in self._arg_spec.args:
-                definition = self.param_definitions[arg_name]
-                if sender and definition.is_self:
-                    prepared_list.append(sender)
-                elif definition.is_context:
-                    prepared_list.append(context)
+        for arg_name in self._arg_spec.args:
+            definition = self.param_definitions[arg_name]
+            if sender and definition.is_self:
+                definition.validate_value(sender)
+                prepared_list.append(sender)
+            elif definition.is_context:
+                prepared_list.append(context)
+            else:
+                arg = args[input_position]
+                input_position += 1
+                value, base_context = definition.validate(
+                    arg.create_callable(context_to_pass))
+                prepared_list.append(value)
+                if self._inverse_context:
+                    context_to_pass = yaql.language.context.Context(
+                        base_context)
                 else:
-                    arg = args[input_position]
-                    input_position += 1
-                    value, base_context = definition.validate(
-                        arg.create_callable(context_to_pass))
-                    prepared_list.append(value)
-                    if self._inverse_context:
-                        context_to_pass = yaql.language.context.Context(
-                            base_context)
-                    else:
-                        context_to_pass = yaql.language.context.Context(
-                            context)
+                    context_to_pass = yaql.language.context.Context(
+                        context)
 
-        else:
-            for arg in args:
+        if self._arg_spec.varargs:
+            while input_position < len(args):
+                definition = self.param_definitions[self._arg_spec.varargs]
+                arg = args[input_position]
+                input_position += 1
                 c = arg.create_callable(context_to_pass)
-                val = c()
+                val = definition.validate(c)[0]
                 base_context = c.yaql_context
                 prepared_list.append(val)
                 if self._inverse_context:
@@ -160,7 +162,10 @@ class YaqlFunctionDefinition(object):
         return self.function(*prepared_list), final_context
 
     def restrict_to_class(self, class_type):
-        self.class_restriction = class_type
+        if self.self_param_name:
+            definition = self.param_definitions.get(self.self_param_name)
+            if not definition.arg_type:
+                definition.arg_type = class_type
 
 
 class ParameterDefinition(object):
@@ -205,23 +210,26 @@ class ParameterDefinition(object):
             res = value
 
         context = value.yaql_context
+        self.validate_value(res)
+        return res, context
+
+    def validate_value(self, value):
         if self.arg_type:
             # we need a special handling for booleans, as
             # isinstance(boolean_value, integer_type)
             # will return true, which is not what we expect
-            if type(res) is types.BooleanType:
+            if type(value) is types.BooleanType:
                 if self.arg_type is not types.BooleanType:
                     raise YaqlExecutionException(
                         "Type of the parameter is not boolean")
-            elif not isinstance(res, self.arg_type):
+            elif not isinstance(value, self.arg_type):
                 raise YaqlExecutionException(
                     "Type of the parameter is not {0}".format(
                         str(self.arg_type)))
         if self.custom_validator:
-            if not self.custom_validator(res):
+            if not self.custom_validator(value):
                 raise YaqlExecutionException(
                     "Parameter didn't pass the custom validation")
-        return res, context
 
 
 def parameter(name,

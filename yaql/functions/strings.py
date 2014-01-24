@@ -25,6 +25,16 @@ def string_concatenation(a, b):
 def as_list(self):
     return list(self)
 
+
+def to_string(self):
+    return str(self)
+
+def _to_string_func(data):
+    return to_string(data)
+
+
 def add_to_context(context):
     context.register_function(string_concatenation, 'operator_+')
     context.register_function(as_list, 'asList')
+    context.register_function(to_string)
+    context.register_function(_to_string_func, 'string')

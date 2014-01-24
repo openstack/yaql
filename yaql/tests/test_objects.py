@@ -14,6 +14,7 @@
 
 import unittest
 from yaql.language.engine import parameter
+from yaql.language.exceptions import YaqlExecutionException
 from yaql.tests import YaqlTest
 
 
@@ -55,6 +56,12 @@ class TestObjects(YaqlTest):
         data = Foobar("foobar")
         self.assertEquals('foobar: abc', self.eval(expression, data))
 
+    def test_calling_decorated_class_methods_for_invalid_objects(self):
+        self.context.register_function(Foobar.foo, 'foo')
+        expression = '$.foo(aBc)'
+        self.assertRaises(YaqlExecutionException, self.eval, expression, "str")
+        self.assertRaises(YaqlExecutionException, self.eval, expression,
+                          object())
 
 if __name__ == '__main__':
     unittest.main()
