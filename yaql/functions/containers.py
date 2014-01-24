@@ -20,6 +20,12 @@ from yaql.language.engine import parameter
 from yaql.language.utils import limit
 
 
+def collection_parameter(name):
+    return parameter(name, arg_type=collections.Iterable,
+                     custom_validator=
+                     lambda v: not isinstance(v, types.StringTypes))
+
+
 @parameter("index", arg_type=types.IntType)
 def get_by_index(data, index):
     if isinstance(data, types.GeneratorType):
@@ -27,8 +33,7 @@ def get_by_index(data, index):
     return data[index]
 
 
-@parameter("self", arg_type=collections.Iterable,
-           custom_validator=lambda v: not isinstance(v, types.StringTypes))
+@collection_parameter('self')
 @parameter("predicate", function_only=True, lazy=True)
 def filter_by_predicate(self, predicate):
     for item in self:
@@ -48,14 +53,12 @@ def build_list(*args):
     return res
 
 
-@parameter("b", arg_type=collections.Iterable,
-           custom_validator=lambda v: not isinstance(v, types.StringTypes))
+@collection_parameter('b')
 def is_in(a, b):
     return a in b
 
 
-@parameter('self', arg_type=collections.Iterable,
-           custom_validator=lambda v: not isinstance(v, types.DictionaryType))
+@collection_parameter('self')
 @parameter('att_name', constant_only=True)
 def collection_attribution(self, att_name):
     def get_att_or_key(col_item):
@@ -93,10 +96,8 @@ def build_dict(*tuples):
         raise YaqlExecutionException("Not a valid dictionary", e)
 
 
-@parameter('self', arg_type=collections.Iterable,
-           custom_validator=lambda v: not isinstance(v, types.DictionaryType))
-@parameter('others', arg_type=collections.Iterable,
-           custom_validator=lambda v: not isinstance(v, types.DictionaryType))
+@collection_parameter('self')
+@collection_parameter('others')
 @parameter('join_predicate', lazy=True, function_only=True)
 @parameter('composer', lazy=True, function_only=True)
 def join(self, others, join_predicate, composer):
