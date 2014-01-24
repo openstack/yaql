@@ -136,6 +136,20 @@ class TestSystem(YaqlTest):
         self.context.register_function(foo, 'test')
         self.assertEquals(42, self.eval("test()"))
 
+    def test_composite_function_call_1(self):
+        def foo():
+            return 42
+
+        self.context.register_function(foo, 'long.namespace.based.name')
+        self.assertEval(42, "'long.namespace.based.name'()")
+
+    def test_composite_function_call_2(self):
+        def foo():
+            return 42
+
+        self.context.register_function(foo, 'some spaced name\'s')
+        self.assertEval(42, "'some spaced name\\'s'()")
+
     def test_return_same_function(self):
         def foo(bar):
             return bar
