@@ -18,6 +18,9 @@ from yaql.language import parser, context
 __versioninfo__ = (0, 3, 0)
 __version__ = '.'.join(map(str, __versioninfo__))
 
+__versioninfo__ = (0, 2, 1)
+__version__ = '.'.join(map(str, __versioninfo__))
+
 
 def parse(expression):
     return parser.parse(expression)
