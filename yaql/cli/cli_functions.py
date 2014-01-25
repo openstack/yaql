@@ -16,12 +16,15 @@ import json
 import os
 import re
 import types
+import readline
+
 from json import JSONDecoder
+import yaql
 
 from yaql.language.context import Context
 from yaql.language.exceptions import YaqlParsingException
 
-import yaql
+from yaql import __version__ as version
 from yaql.language import lexer
 from yaql.language.engine import context_aware
 from yaql.language.utils import limit
