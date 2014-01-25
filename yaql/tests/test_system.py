@@ -182,7 +182,6 @@ class TestSystem(YaqlTest):
         self.assertEquals(10, self.eval(expression))
 
     def test_as(self):
-
         @parameter('f', lazy=True)
         def foo(self, f):
             return (self, f())
@@ -191,6 +190,12 @@ class TestSystem(YaqlTest):
         expression = "(random()).as($*10=>random_by_ten).foo($random_by_ten)"
         v = self.eval(expression)
         self.assertTrue(v[1] == v[0] * 10)
+
+    def test_switch(self):
+        expression = "$.switch(($>5)=>$, ($>2)=>('_'+string($)), true=>0)"
+        self.assertEval(10, expression, 10)
+        self.assertEval("_4", expression, 4)
+        self.assertEval(0, expression, 1)
 
 
 if __name__ == '__main__':

@@ -156,6 +156,13 @@ def _list(self):
     return limit(self)
 
 
+@collection_parameter('self')
+@parameter('function', lazy=True, function_only=True)
+def for_each(self, function):
+    for item in self:
+        yield function(sender=item)
+
+
 def add_to_context(context):
     context.register_function(get_by_index, 'where')
     context.register_function(filter_by_predicate, 'where')
@@ -172,3 +179,5 @@ def add_to_context(context):
     context.register_function(_range_infinite, 'range')
     context.register_function(take_while)
     context.register_function(_list, 'list')
+    context.register_function(for_each)
+

@@ -65,11 +65,26 @@ def _as(self, context, *tuple_preds):
         context.set_data(val, key_name)
     return self
 
+
+@parameter('conditions', lazy=True)
+def switch(self, *conditions):
+    for cond in conditions:
+        res = cond(self)
+        if not isinstance(res, types.TupleType):
+            raise YaqlExecutionException("Switch must have tuple parameters")
+        if len(res) != 2:
+            raise YaqlExecutionException("Switch tuples must be of size 2")
+        if res[0]:
+            return res[1]
+    return None
+
+
 def add_to_context(context):
     context.register_function(get_context_data)
     context.register_function(obj_attribution, 'operator_.')
     context.register_function(dict_attribution, 'operator_.')
     context.register_function(method_call, 'operator_.')
     context.register_function(_as, 'as')
+    context.register_function(switch)
 
     context.register_function(lambda val: val, 'wrap')

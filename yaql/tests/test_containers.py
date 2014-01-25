@@ -136,3 +136,9 @@ class TestCollections(YaqlTest):
         v3 = yaql.parse('range(0).list()')
         self.assertRaises(YaqlSequenceException, v3.evaluate)
 
+    def test_select_for_each(self):
+        data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        expression = "$.for_each(switch(($>5)=>$, " \
+                     "($>2)=>('_'+string($)), true=>0))"
+        self.assertEval([0, 0, "_3", "_4", "_5", 6, 7, 8, 9, 10], expression,
+                        data)
