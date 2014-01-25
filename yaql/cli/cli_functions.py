@@ -18,20 +18,19 @@ import re
 import types
 from json import JSONDecoder
 
-from yaql.context import Context
-from yaql.exceptions import YaqlParsingException
+from yaql.language.context import Context
+from yaql.language.exceptions import YaqlParsingException
 
 import yaql
-from yaql.functions.old.decorators import arg, ContextAware
 from yaql.language import lexer
+from yaql.language.engine import context_aware
 from yaql.language.utils import limit
 
 
 PROMPT = "yaql> "
 
 
-@ContextAware()
-@arg('show_tokens')
+@context_aware
 def main(context, show_tokens):
     print "Yet Another Query Language - command-line query tool"
     print "Copyright (c) 2013 Mirantis, Inc"
@@ -49,22 +48,22 @@ def main(context, show_tokens):
         if not comm:
             continue
         if comm[0] == '@':
-            funcName, args = parse_service_command(comm)
-            if funcName not in SERVICE_FUNCTIONS:
-                print "Unknown command " + funcName
+            func_name, args = parse_service_command(comm)
+            if func_name not in SERVICE_FUNCTIONS:
+                print "Unknown command " + func_name
             else:
-                SERVICE_FUNCTIONS[funcName](args, context)
+                SERVICE_FUNCTIONS[func_name](args, context)
             continue
         try:
             if show_tokens:
-                lexer.input(comm)
+                lexer.lexer.input(comm)
                 tokens = []
                 while True:
-                    tok = lexer.token()
+                    tok = lexer.lexer.token()
                     if not tok:
                         break
                     tokens.append(tok)
-                print "Tokens: "+str(tokens)
+                print "Tokens: " + str(tokens)
             expr = yaql.parse(comm)
         except YaqlParsingException as ex:
             if ex.position:
@@ -103,7 +102,7 @@ def load_data(data_file, context):
 
 
 def regexp(self, pattern):
-    match =  re.match(pattern(), self())
+    match = re.match(pattern(), self())
     if match:
         return match.groups()
     else:
