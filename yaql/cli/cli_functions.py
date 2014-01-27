@@ -37,7 +37,7 @@ PROMPT = "yaql> "
 def main(context, show_tokens):
     print "Yet Another Query Language - command-line query tool"
     print "Version {0}".format(version)
-    print "Copyright (c) 2013 Mirantis, Inc"
+    print "Copyright (c) 2014 Mirantis, Inc"
     print
     if not context.get_data():
         print "No data loaded into context "

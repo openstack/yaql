@@ -19,7 +19,7 @@ setup(name='yaql',
       description="Yet Another Query Language",
       author='Mirantis, Inc.',
       author_email='info@mirantis.com',
-      url='http://mirantis.com',
+      url='https://github.com/ativelkov/yaql',
       install_requires=['ply'],
       entry_points={
           'console_scripts': [
