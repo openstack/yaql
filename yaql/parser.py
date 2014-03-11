@@ -51,7 +51,7 @@ def p_value_to_symbol(p):
     name = symbol_parts[1]
     expanding = expressions.UnaryOperator(':', expressions.Constant(sns))
 
-    p[0] = expressions.Function('validate', None, expanding,
+    p[0] = expressions.Function('#validate', None, expanding,
                                 expressions.Constant(name))
 
 

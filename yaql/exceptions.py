@@ -29,7 +29,8 @@ class NoFunctionRegisteredException(YaqlException):
 
 
 class YaqlExecutionException(YaqlException):
-    pass
+    def __init__(self, message=''):
+        super(YaqlExecutionException, self).__init__(message)
 
 
 class NoArgumentFound(YaqlException):

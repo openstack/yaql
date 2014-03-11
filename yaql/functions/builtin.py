@@ -195,35 +195,35 @@ def to_bool(value):
 def add_to_context(context):
     # basic language operations:
     # retrieving data from context, attribution and wrapping in parenthesis
-    context.register_function(get_context_data, 'get_context_data')
-    context.register_function(collection_attribution, 'operator_.')
-    context.register_function(dict_attribution, 'operator_.')
-    context.register_function(obj_attribution, 'operator_.')
-    context.register_function(wrap, 'wrap')
+    context.register_function(get_context_data, '#get_context_data')
+    context.register_function(collection_attribution, '#operator_.')
+    context.register_function(dict_attribution, '#operator_.')
+    context.register_function(obj_attribution, '#operator_.')
+    context.register_function(wrap, '#wrap')
 
     # collection filtering
     context.register_function(get_by_index, "where")
     context.register_function(filter_by_predicate, "where")
 
     # comparison operations
-    context.register_function(greater_then, 'operator_>')
-    context.register_function(less_then, 'operator_<')
-    context.register_function(greater_or_equals, 'operator_>=')
-    context.register_function(less_or_equals, 'operator_<=')
-    context.register_function(equals, 'operator_=')
-    context.register_function(not_equals, 'operator_!=')
-    context.register_function(is_in, 'operator_in')
+    context.register_function(greater_then, '#operator_>')
+    context.register_function(less_then, '#operator_<')
+    context.register_function(greater_or_equals, '#operator_>=')
+    context.register_function(less_or_equals, '#operator_<=')
+    context.register_function(equals, '#operator_=')
+    context.register_function(not_equals, '#operator_!=')
+    context.register_function(is_in, '#operator_in')
 
     # arithmetic actions
-    context.register_function(plus, 'operator_+')
-    context.register_function(minus, 'operator_-')
-    context.register_function(multiply, 'operator_*')
-    context.register_function(divide, 'operator_/')
+    context.register_function(plus, '#operator_+')
+    context.register_function(minus, '#operator_-')
+    context.register_function(multiply, '#operator_*')
+    context.register_function(divide, '#operator_/')
 
     # Boolean operations
-    context.register_function(_and, 'operator_and')
-    context.register_function(_or, 'operator_or')
-    context.register_function(_not, 'operator_not')
+    context.register_function(_and, '#operator_and')
+    context.register_function(_or, '#operator_or')
+    context.register_function(_not, '#operator_not')
 
     #data structure creations
     context.register_function(build_list, 'list')
@@ -231,8 +231,8 @@ def add_to_context(context):
     context.register_function(build_tuple, 'tuple')
 
     #stubs for namespace resolving
-    context.register_function(lambda a, b: a() + "." + b(), 'validate')
-    context.register_function(lambda a: a(), 'operator_:')
+    context.register_function(lambda a, b: a() + "." + b(), '#validate')
+    context.register_function(lambda a: a(), '#operator_:')
 
     #type conversions
     context.register_function(to_bool, 'bool')
