@@ -204,6 +204,7 @@ def add_to_context(context):
     # collection filtering
     context.register_function(get_by_index, "where")
     context.register_function(filter_by_predicate, "where")
+    context.register_function(dict_attribution, "get")
 
     # comparison operations
     context.register_function(greater_then, '#operator_>')
