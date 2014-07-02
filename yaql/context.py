@@ -68,12 +68,25 @@ class Context():
         if path == '$':
             self.data['$1'] = data
 
-
-    def get_data(self, path='$'):
+    def get_data(self, path='$', default=None):
+        if not path.startswith('$'):
+            path = '$' + path
         if path in self.data:
             return self.data[path]
         if self.parent_context:
-            return self.parent_context.get_data(path)
+            return self.parent_context.get_data(path, default)
+        else:
+            return default
+
+    def __contains__(self, item):
+        if not item.startswith('$'):
+            item = '$' + item
+        if item in self.data:
+            return True
+        elif self.parent_context:
+            return item in self.parent_context
+        else:
+            return False
 
 
 class EvalArg(object):
