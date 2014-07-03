@@ -92,7 +92,10 @@ def append_tuple(arg1, arg2):
 
 def build_dict(*tuples):
     try:
-        return {key: value for key, value in tuples}
+        d = {}
+        for key, value in tuples:
+            d[key] = value
+        return d
     except ValueError as e:
         raise YaqlExecutionException("Not a valid dictionary", e)
 
