@@ -21,6 +21,7 @@ from yaql.language.engine import parameter
 def string_concatenation(a, b):
     return a + b
 
+
 @parameter('self', arg_type=types.StringTypes, is_self=True)
 def as_list(self):
     return list(self)
@@ -28,6 +29,7 @@ def as_list(self):
 
 def to_string(self):
     return str(self)
+
 
 def _to_string_func(data):
     return to_string(data)

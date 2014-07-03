@@ -54,6 +54,7 @@ def dict_attribution(self, att_name):
 def method_call(self, method):
     return method(sender=self)
 
+
 @context_aware
 @parameter('tuple_preds', lazy=True)
 def _as(self, context, *tuple_preds):

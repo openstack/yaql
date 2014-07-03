@@ -151,6 +151,7 @@ def take_while(self, predicate):
         else:
             return
 
+
 @parameter('self', arg_type=types.GeneratorType)
 def _list(self):
     return limit(self)
@@ -180,4 +181,3 @@ def add_to_context(context):
     context.register_function(take_while)
     context.register_function(_list, 'list')
     context.register_function(for_each)
-

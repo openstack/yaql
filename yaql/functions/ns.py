@@ -59,6 +59,7 @@ def resolve_prop(alias, symbol, context):
     namespace.validate(symbol)
     return namespace.name + '.' + symbol
 
+
 @context_aware
 @parameter('symbol', function_only=True, lazy=True)
 def resolve_function(self, alias, symbol, context):

@@ -39,19 +39,19 @@ unary_prefix = {
 
 op_to_level = {
     'abc': 0,
-    '|' : 1,
-    '^' : 2,
-    '&' : 3,
-    '<' : 4,
-    '>' : 4,
-    '=' : 5,
-    '!' : 5,
-    '+' : 6,
-    '-' : 6,
-    '*' : 7,
-    '/' : 7,
-    '%' : 7,
-    '.' : 8
+    '|': 1,
+    '^': 2,
+    '&': 3,
+    '<': 4,
+    '>': 4,
+    '=': 5,
+    '!': 5,
+    '+': 6,
+    '-': 6,
+    '*': 7,
+    '/': 7,
+    '%': 7,
+    '.': 8
 }
 
 ops = {
@@ -86,7 +86,7 @@ tokens = [
     'FILTER',
     'NOT',
     'DOLLAR'
-] + list(keywords.values())+list(ops.values()) + list(unary_prefix.values())
+] + list(keywords.values()) + list(ops.values()) + list(unary_prefix.values())
 
 literals = "()],"
 
@@ -162,12 +162,11 @@ def t_CHAR_ORB(t):
     return t
 
 
-
 def get_orb_op_type(first_char, last_char):
     if first_char.isalpha() or first_char == '_':
         level = op_to_level['abc']
     else:
-        level = op_to_level.get(first_char, max(op_to_level.values())+1)
+        level = op_to_level.get(first_char, max(op_to_level.values()) + 1)
     asc = 'r' if last_char in right_associative else 'l'
     return ops.get((level, asc))
 

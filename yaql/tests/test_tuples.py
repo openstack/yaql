@@ -54,6 +54,5 @@ class TestTuples(YaqlTest):
         self.assertEquals((5, 'a'), self.eval(expression2))
 
 
-
 if __name__ == '__main__':
     unittest.main()

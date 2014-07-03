@@ -140,7 +140,6 @@ def p_binary(p):
     p[0] = expressions.BinaryOperator(p[2], p[1], p[3])
 
 
-
 def p_unary_prefix(p):
     """
     value : UNARY_TILDE value
