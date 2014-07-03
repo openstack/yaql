@@ -1,5 +1,5 @@
 YAQL - Yet Another Query Language
-====
+=================================
 
 At the beginning of millennium the growing trend towards data formats standardization and application integrability made
 XML extremely popular. XML became lingua franca of the data. Applications tended to process lots of XML files ranging
