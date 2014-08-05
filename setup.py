@@ -15,7 +15,7 @@
 from setuptools import setup, find_packages
 
 setup(name='yaql',
-      version='0.2.3',
+      version='0.2.4',
       description="Yet Another Query Language",
       author='Mirantis, Inc.',
       author_email='info@mirantis.com',

@@ -16,12 +16,14 @@ import parser
 import context
 from yaql.functions import builtin, extended
 
-__versioninfo__ = (0, 2, 3)
+__versioninfo__ = (0, 2, 4)
 __version__ = '.'.join(map(str, __versioninfo__))
+__grammar_version__ = '1.0'
 
 
-def parse(expression):
-    return parser.parse(expression)
+def parse(expression, write_tables=False):
+    tabmodule = 'yaql_parser_t_v%s' % __grammar_version__
+    return parser.parse(expression, write_tables, tabmodule)
 
 
 def create_context(include_extended_functions=True):

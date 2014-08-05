@@ -13,11 +13,14 @@
 #    under the License.
 
 import types
+import tempfile
+import uuid
+
 import ply.yacc as yacc
+
 import expressions
 import exceptions
 import lexer
-import tempfile
 
 
 tokens = lexer.tokens
@@ -207,8 +210,16 @@ precedence = (
     ('left', 'SYMBOL')
 )
 
-parser = yacc.yacc(debug=False, outputdir=tempfile.gettempdir(), tabmodule='parser_table')
+parser = None
 
 
-def parse(expression):
+def parse(expression, write_tables=False, tabmodule=None):
+    global parser
+    if parser is None:
+        parser = yacc.yacc(
+            debug=False,
+            outputdir=tempfile.gettempdir(),
+            write_tables=(1 if not write_tables else 0),
+            tabmodule=tabmodule or 'yaql_%s' % uuid.uuid4().hex
+        )
     return parser.parse(expression)

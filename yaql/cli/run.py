@@ -23,6 +23,7 @@ from yaql.cli import cli_functions
 def main():
     p = optparse.OptionParser()
     p.add_option('--data', '-d')
+    p.add_option('--no-parser-table', '-t')
     options, arguments = p.parse_args()
     if options.data:
         try:
@@ -35,9 +36,10 @@ def main():
     else:
         data = None
 
+    write_tables = True if options.no_parser_table else False
     context = yaql.create_context()
     cli_functions.register_in_context(context)
-    yaql.parse('__main()').evaluate(data, context)
+    yaql.parse('__main()', write_tables=write_tables).evaluate(data, context)
 
 
 if __name__ == "__main__":
