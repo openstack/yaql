@@ -1,4 +1,4 @@
-#    Copyright (c) 2014 Mirantis, Inc.
+# Copyright (c) 2014 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -43,6 +43,12 @@ class TestBooleans(YaqlTest):
     def test_bool_precedence(self):
         self.assertEval(True, 'true and not false')
         self.assertEval(True, 'not true or not false')
+
+    @unittest.skip(
+        "Custom precedence for 'or' and 'and' operators is not defined")
+    def test_incorrect_boolean_precedence(self):
+        self.assertEval(True, "false or true or (true and false)")  # works
+        self.assertEval(True, "false or true or true and false")  # breaks
 
     def test_boolean_conversion(self):
         self.assertNotEquals(types.BooleanType, type(self.eval('abcd')))
