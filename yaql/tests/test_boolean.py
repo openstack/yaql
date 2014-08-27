@@ -47,8 +47,8 @@ class TestBooleans(YaqlTest):
     @unittest.skip(
         "Custom precedence for 'or' and 'and' operators is not defined")
     def test_incorrect_boolean_precedence(self):
-        self.assertEval(True, "false or true or (true and false)")  # works
-        self.assertEval(True, "false or true or true and false")  # breaks
+        self.assertEval(True, "true or (true and false)")  # works
+        self.assertEval(True, "true or true and false")  # breaks
 
     def test_boolean_conversion(self):
         self.assertNotEquals(types.BooleanType, type(self.eval('abcd')))
