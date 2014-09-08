@@ -50,6 +50,7 @@ def override_with_caps(self, context):
 def _print(self):
     return "data is: %s" % self
 
+
 @parameter('self', arg_type=types.StringType)
 def print_string(self):
     return "print %s" % self
@@ -62,7 +63,6 @@ class TestExecutionChain(YaqlTest):
         self.context.register_function(f1, 'f1')
         self.context.register_function(_print, 'print')
         self.context.register_function(override_with_caps, 'caps_on')
-
 
     def test_chain1(self):
         expression = 'f1(abc).f2().f3()'
@@ -101,8 +101,6 @@ class TestExecutionChain(YaqlTest):
         self.context.register_function(print_string)
         self.assertEval("print abc", good_expression)  # self is valid string
         self.assertRaises(YaqlExecutionException, self.eval, wrong_expression)
-
-
 
 
 if __name__ == '__main__':

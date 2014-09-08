@@ -21,10 +21,12 @@ from yaql.language.exceptions import YaqlExecutionException
 def _and(a, b):
     return a and b
 
+
 @parameter('a', arg_type=types.BooleanType)
 @parameter('b', arg_type=types.BooleanType)
 def _or(a, b):
     return a or b
+
 
 @parameter('data', arg_type=types.BooleanType)
 def _not(data):

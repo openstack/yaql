@@ -19,6 +19,7 @@ from yaql.language.exceptions import YaqlExecutionException
 def _is_a_number(value):
     return isinstance(value, (int, long, float, complex))
 
+
 @parameter('value', custom_validator=_is_a_number)
 def unary_minus(value):
     return -1 * value
@@ -33,6 +34,7 @@ def unary_plus(value):
 @parameter('b', custom_validator=_is_a_number)
 def plus(a, b):
     return a + b
+
 
 @parameter('a', custom_validator=_is_a_number)
 @parameter('b', custom_validator=_is_a_number)

@@ -92,7 +92,10 @@ def append_tuple(arg1, arg2):
 
 def build_dict(*tuples):
     try:
-        return {key: value for key, value in tuples}
+        d = {}
+        for key, value in tuples:
+            d[key] = value
+        return d
     except ValueError as e:
         raise YaqlExecutionException("Not a valid dictionary", e)
 
@@ -151,6 +154,7 @@ def take_while(self, predicate):
         else:
             return
 
+
 @parameter('self', arg_type=types.GeneratorType)
 def _list(self):
     return limit(self)
@@ -180,4 +184,3 @@ def add_to_context(context):
     context.register_function(take_while)
     context.register_function(_list, 'list')
     context.register_function(for_each)
-
