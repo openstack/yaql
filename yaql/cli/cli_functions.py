@@ -35,14 +35,14 @@ PROMPT = "yaql> "
 
 @context_aware
 def main(context, show_tokens):
-    print "Yet Another Query Language - command-line query tool"
-    print "Version {0}".format(version)
-    print "Copyright (c) 2014 Mirantis, Inc"
-    print
+    print("Yet Another Query Language - command-line query tool")
+    print("Version {0}".format(version))
+    print("Copyright (c) 2014 Mirantis, Inc")
+    print("")
     if not context.get_data():
-        print "No data loaded into context "
-        print "Type '@load data-file.json' to load data"
-        print
+        print("No data loaded into context ")
+        print("Type '@load data-file.json' to load data")
+        print("")
 
     readline.parse_and_bind('')
 
@@ -57,7 +57,7 @@ def main(context, show_tokens):
         if comm[0] == '@':
             func_name, args = parse_service_command(comm)
             if func_name not in SERVICE_FUNCTIONS:
-                print "Unknown command " + func_name
+                print("Unknown command " + func_name)
             else:
                 SERVICE_FUNCTIONS[func_name](args, context)
             continue
@@ -70,42 +70,42 @@ def main(context, show_tokens):
                     if not tok:
                         break
                     tokens.append(tok)
-                print "Tokens: " + str(tokens)
+                print("Tokens: " + str(tokens))
             expr = yaql.parse(comm)
         except YaqlParsingException as ex:
             if ex.position:
                 pointer_string = (" " * (ex.position + len(PROMPT))) + '^'
-                print pointer_string
-            print ex.message
+                print(pointer_string)
+            print(ex.message)
             continue
         try:
             res = expr.evaluate(context=Context(context))
             if isinstance(res, types.GeneratorType):
                 res = limit(res)
-            print json.dumps(res, indent=4)
+            print(json.dumps(res, indent=4))
         except Exception as ex:
-            print "Execution exception:"
+            print("Execution exception:")
             if hasattr(ex, 'message'):
-                print ex.message
+                print(ex.message)
             else:
-                print "Unknown"
+                print("Unknown")
 
 
 def load_data(data_file, context):
     try:
         json_str = open(os.path.expanduser(data_file)).read()
     except IOError as e:
-        print "Unable to read data file '{0}': {1}".format(data_file,
-                                                           e.strerror)
+        print("Unable to read data file '{0}': {1}".format(data_file,
+                                                           e.strerror))
         return
     try:
         decoder = JSONDecoder()
         data = decoder.decode(json_str)
     except Exception as e:
-        print "Unable to parse data: " + e.message
+        print("Unable to parse data: " + e.message)
         return
     context.set_data(data)
-    print "Data from file '{0}' loaded into context".format(data_file)
+    print("Data from file '{0}' loaded into context".format(data_file))
 
 
 def regexp(self, pattern):
