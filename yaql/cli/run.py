@@ -32,7 +32,7 @@ def main():
             decoder = JSONDecoder()
             data = decoder.decode(json_str)
         except:
-            print "Unable to load data from " + options.data
+            print("Unable to load data from " + options.data)
             return
     else:
         data = None
