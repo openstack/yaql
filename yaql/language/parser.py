@@ -203,7 +203,9 @@ precedence = (
 
 )
 
-parser = yacc.yacc(debug=False, outputdir=tempfile.gettempdir(), tabmodule='parser_table')
+parser = yacc.yacc(debug=False,
+                   outputdir=tempfile.gettempdir(),
+                   tabmodule='parser_table')
 # parser = yacc.yacc()
 
 
