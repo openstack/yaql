@@ -11,14 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import inspect
-
-import types
-import sys
 from yaql.language.context import Context
-from yaql.language.exceptions import (YaqlExecutionException,
-                                      NoFunctionRegisteredException,
-                                      YaqlException)
+from yaql.language import exceptions
 import yaql
 
 
@@ -72,8 +66,9 @@ class Function(Expression):
 
             fs = self.yaql_context.get_functions(self.function_name, num_args)
             if not fs:
-                raise NoFunctionRegisteredException(self.function_name,
-                                                    num_args)
+                raise exceptions.NoFunctionRegisteredException(
+                    self.function_name,
+                    num_args)
             snapshot = self.yaql_context.take_snapshot()
             errors = []
             for func in fs:
@@ -82,11 +77,11 @@ class Function(Expression):
                                                *self.args)
                     self.yaql_context = res_context
                     return result
-                except YaqlExecutionException as e:
+                except exceptions.YaqlExecutionException as e:
                     self.yaql_context.restore(snapshot)
                     errors.append(e)
                     continue
-            raise YaqlExecutionException(
+            raise exceptions.YaqlExecutionException(
                 "Registered function(s) matched but none"
                 " could run successfully", errors)
 
