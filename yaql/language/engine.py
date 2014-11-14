@@ -202,7 +202,7 @@ class ParameterDefinition(object):
         if not self.lazy:
             try:
                 res = value()
-            except Exception as e:
+            except Exception:
                 raise exceptions.YaqlExecutionException(
                     "Unable to evaluate parameter {0}".format(self.name),
                     sys.exc_info())
