@@ -23,6 +23,7 @@ pip-log.txt
 
 # Unit test / coverage reports
 .coverage
+cover
 .tox
 nosetests.xml
 .testrepository
@@ -34,6 +35,9 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+#IntelJ Idea
+.idea/
 
 # Complexity
 output/*.html
