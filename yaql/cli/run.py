@@ -31,7 +31,7 @@ def main():
             json_str = open(options.data).read()
             decoder = JSONDecoder()
             data = decoder.decode(json_str)
-        except:
+        except Exception:
             print("Unable to load data from " + options.data)
             return
     else:
