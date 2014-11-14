@@ -11,8 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import types
-
 import unittest
 from yaql.tests import YaqlTest
 
@@ -23,7 +21,6 @@ class TestArithmetic(YaqlTest):
         self.assertEquals(20, self.eval('15+10-5'))
         self.assertEquals(20, self.eval('15+10-5*2+10/2'))
         self.assertEquals(2, self.eval('5/2'))
-        self.assertEquals(3, self.eval('6/2'))
 
     def test_float_arithmetic(self):
         self.assertEquals(10.0, self.eval('5.0 * 2'))
@@ -37,12 +34,12 @@ class TestArithmetic(YaqlTest):
         self.assertEquals(-25, self.eval('-20 - +5'))
 
     def test_int_conversion(self):
-        self.assertNotEquals(types.IntType, type(self.eval('123.45')))
-        self.assertEquals(types.IntType, type(self.eval('int(123.45)')))
+        self.assertNotEquals(int, type(self.eval('123.45')))
+        self.assertEquals(int, type(self.eval('int(123.45)')))
 
     def test_float_conversion(self):
-        self.assertNotEquals(types.FloatType, type(self.eval('123')))
-        self.assertEquals(types.FloatType, type(self.eval('float(123)')))
+        self.assertNotEquals(float, type(self.eval('123')))
+        self.assertEquals(float, type(self.eval('float(123)')))
 
     def test_random(self):
         self.assertTrue(0 < self.eval('random()') < 1)

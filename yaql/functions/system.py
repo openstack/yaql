@@ -12,9 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import collections
-import types
-from yaql.language.exceptions import YaqlExecutionException
+import six
 
+from yaql.language.exceptions import YaqlExecutionException
 from yaql.language.engine import parameter, context_aware, inverse_context
 
 
@@ -23,9 +23,8 @@ from yaql.language.engine import parameter, context_aware, inverse_context
 
 
 def _is_object(value):
-    return not isinstance(value, (
-        types.DictionaryType, collections.Iterable)) \
-        or isinstance(value, types.StringType)
+    return not isinstance(value, (dict, collections.Iterable)) \
+        or isinstance(value, six.string_types)
 
 
 @context_aware
@@ -42,7 +41,7 @@ def obj_attribution(self, att_name):
         raise YaqlExecutionException("Unable to retrieve object attribute")
 
 
-@parameter('self', arg_type=types.DictionaryType)
+@parameter('self', arg_type=dict)
 @parameter('att_name', constant_only=True)
 def dict_attribution(self, att_name):
     return self.get(att_name)
@@ -71,7 +70,7 @@ def _as(self, context, *tuple_preds):
 def switch(self, *conditions):
     for cond in conditions:
         res = cond(self)
-        if not isinstance(res, types.TupleType):
+        if not isinstance(res, tuple):
             raise YaqlExecutionException("Switch must have tuple parameters")
         if len(res) != 2:
             raise YaqlExecutionException("Switch tuples must be of size 2")

@@ -15,8 +15,8 @@
 import json
 import os
 import re
-import types
 import readline
+import types
 
 from json import JSONDecoder
 import yaql

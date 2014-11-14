@@ -11,7 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import types
+import six
 import unittest
 
 from yaql.language.exceptions import YaqlException, YaqlExecutionException
@@ -51,7 +51,7 @@ def _print(self):
     return "data is: %s" % self
 
 
-@parameter('self', arg_type=types.StringType)
+@parameter('self', arg_type=six.string_types)
 def print_string(self):
     return "print %s" % self
 

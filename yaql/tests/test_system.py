@@ -11,7 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import types
 
 import unittest
 from yaql.tests import YaqlTest
@@ -52,11 +51,11 @@ class TestSystem(YaqlTest):
                           self.eval, '$.foo.missing', {'foo': 'bar'})
 
     def test_int_bool_resolving(self):
-        @parameter('param', arg_type=types.IntType)
+        @parameter('param', arg_type=int)
         def int_func(param):
             return "int: " + str(param)
 
-        @parameter('param', arg_type=types.BooleanType)
+        @parameter('param', arg_type=bool)
         def bool_func(param):
             return "bool: " + str(param)
 

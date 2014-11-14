@@ -11,7 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import types
 
 import unittest
 from yaql.tests import YaqlTest
@@ -51,8 +50,8 @@ class TestBooleans(YaqlTest):
         self.assertEval(True, "true or true and false")  # breaks
 
     def test_boolean_conversion(self):
-        self.assertNotEquals(types.BooleanType, type(self.eval('abcd')))
-        self.assertEquals(types.BooleanType, type(self.eval('bool(abcd)')))
+        self.assertNotEquals(bool, type(self.eval('abcd')))
+        self.assertEquals(bool, type(self.eval('bool(abcd)')))
 
 
 if __name__ == '__main__':

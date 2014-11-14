@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functions
+from yaql import functions
 from yaql.language import parser, context
 
 __versioninfo__ = (0, 3, 0)

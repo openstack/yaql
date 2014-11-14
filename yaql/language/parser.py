@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import types
 import tempfile
 
 import ply.yacc as yacc
@@ -68,11 +67,11 @@ def p_arg_list(p):
     arg : arg ',' arg
     """
     val_list = []
-    if isinstance(p[1], types.ListType):
+    if isinstance(p[1], list):
         val_list += p[1]
     else:
         val_list.append(p[1])
-    if isinstance(p[3], types.ListType):
+    if isinstance(p[3], list):
         val_list += p[3]
     else:
         val_list.append(p[3])
@@ -84,7 +83,7 @@ def p_method_w_args(p):
     """
     func : value '.' FUNC arg ')'
     """
-    if isinstance(p[4], types.ListType):
+    if isinstance(p[4], list):
         arg = p[4]
     else:
         arg = [p[4]]
@@ -102,7 +101,7 @@ def p_function_w_args(p):
     """
     func : FUNC arg ')'
     """
-    if isinstance(p[2], types.ListType):
+    if isinstance(p[2], list):
         arg = p[2]
     else:
         arg = [p[2]]

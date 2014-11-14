@@ -12,8 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import inspect
-import types
 import sys
+import types
 
 import yaql.language.context
 from yaql.language import exceptions
@@ -218,8 +218,8 @@ class ParameterDefinition(object):
             # we need a special handling for booleans, as
             # isinstance(boolean_value, integer_type)
             # will return true, which is not what we expect
-            if type(value) is types.BooleanType:
-                if self.arg_type is not types.BooleanType:
+            if type(value) is bool:
+                if self.arg_type is not bool:
                     raise exceptions.YaqlExecutionException(
                         "Type of the parameter is not boolean")
             elif not isinstance(value, self.arg_type):

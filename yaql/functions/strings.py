@@ -12,17 +12,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import types
+import six
 from yaql.language.engine import parameter
 
 
-@parameter('a', arg_type=types.StringTypes)
-@parameter('b', arg_type=types.StringTypes)
+@parameter('a', arg_type=six.string_types)
+@parameter('b', arg_type=six.string_types)
 def string_concatenation(a, b):
     return a + b
 
 
-@parameter('self', arg_type=types.StringTypes, is_self=True)
+@parameter('self', arg_type=six.string_types, is_self=True)
 def as_list(self):
     return list(self)
 

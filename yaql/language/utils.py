@@ -11,16 +11,18 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from six.moves import xrange
+
 from yaql.language.exceptions import YaqlSequenceException
 
 MAX_GENERATOR_ITEMS = 100000
 
 
-def limit(generator, limit=MAX_GENERATOR_ITEMS):
+def limit(generator, _limit=MAX_GENERATOR_ITEMS):
     res = []
-    for i in xrange(limit):
+    for _ in xrange(_limit):
         try:
-            res.append(generator.next())
+            res.append(next(generator))
         except StopIteration:
             return res
-    raise YaqlSequenceException(limit)
+    raise YaqlSequenceException(_limit)

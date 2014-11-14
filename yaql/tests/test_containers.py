@@ -140,7 +140,7 @@ class TestCollections(YaqlTest):
         v = yaql.parse('range(0, 10)').evaluate()
         self.assertTrue(isinstance(v, types.GeneratorType))
         v2 = yaql.parse('range(0, 10).list()').evaluate()
-        self.assertTrue(isinstance(v2, types.ListType))
+        self.assertTrue(isinstance(v2, list))
         v3 = yaql.parse('range(0).list()')
         self.assertRaises(YaqlSequenceException, v3.evaluate)
 

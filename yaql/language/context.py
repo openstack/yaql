@@ -46,7 +46,7 @@ class Context():
             func_def.restrict_to_class(function.im_class)
         num_params = func_def.get_num_params()
         if not name:
-            name = func_def.function.func_name
+            name = func_def.function.__name__
 
         if name not in self.functions:
             self.functions[name] = {}

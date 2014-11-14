@@ -12,12 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import random
+import six
+
 from yaql.language.engine import parameter
 from yaql.language.exceptions import YaqlExecutionException
 
 
 def _is_a_number(value):
-    return isinstance(value, (int, long, float, complex))
+    return isinstance(value, six.integer_types + (float, complex))
 
 
 @parameter('value', custom_validator=_is_a_number)
@@ -51,6 +53,8 @@ def multiply(a, b):
 @parameter('a', custom_validator=_is_a_number)
 @parameter('b', custom_validator=_is_a_number)
 def divide(a, b):
+    if isinstance(a, six.integer_types) and isinstance(b, six.integer_types):
+        return a // b
     return a / b
 
 

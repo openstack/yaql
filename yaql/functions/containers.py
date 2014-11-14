@@ -13,8 +13,10 @@
 #    under the License.
 
 import collections
-import types
 import itertools
+import six
+import types
+
 from yaql.language.exceptions import YaqlExecutionException
 
 from yaql.language.engine import parameter
@@ -24,10 +26,10 @@ from yaql.language.utils import limit
 def collection_parameter(name):
     return parameter(name, arg_type=collections.Iterable,
                      custom_validator=
-                     lambda v: not isinstance(v, types.StringTypes))
+                     lambda v: not isinstance(v, six.string_types))
 
 
-@parameter("index", arg_type=types.IntType)
+@parameter("index", arg_type=int)
 def get_by_index(data, index):
     if isinstance(data, types.GeneratorType):
         data = list(data)
@@ -39,7 +41,7 @@ def get_by_index(data, index):
 def filter_by_predicate(self, predicate):
     for item in self:
         r = predicate(item)
-        if not isinstance(r, types.BooleanType):
+        if not isinstance(r, bool):
             raise YaqlExecutionException("Not a predicate")
         if r is True:
             yield item
@@ -64,7 +66,7 @@ def is_in(a, b):
 def collection_attribution(self, att_name):
     def get_att_or_key(col_item):
         value = att_name
-        if isinstance(col_item, types.DictionaryType):
+        if isinstance(col_item, dict):
             return col_item.get(value)
         else:
             return getattr(col_item, value)
@@ -108,7 +110,7 @@ def join(self, others, join_predicate, composer):
     for self_item in self:
         for other_item in others:
             res = join_predicate(self_item, other_item)
-            if not isinstance(res, types.BooleanType):
+            if not isinstance(res, bool):
                 raise YaqlExecutionException("Not a predicate")
             if res:
                 yield composer(self_item, other_item)
@@ -129,14 +131,14 @@ def _sum(self):
         raise YaqlExecutionException("Not a collection of numbers", e)
 
 
-@parameter('start', arg_type=types.IntType)
-@parameter('end', arg_type=types.IntType)
+@parameter('start', arg_type=int)
+@parameter('end', arg_type=int)
 def _range_limited(start, end):
-    for i in xrange(int(start), int(end)):
+    for i in six.moves.range(int(start), int(end)):
         yield i
 
 
-@parameter('start', arg_type=types.IntType)
+@parameter('start', arg_type=int)
 def _range_infinite(start):
     for i in itertools.count(start):
         yield i
@@ -147,7 +149,7 @@ def _range_infinite(start):
 def take_while(self, predicate):
     for item in self:
         res = predicate(item)
-        if not isinstance(res, types.BooleanType):
+        if not isinstance(res, bool):
             raise YaqlExecutionException("Not a predicate")
         if res:
             yield item

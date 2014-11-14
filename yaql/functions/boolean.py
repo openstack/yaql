@@ -11,24 +11,23 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import types
 from yaql.language.engine import parameter
 from yaql.language.exceptions import YaqlExecutionException
 
 
-@parameter('a', arg_type=types.BooleanType)
-@parameter('b', arg_type=types.BooleanType)
+@parameter('a', arg_type=bool)
+@parameter('b', arg_type=bool)
 def _and(a, b):
     return a and b
 
 
-@parameter('a', arg_type=types.BooleanType)
-@parameter('b', arg_type=types.BooleanType)
+@parameter('a', arg_type=bool)
+@parameter('b', arg_type=bool)
 def _or(a, b):
     return a or b
 
 
-@parameter('data', arg_type=types.BooleanType)
+@parameter('data', arg_type=bool)
 def _not(data):
     return not data
 
