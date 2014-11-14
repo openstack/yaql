@@ -15,9 +15,8 @@ import inspect
 import types
 import sys
 
-from yaql.language.exceptions import *
 import yaql.language.context
-
+from yaql.language import exceptions
 import yaql.language.expressions
 
 
@@ -40,23 +39,24 @@ class YaqlFunctionDefinition(object):
         self._arg_spec = inspect.getargspec(function)
         self._inverse_context = False
         if self._arg_spec.keywords:
-            raise YaqlException("Keyword parameters are not supported")
+            raise exceptions.YaqlException(
+                "Keyword parameters are not supported")
 
     def register_param_constraint(self, param):
         if param.name not in self._arg_spec.args \
             and self._arg_spec.varargs != param.name:
-            raise NoParameterFoundException(
+            raise exceptions.NoParameterFoundException(
                 function_name=self.function.func_name,
                 param_name=param.name)
         if param.name in self.param_definitions:
-            raise DuplicateParameterDecoratorException(
+            raise exceptions.DuplicateParameterDecoratorException(
                 function_name=self.function.func_name,
                 param_name=param.name)
         if self.is_context_aware and param.is_context:
-            raise DuplicateContextDecoratorException(
+            raise exceptions.DuplicateContextDecoratorException(
                 function_name=self.function.func_name)
         if self.context_owner_param_name and param.own_context:
-            raise DuplicateContextOwnerDecoratorException(
+            raise exceptions.DuplicateContextOwnerDecoratorException(
                 function_name=self.function.func_name)
         self.param_definitions[param.name] = param
         if param.is_context:
@@ -69,7 +69,7 @@ class YaqlFunctionDefinition(object):
         if param.is_self:
             self.self_param_name = param.name
             if param.lazy:
-                raise YaqlException("Self parameter cannot be lazy")
+                raise exceptions.YaqlException("Self parameter cannot be lazy")
 
     def get_num_params(self):
         if self._arg_spec.varargs or self._arg_spec.keywords:
@@ -102,13 +102,13 @@ class YaqlFunctionDefinition(object):
 
     def __call__(self, context, sender, *args):
         if sender and not self.self_param_name:
-            raise YaqlExecutionException(
+            raise exceptions.YaqlExecutionException(
                 "The function cannot be run as a method")
 
         num_args = len(args) + 1 if sender else len(args)
 
         if 0 <= self.get_num_params() != num_args:
-            raise YaqlExecutionException(
+            raise exceptions.YaqlExecutionException(
                 "Expected {0} args, got {1}".format(self.get_num_params(),
                                                     len(args)))
 
@@ -192,18 +192,18 @@ class ParameterDefinition(object):
         if self.constant_only:
             if not isinstance(value,
                               yaql.language.expressions.Constant.Callable):
-                raise YaqlExecutionException(
+                raise exceptions.YaqlExecutionException(
                     "Parameter {0} has to be a constant".format(self.name))
         if self.function_only:
             if not isinstance(value,
                               yaql.language.expressions.Function.Callable):
-                raise YaqlExecutionException(
+                raise exceptions.YaqlExecutionException(
                     "Parameter {0} has to be a function".format(self.name))
         if not self.lazy:
             try:
                 res = value()
             except Exception as e:
-                raise YaqlExecutionException(
+                raise exceptions.YaqlExecutionException(
                     "Unable to evaluate parameter {0}".format(self.name),
                     sys.exc_info())
         else:
@@ -220,15 +220,15 @@ class ParameterDefinition(object):
             # will return true, which is not what we expect
             if type(value) is types.BooleanType:
                 if self.arg_type is not types.BooleanType:
-                    raise YaqlExecutionException(
+                    raise exceptions.YaqlExecutionException(
                         "Type of the parameter is not boolean")
             elif not isinstance(value, self.arg_type):
-                raise YaqlExecutionException(
+                raise exceptions.YaqlExecutionException(
                     "Type of the parameter is not {0}".format(
                         str(self.arg_type)))
         if self.custom_validator:
             if not self.custom_validator(value):
-                raise YaqlExecutionException(
+                raise exceptions.YaqlExecutionException(
                     "Parameter didn't pass the custom validation")
 
 
