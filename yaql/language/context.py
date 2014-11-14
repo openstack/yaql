@@ -48,9 +48,9 @@ class Context():
         if not name:
             name = func_def.function.func_name
 
-        if not name in self.functions:
+        if name not in self.functions:
             self.functions[name] = {}
-        if not num_params in self.functions[name]:
+        if num_params not in self.functions[name]:
             self.functions[name][num_params] = [func_def]
         else:
             self.functions[name][num_params].append(func_def)

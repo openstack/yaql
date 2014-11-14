@@ -33,7 +33,7 @@ class Namespace(object):
         self.symbols = symbols
 
     def validate(self, symbol):
-        if not symbol in self.symbols:
+        if symbol not in self.symbols:
             raise NamespaceValidationException(self.name, symbol)
 
 
