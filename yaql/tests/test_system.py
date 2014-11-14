@@ -17,6 +17,7 @@ import unittest
 from yaql.tests import YaqlTest
 import yaql
 from yaql.language.engine import parameter
+from yaql.language.exceptions import YaqlExecutionException
 
 
 class TestSystem(YaqlTest):
@@ -45,9 +46,10 @@ class TestSystem(YaqlTest):
                 self.bar = value
 
         foo = Foo(42)
-        self.assertRaises(Exception, self.eval, '$.foo.missing', foo)
-        self.assertRaises(Exception, self.eval, '$.foo.missing',
-                          {'foo': 'bar'})
+        self.assertRaises(YaqlExecutionException,
+                          self.eval, '$.foo.missing', foo)
+        self.assertRaises(YaqlExecutionException,
+                          self.eval, '$.foo.missing', {'foo': 'bar'})
 
     def test_int_bool_resolving(self):
         @parameter('param', arg_type=types.IntType)
@@ -72,18 +74,23 @@ class TestSystem(YaqlTest):
 
         self.assertEquals("int: 1", self.eval('foo(1)', context=context1))
         self.assertEquals("int: 0", self.eval('foo(0)', context=context1))
-        self.assertRaises(Exception, self.eval, "foo('1')", context=context1)
-        self.assertRaises(Exception, self.eval, 'foo(1)', context=context2)
+        self.assertRaises(YaqlExecutionException,
+                          self.eval, "foo('1')", context=context1)
+        self.assertRaises(YaqlExecutionException,
+                          self.eval, 'foo(1)', context=context2)
 
         self.assertEquals("bool: True",
                           self.eval('foo(true)', context=context2))
         self.assertEquals("bool: False",
                           self.eval('foo(false)', context=context2))
-        self.assertRaises(Exception, self.eval, "foo(1)", context=context2)
-        self.assertRaises(Exception, self.eval, 'foo(0)', context=context2)
-        self.assertRaises(Exception, self.eval, 'foo(True)', context=context2)
-        self.assertRaises(Exception, self.eval, "foo('true')",
-                          context=context2)
+        self.assertRaises(YaqlExecutionException,
+                          self.eval, "foo(1)", context=context2)
+        self.assertRaises(YaqlExecutionException,
+                          self.eval, 'foo(0)', context=context2)
+        self.assertRaises(YaqlExecutionException,
+                          self.eval, 'foo(True)', context=context2)
+        self.assertRaises(YaqlExecutionException,
+                          self.eval, "foo('true')", context=context2)
 
         self.assertEquals("int: 1", self.eval('foo(1)', context=context3))
         self.assertEquals("int: 0", self.eval('foo(0)', context=context3))
