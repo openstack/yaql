@@ -13,7 +13,9 @@
 #    under the License.
 import types
 
-from yaql.language.exceptions import YaqlException, YaqlExecutionException, YaqlSequenceException
+from yaql.language.exceptions import YaqlException
+from yaql.language.exceptions import YaqlExecutionException
+from yaql.language.exceptions import YaqlSequenceException
 
 from yaql.tests import YaqlTest
 import yaql.tests.testdata
@@ -60,27 +62,33 @@ class TestCollections(YaqlTest):
         data = yaql.tests.testdata.users
         expression = "$.email"
         self.assertEquals(
-            ['user1@example.com', 'user2@example.com', 'user3@example.com'],
+            ['user1@example.com',
+             'user2@example.com',
+             'user3@example.com'],
             self.eval(expression, data))
 
     def test_iterable_property_attribution_2(self):
         data = yaql.tests.testdata.data
         expression = "$.users.email"
         self.assertEquals(
-            ['user1@example.com', 'user2@example.com', 'user3@example.com'],
+            ['user1@example.com',
+             'user2@example.com',
+             'user3@example.com'],
             self.eval(expression, data))
 
     def test_iterable_dictionary_attribution(self):
         data = yaql.tests.testdata.data
         expression = "$.services.'com.mirantis.murano.yaql.name'"
-        self.assertEquals(['Service1', 'Service2', 'Service3', 'Service4'],
+        self.assertEquals(['Service1', 'Service2',
+                           'Service3', 'Service4'],
                           self.eval(expression, data))
 
     def test_join(self):
         data = yaql.tests.testdata.data
         expression = "$.services.join($.users, " \
                      "$1.'com.mirantis.murano.yaql.owner'=$2.id, " \
-                     "dict(service_name=>$1.'com.mirantis.murano.yaql.name', " \
+                     "dict(service_name=>" \
+                     "$1.'com.mirantis.murano.yaql.name', " \
                      "user_name=>$2.email))"
         value = self.eval(expression, data=data)
         self.assertEqual('Service1', value[0]['service_name'])
