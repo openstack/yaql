@@ -27,7 +27,7 @@ class Expression(object):
     def evaluate(self, data=None, context=None):
         if not context:
             context = Context(yaql.create_context())
-        if data:
+        if data is not None:
             context.set_data(data)
 
         f = self.create_callable(context)
