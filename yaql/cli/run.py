@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#    Copyright (c) 2013 Mirantis, Inc.
+#    Copyright (c) 2013-2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -14,8 +14,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+
 import optparse
-from json import JSONDecoder
+
 import yaql
 from yaql.cli import cli_functions
 
@@ -28,21 +30,26 @@ def main():
     options, arguments = p.parse_args()
     if options.data:
         try:
-            json_str = open(options.data).read()
-            decoder = JSONDecoder()
-            data = decoder.decode(json_str)
+            with open(options.data) as f:
+                data = json.load(f)
         except Exception:
-            print("Unable to load data from " + options.data)
+            print('Unable to load data from ' + options.data)
             return
     else:
         data = None
 
     context = yaql.create_context()
-    cli_functions.register_in_context(context)
+    engine_options = {
+        'yaql.limitIterators': 100,
+        'yaql.treatSetsAsLists': True,
+        'yaql.memoryQuota': 10000
+    }
+    parser = yaql.YaqlFactory().create(options=engine_options)
+    cli_functions.register_in_context(context, parser)
     if options.tokens:
-        yaql.parse('__main(true)').evaluate(data, context)
+        parser('__main(true)').evaluate(data, context)
     else:
-        yaql.parse('__main(false)').evaluate(data, context)
+        parser('__main(false)').evaluate(data, context)
 
 
 if __name__ == "__main__":

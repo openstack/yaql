@@ -11,72 +11,134 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import types
 
-import yaql.language
+import six
+
+from yaql.language import specs
+from yaql.language import exceptions
+from yaql.language import runner
+from yaql.language import utils
 
 
-class Context():
-    def __init__(self, parent_context=None, data=None):
-        self.parent_context = parent_context
-        self.functions = {}
-        self.data = {}
+class ContextBase(object):
+    def __init__(self, parent_context):
+        self._parent_context = parent_context
 
-        if data:
-            self.data['$'] = data
-        if parent_context:
-            self.depth = parent_context.depth + 1
-        else:
-            self.depth = 0
+    @property
+    def parent(self):
+        return self._parent_context
 
-    def take_snapshot(self):
-        return {
-            'functions': self.functions.copy(),
-            'data': self.data.copy()
-        }
+    def register_function(self, spec, *args, **kwargs):
+        pass
 
-    def restore(self, snapshot):
-        self.data = snapshot['data'].copy()
-        self.functions = snapshot['functions'].copy()
+    def __getitem__(self, name):
+        return None
 
-    def register_function(self, function, name=None):
-        func_def = yaql.language.engine.yaql_function(function)
-        func_def.build()
-        if isinstance(function, types.MethodType):
-            func_def.restrict_to_class(function.im_class)
-        num_params = func_def.get_num_params()
-        if not name:
-            name = func_def.function.__name__
+    def __setitem__(self, name, value):
+        pass
 
-        if name not in self.functions:
-            self.functions[name] = {}
-        if num_params not in self.functions[name]:
-            self.functions[name][num_params] = [func_def]
-        else:
-            self.functions[name][num_params].append(func_def)
+    def __delitem__(self, name):
+        pass
 
-    def get_functions(self, function_name, num_params):
-        result = []
-        if function_name in self.functions:
-            if num_params in self.functions[function_name]:
-                result += self.functions[function_name][num_params]
-            if -1 in self.functions[function_name]:
-                result += self.functions[function_name][-1]
+    def __call__(self, name, engine, sender=utils.NO_VALUE,
+                 data_context=None, return_context=False,
+                 use_convention=False):
+        raise exceptions.NoFunctionRegisteredException(name)
 
-        if self.parent_context:
-            result += self.parent_context.get_functions(function_name,
-                                                        num_params)
-        return result
+    def get_functions(self, name, predicate=None, use_convention=False):
+        return []
 
-    def set_data(self, data, path='$'):
-        if not path.startswith('$'):
-            path = '$' + path
-        self.data[path] = data
-        if path == '$':
-            self.data['$1'] = data
+    def collect_functions(self, name, predicate=None, use_convention=False):
+        return [[]]
 
-    def get_data(self, path='$'):
-        if path in self.data:
-            return self.data[path]
-        if self.parent_context:
-            return self.parent_context.get_data(path)
+    def create_child_context(self):
+        return type(self)(self)
+
+
+class Context(ContextBase):
+    def __init__(self, parent_context=None, data=utils.NO_VALUE,
+                 convention=None):
+        super(Context, self).__init__(parent_context)
+        self._functions = {}
+        self._data = {}
+        self._convention = convention
+        if data is not utils.NO_VALUE:
+            self['$'] = data
+
+    @staticmethod
+    def _import_function_definition(fd):
+        return fd
+
+    def register_function(self, spec, *args, **kwargs):
+        exclusive = kwargs.pop('exclusive', False)
+
+        if not isinstance(spec, specs.FunctionDefinition) \
+                and six.callable(spec):
+            spec = specs.get_function_definition(
+                spec, *args, convention=self._convention, **kwargs)
+
+        spec = self._import_function_definition(spec)
+        if spec.is_method:
+            if not spec.is_valid_method():
+                raise exceptions.InvalidMethodException(spec.name)
+        self._functions.setdefault(spec.name, list()).append((spec, exclusive))
+
+    def get_functions(self, name, predicate=None, use_convention=False):
+        if use_convention and self._convention is not None:
+            name = self._convention.convert_function_name(name)
+        if predicate is None:
+            predicate = lambda x: True
+        return six.moves.filter(predicate, list(six.moves.map(
+            lambda x: x[0],
+            self._functions.get(name, list()))))
+
+    def collect_functions(self, name, predicate=None, use_convention=False):
+        if use_convention and self._convention is not None:
+            name = self._convention.convert_function_name(name)
+        overloads = []
+        p = self
+        while p is not None:
+            layer_overloads = p._functions.get(name)
+            p = p.parent
+            if layer_overloads:
+                layer = []
+                for spec, exclusive in layer_overloads:
+                    if exclusive:
+                        p = None
+                    if predicate and not predicate(spec):
+                        continue
+                    layer.append(spec)
+                if layer:
+                    overloads.append(layer)
+        return overloads
+
+    def __call__(self, name, engine, sender=utils.NO_VALUE,
+                 data_context=None, return_context=False,
+                 use_convention=False):
+        return lambda *args, **kwargs: runner.call(
+            name, self, args, kwargs, engine, sender,
+            data_context, return_context, use_convention)
+
+    @staticmethod
+    def _normalize_name(name):
+        if not name.startswith('$'):
+            name = ('$' + name)
+        if name == '$':
+            name = '$1'
+        return name
+
+    def __setitem__(self, name, value):
+        self._data[self._normalize_name(name)] = value
+
+    def __getitem__(self, name):
+        name = self._normalize_name(name)
+        if name in self._data:
+            return self._data[name]
+        if self.parent:
+            return self.parent[name]
+
+    def __delitem__(self, name):
+        self._data.pop(self._normalize_name(name))
+
+    def create_child_context(self):
+        return Context(self, convention=self._convention)

@@ -1,4 +1,4 @@
-#    Copyright (c) 2014 Mirantis, Inc.
+#    Copyright (c) 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,197 +12,57 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import unittest
-from yaql.tests import YaqlTest
-import yaql
-from yaql.language.engine import parameter
-from yaql.language.exceptions import YaqlExecutionException
+import yaql.tests
 
 
-class TestSystem(YaqlTest):
+class TestSystem(yaql.tests.TestCase):
+    def test_def(self):
+        self.assertEqual(
+            [1, 4, 9],
+            self.eval('def(sq, $*$) -> $.select(sq($))', data=[1, 2, 3]))
+        self.assertEqual(
+            [1, 4, 9],
+            self.eval('def(sq, $arg * $arg) -> $.select(sq(arg => $))',
+                      data=[1, 2, 3]))
 
-    def test_string_concat(self):
-        self.assertEquals("abcqwe", self.eval('abc + qwe'))
-        self.assertEquals("abc qwe", self.eval("abc + ' ' + qwe"))
+    def test_def_recursion(self):
+        self.assertEqual(24, self.eval(
+            'def(rec, switch($ = 1 => 1, true => $*rec($-1))) -> rec($)',
+            data=4))
 
-    def test_get_context_data(self):
-        obj = object()
-        self.assertEquals(obj, self.eval('$', obj))
+    def test_elvis_dict(self):
+        self.assertEqual(1, self.eval('$?.a', data={'a': 1}))
+        self.assertIsNone(self.eval('$?.a', data=None))
 
-    def test_get_object_attribution(self):
-        class Foo(object):
-            def __init__(self, value):
-                self.bar = value
+    def test_elvis_method(self):
+        self.assertEqual([2, 3], self.eval('$?.select($+1)', data=[1, 2]))
+        self.assertIsNone(self.eval('$?.select($+1)', data=None))
 
-        foo = Foo(42)
-        self.assertEquals(42, self.eval('$.bar', foo))
-        bar = Foo(foo)
-        self.assertEquals(42, self.eval('$.bar.bar', bar))
+    def test_unpack(self):
+        self.assertEqual(
+            5, self.eval('[2, 3].unpack() -> $1 + $2'))
 
-    def test_missing_object_property_attribution(self):
-        class Foo(object):
-            def __init__(self, value):
-                self.bar = value
+    def test_unpack_with_names(self):
+        self.assertEqual(
+            5, self.eval('[2, 3].unpack(a, b) -> $a + $b'))
 
-        foo = Foo(42)
-        self.assertRaises(YaqlExecutionException,
-                          self.eval, '$.foo.missing', foo)
-        self.assertRaises(YaqlExecutionException,
-                          self.eval, '$.foo.missing', {'foo': 'bar'})
+        self.assertRaises(
+            ValueError,
+            self.eval, '[2, 3].unpack(a, b, c) -> $a + $b')
 
-    def test_int_bool_resolving(self):
-        @parameter('param', arg_type=int)
-        def int_func(param):
-            return "int: " + str(param)
+        self.assertRaises(
+            ValueError,
+            self.eval, '[2, 3].unpack(a) -> $a')
 
-        @parameter('param', arg_type=bool)
-        def bool_func(param):
-            return "bool: " + str(param)
+    def test_assert(self):
+        self.assertEqual(
+            [3, 4],
+            self.eval('[2, 3].assert(len($) > 1).select($ + 1)'))
 
-        context1 = yaql.create_context(False)
-        context2 = yaql.create_context(False)
-        context3 = yaql.create_context(False)
-        context4 = yaql.create_context(False)
+        self.assertRaises(
+            AssertionError,
+            self.eval, '[2].assert(len($) > 1).select($ + 1)')
 
-        context1.register_function(int_func, 'foo')
-        context2.register_function(bool_func, 'foo')
-        context3.register_function(int_func, 'foo')
-        context3.register_function(bool_func, 'foo')
-        context4.register_function(bool_func, 'foo')
-        context4.register_function(int_func, 'foo')
-
-        self.assertEquals("int: 1", self.eval('foo(1)', context=context1))
-        self.assertEquals("int: 0", self.eval('foo(0)', context=context1))
-        self.assertRaises(YaqlExecutionException,
-                          self.eval, "foo('1')", context=context1)
-        self.assertRaises(YaqlExecutionException,
-                          self.eval, 'foo(1)', context=context2)
-
-        self.assertEquals("bool: True",
-                          self.eval('foo(true)', context=context2))
-        self.assertEquals("bool: False",
-                          self.eval('foo(false)', context=context2))
-        self.assertRaises(YaqlExecutionException,
-                          self.eval, "foo(1)", context=context2)
-        self.assertRaises(YaqlExecutionException,
-                          self.eval, 'foo(0)', context=context2)
-        self.assertRaises(YaqlExecutionException,
-                          self.eval, 'foo(True)', context=context2)
-        self.assertRaises(YaqlExecutionException,
-                          self.eval, "foo('true')", context=context2)
-
-        self.assertEquals("int: 1", self.eval('foo(1)', context=context3))
-        self.assertEquals("int: 0", self.eval('foo(0)', context=context3))
-        self.assertEquals("bool: True",
-                          self.eval('foo(true)', context=context3))
-        self.assertEquals("bool: False",
-                          self.eval('foo(false)', context=context3))
-
-        self.assertEquals("int: 1", self.eval('foo(1)', context=context4))
-        self.assertEquals("int: 0", self.eval('foo(0)', context=context4))
-        self.assertEquals("bool: True",
-                          self.eval('foo(true)', context=context4))
-        self.assertEquals("bool: False",
-                          self.eval('foo(false)', context=context4))
-
-    def test_get_dict_attribution(self):
-        d = {
-            'key1': 'string1',
-            'key2': {
-                'inner': {
-                    'last': 42,
-                    'lastString': 'string'
-                }
-            },
-            'composite key': 3
-        }
-        self.assertEquals('string1', self.eval('$.key1', d))
-        self.assertEquals('string', self.eval('$.key2.inner.lastString', d))
-        self.assertEquals(42, self.eval('$.key2.inner.last', d))
-        self.assertEquals(3, self.eval("$.'composite key'", d))
-
-    def test_missing_key_dict_attributions(self):
-        d = {
-            'key1': 'string1',
-            'key2': {
-                'inner': {
-                    'last': 42,
-                    'lastString': 'string'
-                }
-            },
-            'composite key': 3
-        }
-        self.assertEquals(None, self.eval("$.'missing key'", d))
-        self.assertEquals(None, self.eval("$.key2.missing", d))
-
-    def test_function_call(self):
-        def foo():
-            return 42
-
-        self.context.register_function(foo, 'test')
-        self.assertEquals(42, self.eval("test()"))
-
-    def test_composite_function_call_1(self):
-        def foo():
-            return 42
-
-        self.context.register_function(foo, 'long.namespace.based.name')
-        self.assertEval(42, "'long.namespace.based.name'()")
-
-    def test_composite_function_call_2(self):
-        def foo():
-            return 42
-
-        self.context.register_function(foo, 'some spaced name\'s')
-        self.assertEval(42, "'some spaced name\\'s'()")
-
-    def test_return_same_function(self):
-        def foo(bar):
-            return bar
-
-        self.context.register_function(foo, 'foo')
-        self.assertEquals('bar', self.eval('foo(bar)'))
-
-    def test_return_same_method(self):
-        def foo(self):
-            return self
-
-        self.context.register_function(foo, 'foo')
-        self.assertEquals('bar', self.eval('bar.foo()'))
-
-    def test_self_reordering(self):
-        def concat_right(self, arg):
-            return self + ',' + arg
-
-        @parameter('self', is_self=True)
-        def concat_left(arg, self):
-            return arg + ',' + self
-
-        self.context.register_function(concat_right, 'concat1')
-        self.context.register_function(concat_left, 'concat2')
-        self.assertEquals('abc,qwe', self.eval('abc.concat1(qwe)'))
-        self.assertEquals('qwe,abc', self.eval('abc.concat2(qwe)'))
-
-    def test_parenthesis(self):
-        expression = '(2+3)*2'
-        self.assertEquals(10, self.eval(expression))
-
-    def test_as(self):
-        @parameter('f', lazy=True)
-        def foo(self, f):
-            return (self, f())
-
-        self.context.register_function(foo)
-        expression = "(random()).as($*10=>random_by_ten).foo($random_by_ten)"
-        v = self.eval(expression)
-        self.assertTrue(v[1] == v[0] * 10)
-
-    def test_switch(self):
-        expression = "$.switch(($>5)=>$, ($>2)=>('_'+string($)), true=>0)"
-        self.assertEval(10, expression, 10)
-        self.assertEval("_4", expression, 4)
-        self.assertEval(0, expression, 1)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        self.assertEqual(
+            3,
+            self.eval('[2].select($ + 1).assert(len($) = 1).first()'))

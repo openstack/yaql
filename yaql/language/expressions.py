@@ -1,4 +1,4 @@
-#    Copyright (c) 2013 Mirantis, Inc.
+#    Copyright (c) 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -11,145 +11,159 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from yaql.language.context import Context
-from yaql.language import exceptions
+
+import sys
+
+import six
+
 import yaql
+from yaql.language import exceptions
+from yaql.language import utils
 
 
 class Expression(object):
-    class Callable(object):
-        def __init__(self, wrapped_object, context, key=None):
-            self.wrapped_object = wrapped_object
-            self.yaql_context = context
-            self.key = key
-
-        def __str__(self):
-            return str(self.key)
-
-    def evaluate(self, data=None, context=None):
-        if not context:
-            context = Context(yaql.create_context())
-        if data:
-            context.set_data(data)
-
-        f = self.create_callable(context)
-        # noinspection PyCallingNonCallable
-        return f()
-
-    def create_callable(self, context):
+    def __call__(self, sender, context, engine):
         pass
 
 
+@six.python_2_unicode_compatible
 class Function(Expression):
     def __init__(self, name, *args):
         self.name = name
         self.args = args
+        self.uses_sender = True
 
-    class Callable(Expression.Callable):
-        def __init__(self, wrapped, context, function_name, args):
-            super(Function.Callable, self).__init__(wrapped, None,
-                                                    key=function_name)
-            self.function_name = function_name
-            self.args = args
-            self.yaql_context = context
+    def __call__(self, sender, context, engine):
+        return context(self.name, engine, sender, context,
+                       return_context=True)(*self.args)
 
-        def __call__(self, *context_args, **context_kwargs):
-            sender = context_kwargs.pop('sender', None)
-            if context_args:  # passed args have to be placed in the context
-                self.yaql_context.set_data(context_args[0])
-                for i, param in enumerate(context_args):
-                    self.yaql_context.set_data(param, '$' + str(i + 1))
-            for arg_name, arg_value in context_kwargs.items():
-                self.yaql_context.set_data(arg_value, '$' + arg_name)
-
-            num_args = len(self.args) + 1 if sender else len(self.args)
-
-            fs = self.yaql_context.get_functions(self.function_name, num_args)
-            if not fs:
-                raise exceptions.NoFunctionRegisteredException(
-                    self.function_name,
-                    num_args)
-            snapshot = self.yaql_context.take_snapshot()
-            errors = []
-            for func in fs:
-                try:
-                    result, res_context = func(self.yaql_context, sender,
-                                               *self.args)
-                    self.yaql_context = res_context
-                    return result
-                except exceptions.YaqlExecutionException as e:
-                    self.yaql_context.restore(snapshot)
-                    errors.append(e)
-                    continue
-            raise exceptions.YaqlExecutionException(
-                "Registered function(s) matched but none"
-                " could run successfully", errors)
-
-    def create_callable(self, context):
-        return Function.Callable(self, context, self.name, self.args)
+    def __str__(self):
+        return u'{0}({1})'.format(self.name, ', '.join(
+            map(six.text_type, self.args)))
 
 
 class BinaryOperator(Function):
-    def __init__(self, op, obj1, obj2):
-        super(BinaryOperator, self).__init__("operator_" + op, obj1,
-                                             obj2)
+    def __init__(self, op, obj1, obj2, alias):
+        if alias is None:
+            func_name = '#operator_' + op
+        else:
+            func_name = '*' + alias
+        self.operator = op
+        super(BinaryOperator, self).__init__(func_name, obj1, obj2)
+        self.uses_sender = False
 
 
 class UnaryOperator(Function):
-    def __init__(self, op, obj):
-        super(UnaryOperator, self).__init__("unary_" + op, obj)
-
-
-class Filter(Function):
-    def __init__(self, value, expression):
-        super(Filter, self).__init__("where", value, expression)
-
-
-class Tuple(Function):
-    def __init__(self, left, right):
-        super(Tuple, self).__init__('tuple', left, right)
-
-    @staticmethod
-    def create_tuple(left, right):
-        if isinstance(left, Tuple):
-            new_args = list(left.args)
-            new_args.append(right)
-            left.args = tuple(new_args)
-            return left
+    def __init__(self, op, obj, alias):
+        if alias is None:
+            func_name = '#unary_operator_' + op
         else:
-            return Tuple(left, right)
+            func_name = '*' + alias
+        self.operator = op
+        super(UnaryOperator, self).__init__(func_name, obj)
+        self.uses_sender = False
 
 
-class Wrap(Function):
-    def __init__(self, content):
-        super(Wrap, self).__init__('wrap', content)
+class IndexExpression(Function):
+    def __init__(self, value, *args):
+        super(IndexExpression, self).__init__('#indexer', value, *args)
+        self.uses_sender = False
 
 
+class ListExpression(Function):
+    def __init__(self, *args):
+        super(ListExpression, self).__init__('#list', *args)
+        self.uses_sender = False
+
+
+class MapExpression(Function):
+    def __init__(self, *args):
+        super(MapExpression, self).__init__('#map', *args)
+        self.uses_sender = False
+
+
+@six.python_2_unicode_compatible
 class GetContextValue(Function):
     def __init__(self, path):
-        super(GetContextValue, self).__init__("get_context_data", path)
+        super(GetContextValue, self).__init__('#get_context_data', path)
         self.path = path
+        self.uses_sender = False
 
     def __str__(self):
-        return self.path
+        return self.path.value
 
 
+@six.python_2_unicode_compatible
 class Constant(Expression):
     def __init__(self, value):
         self.value = value
+        self.uses_sender = False
 
     def __str__(self):
-        return str(self.value)
+        if isinstance(self.value, six.text_type):
+            return u"'{0}'".format(self.value)
+        return six.text_type(self.value)
 
-    class Callable(Expression.Callable):
-        def __init__(self, wrapped, value, context):
-            super(Constant.Callable, self).__init__(wrapped, context,
-                                                    key=value)
-            self.value = value
+    def __call__(self, sender, context, engine):
+        return self.value, context
 
-        # noinspection PyUnusedLocal
-        def __call__(self, *args):
-            return self.value
 
-    def create_callable(self, context):
-        return Constant.Callable(self, self.value, context)
+class KeywordConstant(Constant):
+    pass
+
+
+@six.python_2_unicode_compatible
+class Wrap(Expression):
+    def __init__(self, expression):
+        self.expr = expression
+        self.uses_sender = False
+
+    def __str__(self):
+        return str(self.expr)
+
+    def __call__(self, sender, context, engine):
+        return self.expr(sender, context, engine)
+
+
+@six.python_2_unicode_compatible
+class MappingRuleExpression(Expression):
+    def __init__(self, source, destination):
+        self.source = source
+        self.destination = destination
+        self.uses_sender = False
+
+    def __str__(self):
+        return u'{0} => {1}'.format(self.source, self.destination)
+
+    def __call__(self, sender, context, engine):
+        return utils.MappingRule(
+            self.source(sender, context, engine)[0],
+            self.destination(sender, context, engine)[0]), context
+
+
+@six.python_2_unicode_compatible
+class Statement(Function):
+    def __init__(self, expression, engine):
+        self.expression = expression
+        self.uses_sender = False
+        self.engine = engine
+        super(Statement, self).__init__('#finalize', expression)
+
+    def __call__(self, sender, context, engine):
+        if not context.collect_functions('#finalize'):
+            context = context.create_child_context()
+            context.register_function(lambda x: x, name='#finalize')
+        try:
+            return super(Statement, self).__call__(sender, context, engine)
+        except exceptions.WrappedException as e:
+            six.reraise(type(e.wrapped), e.wrapped, sys.exc_info()[2])
+
+    def evaluate(self, data=utils.NO_VALUE, context=utils.NO_VALUE):
+        if context is utils.NO_VALUE:
+            context = yaql.create_context()
+        if data is not utils.NO_VALUE:
+            context['$'] = utils.convert_input_data(data)
+        return self(utils.NO_VALUE, context, self.engine)[0]
+
+    def __str__(self):
+        return str(self.expression)

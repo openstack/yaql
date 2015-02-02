@@ -1,4 +1,4 @@
-#    Copyright (c) 2013 Mirantis, Inc.
+#    Copyright (c) 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,166 +12,133 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import ply.lex as lex
-from yaql.language.exceptions import YaqlLexicalException
+import codecs
+import re
 
-keywords = {
-    'true': 'TRUE',
-    'false': 'FALSE',
-    'null': 'NULL'
-}
+import six
 
-keywords_to_val = {
-    'TRUE': True,
-    'FALSE': False,
-    'NULL': None
-}
-
-right_associative = [':']
+from yaql.language import exceptions
 
 
-unary_prefix = {
-    '-': "UNARY_MINUS",
-    '+': "UNARY_PLUS",
-    '~': "UNARY_TILDE",
-    '!': "UNARY_EXPL"
-}
-
-op_to_level = {
-    'abc': 0,
-    '|': 1,
-    '^': 2,
-    '&': 3,
-    '<': 4,
-    '>': 4,
-    '=': 5,
-    '!': 5,
-    '+': 6,
-    '-': 6,
-    '*': 7,
-    '/': 7,
-    '%': 7,
-    '.': 8
-}
-
-ops = {
-    (0, 'l'): "LVL0_LEFT",
-    (0, 'r'): "LVL0_RIGHT",
-    (1, 'l'): "LVL1_LEFT",
-    (1, 'r'): "LVL1_RIGHT",
-    (2, 'l'): "LVL2_LEFT",
-    (2, 'r'): "LVL2_RIGHT",
-    (3, 'l'): "LVL3_LEFT",
-    (3, 'r'): "LVL3_RIGHT",
-    (4, 'l'): "LVL4_LEFT",
-    (4, 'r'): "LVL4_RIGHT",
-    (5, 'l'): "LVL5_LEFT",
-    (5, 'r'): "LVL5_RIGHT",
-    (6, 'l'): "LVL6_LEFT",
-    (6, 'r'): "LVL6_RIGHT",
-    (7, 'l'): "LVL7_LEFT",
-    (7, 'r'): "LVL7_RIGHT",
-    (8, 'l'): "LVL8_LEFT",
-    (8, 'r'): "LVL8_RIGHT",
-    (9, 'l'): "LVL9_LEFT",
-    (9, 'r'): "LVL9_RIGHT"
-}
+NEVER_MATCHING_RE = '(?!x)x'
+ESCAPE_SEQUENCE_RE = re.compile(r'''
+    ( \\U........      # 8-digit hex escapes
+    | \\u....          # 4-digit hex escapes
+    | \\x..            # 2-digit hex escapes
+    | \\[0-7]{1,3}     # Octal escapes
+    | \\N\{[^}]+\}     # Unicode characters by name
+    | \\[\\'"abfnrtv]  # Single-character escapes
+    )''', re.UNICODE | re.VERBOSE)
 
 
-tokens = [
-    'STRING',
-    'QUOTED_STRING',
-    'NUMBER',
-    'FUNC',
-    'FILTER',
-    'NOT',
-    'DOLLAR'
-] + list(keywords.values()) + list(ops.values()) + list(unary_prefix.values())
-
-literals = "()],"
-
-t_ignore = ' \t\r\n'
+def decode_escapes(s):
+    def decode_match(match):
+        return codecs.decode(match.group(0), 'unicode-escape')
+    return ESCAPE_SEQUENCE_RE.sub(decode_match, s)
 
 
-def t_DOLLAR(t):
-    """
-    \\$\\w*
-    """
-    return t
+# noinspection PyPep8Naming
+class Lexer(object):
+    t_ignore = ' \t\r\n'
+    t_INDEXER = '\\['
+    t_MAP = '{'
 
+    literals = '()],}'
+    keywords = {
+        'true': 'TRUE',
+        'false': 'FALSE',
+        'null': 'NULL'
+    }
 
-def t_NUMBER(t):
-    """
-    \\b\\d+(\\.?\\d+)?\\b
-    """
-    if '.' in t.value:
-        t.value = float(t.value)
-    else:
-        t.value = int(t.value)
-    return t
+    keyword_to_val = {
+        'TRUE': True,
+        'FALSE': False,
+        'NULL': None
+    }
 
+    def __init__(self, yaql_operators):
+        self._operators_table = yaql_operators.operators
+        self.tokens = [
+            'KEYWORD_STRING',
+            'QUOTED_STRING',
+            'NUMBER',
+            'FUNC',
+            'DOLLAR',
+            'INDEXER',
+            'MAPPING',
+            'MAP'
+        ] + list(self.keywords.values())
+        for op_symbol, op_record in six.iteritems(self._operators_table):
+            lexem_name = op_record[2]
+            setattr(self, 't_' + lexem_name, re.escape(op_symbol))
+            self.tokens.append(lexem_name)
+        self.t_MAPPING = re.escape(yaql_operators.name_value_op) \
+            if yaql_operators.name_value_op else NEVER_MATCHING_RE
 
-def t_FUNC(t):
-    """
-    \\b\\w+\\(|'(?:[^'\\\\]|\\\\.)*'\\(
-    """
-    val = t.value[:-1].replace('\\', '').strip('\'')
-    t.value = val
-    return t
+    @staticmethod
+    def t_DOLLAR(t):
+        """
+        \\$\\w*
+        """
+        return t
 
+    @staticmethod
+    def t_NUMBER(t):
+        """
+        \\b\\d+(\\.?\\d+)?\\b
+        """
+        if '.' in t.value:
+            t.value = float(t.value)
+        else:
+            t.value = int(t.value)
+        return t
 
-def t_FILTER(t):
-    """
-   (?<!\\s)\\[
-    """
-    return t
+    @staticmethod
+    def t_FUNC(t):
+        """
+        \\b[^\\W\\d]\\w*\\(
+        """
+        val = t.value[:-1]
+        t.value = val
+        return t
 
+    def t_KEYWORD_STRING(self, t):
+        """
+        \\b[^\\W\\d]\\w*\\b
+        """
+        if t.value in self._operators_table:
+            t.type = self._operators_table[t.value][2]
+        else:
+            t.type = self.keywords.get(t.value, 'KEYWORD_STRING')
+            t.value = self.keyword_to_val.get(t.type, t.value)
+        return t
 
-def t_NOT(t):
-    """
-    \\bnot\\b
-    """
-    return t
+    @staticmethod
+    def t_QUOTED_STRING(t):
+        """
+        '([^'\\\\]|\\\\.)*'
+        """
+        t.value = decode_escapes(t.value[1:-1])
+        return t
 
+    @staticmethod
+    def t_DOUBLE_QUOTED_STRING(t):
+        """
+        "([^"\\\\]|\\\\.)*"
+        """
+        t.value = decode_escapes(t.value[1:-1])
+        t.type = 'QUOTED_STRING'
+        return t
 
-def t_STRING(t):
-    """
-    \\b\\w+\\b
-    """
-    t.type = keywords.get(t.value, 'STRING')
-    t.value = keywords_to_val.get(t.type, t.value)
-    return t
+    @staticmethod
+    def t_QUOTED_VERBATIM_STRING(t):
+        """
+        `([^`\\\\]|\\\\.)*`
+        """
+        t.value = t.value[1:-1].replace('\\`', '`')
+        t.type = 'QUOTED_STRING'
+        return t
 
-
-def t_QUOTED_STRING(t):
-    """
-    '(?:[^'\\\\]|\\\\.)*'
-    """
-    t.value = t.value[1:-1].replace('\\', '')
-    return t
-
-
-def t_CHAR_ORB(t):
-    """
-    [!@#%^&*=.:;`~\\-><+/]+
-    """
-    if t.value in unary_prefix:
-        t.type = unary_prefix[t.value]
-    else:
-        t.type = get_orb_op_type(t.value[0], t.value[-1])
-    return t
-
-
-def get_orb_op_type(first_char, last_char):
-    if first_char.isalpha() or first_char == '_':
-        level = op_to_level['abc']
-    else:
-        level = op_to_level.get(first_char, max(op_to_level.values()) + 1)
-    asc = 'r' if last_char in right_associative else 'l'
-    return ops.get((level, asc))
-
-
-def t_error(t):
-    raise YaqlLexicalException(t.value[0], t.lexpos)
-
-lexer = lex.lex()
+    @staticmethod
+    def t_error(t):
+        raise exceptions.YaqlLexicalException(t.value[0], t.lexpos)

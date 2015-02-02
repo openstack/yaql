@@ -1,4 +1,4 @@
-#    Copyright (c) 2013 Mirantis, Inc.
+#    Copyright (c) 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,201 +12,214 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import tempfile
+import six
 
-import ply.yacc as yacc
-
-from yaql.language import lexer, expressions, exceptions
-
-
-tokens = lexer.tokens
+from yaql.language import exceptions
+from yaql.language import expressions
+from yaql.language import utils
 
 
-def p_value_to_const(p):
-    """
-    value : STRING
-          | QUOTED_STRING
-          | NUMBER
-          | TRUE
-          | FALSE
-          | NULL
-    """
-    p[0] = expressions.Constant(p[1])
+class Parser(object):
+    def __init__(self, lexer, yaql_operators):
+        self.tokens = lexer.tokens
+        self._aliases = {}
+        self._generate_operator_funcs(yaql_operators)
 
+    def _generate_operator_funcs(self, yaql_operators):
+        binary_doc = ''
+        unary_doc = ''
+        precedence_dict = {}
 
-def p_value_to_dollar(p):
-    """
-    value : DOLLAR
-    """
-    p[0] = expressions.GetContextValue(expressions.Constant(p[1]))
+        for up, bp, op_name, op_alias in yaql_operators.operators.values():
+            self._aliases[op_name] = op_alias
+            if up:
+                l = precedence_dict.setdefault(
+                    (abs(up), 'l' if up > 0 else 'r'), [])
+                l.append('UNARY_' + op_name if bp else op_name)
+                unary_doc += ('value : ' if not unary_doc else '\n| ')
+                spec_prefix = '{0} value' if up > 0 else 'value {0}'
+                if bp:
+                    unary_doc += (spec_prefix + ' %prec UNARY_{0}').format(
+                        op_name)
+                else:
+                    unary_doc += spec_prefix.format(op_name)
+            if bp:
+                l = precedence_dict.setdefault(
+                    (abs(bp), 'l' if bp > 0 else 'r'), [])
+                l.append(op_name)
+                binary_doc += ('value : ' if not binary_doc else '\n| ') + \
+                    'value {0} value'.format(op_name)
 
+        # noinspection PyProtectedMember
+        def p_binary(this, p):
+            alias = this._aliases.get(p.slice[2].type)
+            p[0] = expressions.BinaryOperator(p[2], p[1], p[3], alias)
 
-def p_val_to_function(p):
-    """
-    value : func
-    """
-    p[0] = p[1]
+        # noinspection PyProtectedMember
+        def p_unary(this, p):
+            if p[1] in yaql_operators.operators:
+                alias = this._aliases.get(p.slice[1].type)
+                p[0] = expressions.UnaryOperator(p[1], p[2], alias)
+            else:
+                alias = this._aliases.get(p.slice[2].type)
+                p[0] = expressions.UnaryOperator(p[2], p[1], alias)
 
+        p_binary.__doc__ = binary_doc
+        self.p_binary = six.create_bound_method(p_binary, self)
+        p_unary.__doc__ = unary_doc
+        self.p_unary = six.create_bound_method(p_unary, self)
 
-def p_method_no_args(p):
-    """
-    func : value '.' FUNC ')'
-    """
-    p[0] = expressions.Function(p[3], p[1])
+        precedence = []
+        for i in range(1, len(precedence_dict) + 1):
+            for oa in ('r', 'l'):
+                value = precedence_dict.get((i, oa))
+                if value:
+                    precedence.append(
+                        (('left',) if oa is 'l' else ('right',)) +
+                        tuple(value)
+                    )
+        precedence.insert(1, ('left', 'LIST', 'INDEXER', 'MAP'))
+        precedence.reverse()
+        self.precedence = tuple(precedence)
 
+    @staticmethod
+    def p_value_to_const(p):
+        """
+        value : QUOTED_STRING
+              | NUMBER
+              | TRUE
+              | FALSE
+              | NULL
+        """
+        p[0] = expressions.Constant(p[1])
 
-def p_arg_definition(p):
-    """
-    arg : value
-    """
-    p[0] = p[1]
+    @staticmethod
+    def p_keyword_constant(p):
+        """
+        value : KEYWORD_STRING
+        """
+        p[0] = expressions.KeywordConstant(p[1])
 
+    @staticmethod
+    def p_value_to_dollar(p):
+        """
+        value : DOLLAR
+        """
+        p[0] = expressions.GetContextValue(expressions.Constant(p[1]))
 
-def p_arg_list(p):
-    """
-    arg : arg ',' arg
-    """
-    val_list = []
-    if isinstance(p[1], list):
-        val_list += p[1]
-    else:
-        val_list.append(p[1])
-    if isinstance(p[3], list):
-        val_list += p[3]
-    else:
-        val_list.append(p[3])
+    @staticmethod
+    def p_val_in_parenthesis(p):
+        """
+        value : '(' value ')'
+        """
+        p[0] = expressions.Wrap(p[2])
 
-    p[0] = val_list
+    @staticmethod
+    def p_args(p):
+        """
+        args : arglist ',' named_arglist
+             | arglist
+             | named_arglist
+        """
+        arg = ()
+        if len(p) >= 2:
+            arg = p[1]
+        if len(p) >= 4:
+            arg += p[3]
+        p[0] = arg
 
+    @staticmethod
+    def p_indexer(p):
+        """
+        value : value INDEXER args ']'
+        """
+        p[0] = expressions.IndexExpression(p[1], *p[3])
 
-def p_method_w_args(p):
-    """
-    func : value '.' FUNC arg ')'
-    """
-    if isinstance(p[4], list):
-        arg = p[4]
-    else:
-        arg = [p[4]]
-    p[0] = expressions.Function(p[3], p[1], *arg)
+    @staticmethod
+    def p_list(p):
+        """
+        value : INDEXER args ']' %prec LIST
+        """
+        p[0] = expressions.ListExpression(*p[2])
 
+    @staticmethod
+    def p_empty_list(p):
+        """
+        value : INDEXER ']' %prec LIST
+        """
+        p[0] = expressions.ListExpression()
 
-def p_function_no_args(p):
-    """
-    func : FUNC ')'
-    """
-    p[0] = expressions.Function(p[1])
+    @staticmethod
+    def p_map(p):
+        """
+        value : MAP args '}'
+        """
+        p[0] = expressions.MapExpression(*p[2])
 
+    @staticmethod
+    def p_empty_map(p):
+        """
+        value : MAP '}'
+        """
+        p[0] = expressions.MapExpression()
 
-def p_function_w_args(p):
-    """
-    func : FUNC arg ')'
-    """
-    if isinstance(p[2], list):
-        arg = p[2]
-    else:
-        arg = [p[2]]
-    p[0] = expressions.Function(p[1], *arg)
+    @staticmethod
+    def p_val_to_function(p):
+        """
+        value : func
+        """
+        p[0] = p[1]
 
+    @staticmethod
+    def p_named_arg_definition(p):
+        """
+        named_arg : value MAPPING value
+        """
+        p[0] = expressions.MappingRuleExpression(p[1], p[3])
 
-def p_binary(p):
-    """
-    value : value STRING value
-          | value LVL0_LEFT value
-          | value LVL0_RIGHT value
-          | value LVL1_LEFT value
-          | value LVL1_RIGHT value
-          | value LVL2_LEFT value
-          | value LVL2_RIGHT value
-          | value LVL3_LEFT value
-          | value LVL3_RIGHT value
-          | value LVL4_LEFT value
-          | value LVL4_RIGHT value
-          | value LVL5_LEFT value
-          | value LVL5_RIGHT value
-          | value LVL6_LEFT value
-          | value LVL6_RIGHT value
-          | value LVL7_LEFT value
-          | value LVL7_RIGHT value
-          | value LVL8_LEFT value
-          | value LVL8_RIGHT value
-          | value LVL9_LEFT value
-          | value LVL9_RIGHT value
-          | value UNARY_PLUS value
-          | value UNARY_MINUS value
-          | value UNARY_EXPL value
-          | value UNARY_TILDE value
-    """
-    p[0] = expressions.BinaryOperator(p[2], p[1], p[3])
+    @staticmethod
+    def p_arg_list(p):
+        """
+        arglist : value
+                | arglist ',' value
+                |
+                | arglist ','
+        """
+        if len(p) == 1:
+            p[0] = [utils.NO_VALUE]
+        elif len(p) == 2:
+            p[0] = [p[1]]
+        elif len(p) == 3:
+            p[0] = p[1] + [utils.NO_VALUE]
+        elif len(p) == 4:
+            p[0] = p[1] + [p[3]]
 
+    @staticmethod
+    def p_named_arg_list(p):
+        """
+        named_arglist : named_arg
+                      | named_arglist ',' named_arg
+        """
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[3]]
 
-def p_unary_prefix(p):
-    """
-    value : UNARY_TILDE value
-          | UNARY_PLUS value
-          | UNARY_EXPL value
-          | UNARY_MINUS value
-          | NOT value
-    """
-    p[0] = expressions.UnaryOperator(p[1], p[2])
+    @staticmethod
+    def p_function(p):
+        """
+        func : FUNC ')'
+             | FUNC args ')'
+        """
+        arg = ()
+        if len(p) > 3:
+            arg = p[2]
+        p[0] = expressions.Function(p[1], *arg)
 
-
-def p_val_in_parenthesis(p):
-    """
-    value : '(' value ')'
-    """
-    p[0] = expressions.Wrap(p[2])
-
-
-def p_val_w_filter(p):
-    """
-    value : value FILTER value ']'
-    """
-    p[0] = expressions.Filter(p[1], p[3])
-
-
-# def p_val_tuple(p):
-#     """
-#     value : value TUPLE value
-#     """
-#     p[0] = expressions.Tuple.create_tuple(p[1], p[3])
-
-
-def p_error(p):
-    if p:
-        raise exceptions.YaqlGrammarException(p.value, p.lexpos)
-    else:
-        raise exceptions.YaqlGrammarException(None, None)
-
-
-precedence = (
-    ('left', lexer.ops[(0, 'l')], 'STRING', ','),
-    ('right', lexer.ops[(0, 'r')]),
-    ('left', lexer.ops[(1, 'l')]),
-    ('right', lexer.ops[(1, 'r')]),
-    ('left', lexer.ops[(2, 'l')]),
-    ('right', lexer.ops[(2, 'r')]),
-    ('left', lexer.ops[(3, 'l')]),
-    ('right', lexer.ops[(3, 'r')]),
-    ('left', lexer.ops[(4, 'l')]),
-    ('right', lexer.ops[(4, 'r')]),
-    ('left', lexer.ops[(5, 'l', )], 'NOT', 'UNARY_EXPL'),
-    ('right', lexer.ops[(5, 'r')]),
-    ('left', lexer.ops[(6, 'l')], 'UNARY_PLUS', 'UNARY_MINUS'),
-    ('right', lexer.ops[(6, 'r')]),
-    ('left', lexer.ops[(7, 'l')]),
-    ('right', lexer.ops[(7, 'r')]),
-    ('left', lexer.ops[(8, 'l')]),
-    ('right', lexer.ops[(8, 'r')]),
-    ('left', lexer.ops[(9, 'l')], 'UNARY_TILDE'),
-    ('right', lexer.ops[(9, 'r')]),
-
-)
-
-parser = yacc.yacc(debug=False,
-                   outputdir=tempfile.gettempdir(),
-                   tabmodule='parser_table')
-# parser = yacc.yacc()
-
-
-def parse(expression):
-    return parser.parse(expression)
+    @staticmethod
+    def p_error(p):
+        if p:
+            raise exceptions.YaqlGrammarException(
+                p.lexer.lexdata, p.value, p.lexpos)
+        else:
+            raise exceptions.YaqlGrammarException(None, None, None)

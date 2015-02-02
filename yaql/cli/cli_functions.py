@@ -1,4 +1,4 @@
-#    Copyright (c) 2013 Mirantis, Inc.
+#    Copyright (c) 2013-2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,34 +12,28 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
 import json
 import os
 import re
 import readline
-import types
 
-from json import JSONDecoder
-import yaql
-
-from yaql.language.context import Context
 from yaql.language.exceptions import YaqlParsingException
 
 from yaql import __version__ as version
-from yaql.language import lexer
-from yaql.language.engine import context_aware
-from yaql.language.utils import limit
+from yaql.language import utils
 
 
 PROMPT = "yaql> "
+LIMIT = 100
 
 
-@context_aware
-def main(context, show_tokens):
+def main(context, show_tokens, parser):
     print("Yet Another Query Language - command-line query tool")
     print("Version {0}".format(version))
-    print("Copyright (c) 2014 Mirantis, Inc")
+    print("Copyright (c) 2013-2015 Mirantis, Inc")
     print("")
-    if not context.get_data():
+    if not context['']:
         print("No data loaded into context ")
         print("Type '@load data-file.json' to load data")
         print("")
@@ -57,21 +51,24 @@ def main(context, show_tokens):
         if comm[0] == '@':
             func_name, args = parse_service_command(comm)
             if func_name not in SERVICE_FUNCTIONS:
-                print("Unknown command " + func_name)
+                print('Unknown command ' + func_name)
             else:
                 SERVICE_FUNCTIONS[func_name](args, context)
             continue
         try:
             if show_tokens:
-                lexer.lexer.input(comm)
+                parser.lexer.input(comm)
                 tokens = []
                 while True:
-                    tok = lexer.lexer.token()
+                    tok = parser.lexer.token()
                     if not tok:
                         break
                     tokens.append(tok)
-                print("Tokens: " + str(tokens))
-            expr = yaql.parse(comm)
+                print('Tokens: ' + str(tokens))
+            expr = parser(comm)
+            if show_tokens:
+                print('Expression: ' + str(expr))
+
         except YaqlParsingException as ex:
             if ex.position:
                 pointer_string = (" " * (ex.position + len(PROMPT))) + '^'
@@ -79,16 +76,16 @@ def main(context, show_tokens):
             print(ex.message)
             continue
         try:
-            res = expr.evaluate(context=Context(context))
-            if isinstance(res, types.GeneratorType):
-                res = limit(res)
+            res = expr.evaluate(context=context)
+            if utils.is_iterator(res):
+                res = list(itertools.islice(res, LIMIT))
             print(json.dumps(res, indent=4))
         except Exception as ex:
-            print("Execution exception:")
+            print('Execution exception:')
             if hasattr(ex, 'message'):
                 print(ex.message)
             else:
-                print("Unknown")
+                print('Unknown')
 
 
 def load_data(data_file, context):
@@ -99,26 +96,27 @@ def load_data(data_file, context):
                                                            e.strerror))
         return
     try:
-        decoder = JSONDecoder()
-        data = decoder.decode(json_str)
+        data = json.loads(json_str)
     except Exception as e:
-        print("Unable to parse data: " + e.message)
+        print('Unable to parse data: ' + e.message)
         return
-    context.set_data(data)
-    print("Data from file '{0}' loaded into context".format(data_file))
+    context['$'] = utils.convert_input_data(data)
+    print('Data from file {0} loaded into context'.format(data_file))
 
 
 def regexp(self, pattern):
-    match = re.match(pattern(), self())
+    match = re.match(pattern, self)
     if match:
         return match.groups()
     else:
         return None
 
 
-def register_in_context(context):
-    context.register_function(main, '__main')
-    context.register_function(regexp, 'regexp')
+def register_in_context(context, parser):
+    context.register_function(
+        lambda context, show_tokens: main(context, show_tokens, parser),
+        name='__main')
+    context.register_function(regexp)
 
 
 def parse_service_command(comm):
