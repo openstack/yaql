@@ -1,4 +1,4 @@
-#    Copyright (c) 2015 Mirantis, Inc.
+# Copyright (c) 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,6 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import sys
+
+import six
+
 import yaql
 from yaql.language import exceptions
 from yaql.language import specs
@@ -21,6 +25,21 @@ from yaql import tests
 
 
 class TestEngine(tests.TestCase):
+    def test_parser_grammar(self):
+        # replace stderr with cString to write to
+        copy = sys.stderr
+        sys.stderr = six.StringIO()
+        try:
+            debug_opts = dict(self.engine_options)
+            debug_opts["yaql.debug"] = True
+            yaql.factory.YaqlFactory().create(options=debug_opts)
+            sys.stderr.seek(0)
+            err_out = sys.stderr.read()
+            self.assertEqual("Generating LALR tables\n", err_out)
+        finally:
+            # put stderr back
+            sys.stderr = copy
+
     def test_no_function_registered(self):
         self.assertRaises(
             exceptions.NoFunctionRegisteredException,
@@ -124,13 +143,8 @@ class TestEngine(tests.TestCase):
             return a, b, c
 
         self.context.register_function(func)
-
-        self.assertEqual([1, 22, 33], self.eval('func(1,,)'))
-        self.assertEqual([11, 1, 33], self.eval('func(,1,)'))
         self.assertEqual([11, 22, 1], self.eval('func(,,1)'))
         self.assertEqual([0, 22, 1], self.eval('func(0,,1)'))
-        self.assertEqual([11, 22, 33], self.eval('func(,,)'))
-        self.assertEqual([11, 22, 33], self.eval('func(,)'))
         self.assertEqual([11, 22, 33], self.eval('func()'))
         self.assertEqual([11, 1, 4], self.eval('func(,1, c=>4)'))
         self.assertRaises(
@@ -139,6 +153,24 @@ class TestEngine(tests.TestCase):
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
             self.eval, 'func(,1,, c=>4)')
+
+    def test_no_trailing_commas(self):
+        self.assertRaises(exceptions.YaqlGrammarException,
+                          self.eval, 'func(1,,)')
+        self.assertRaises(exceptions.YaqlGrammarException,
+                          self.eval, 'func(,1,)')
+        self.assertRaises(exceptions.YaqlGrammarException,
+                          self.eval, 'func(,,)')
+        self.assertRaises(exceptions.YaqlGrammarException,
+                          self.eval, 'func(,)')
+
+    def test_no_varargs_after_kwargs(self):
+        self.assertRaises(exceptions.YaqlGrammarException,
+                          self.eval, 'func(x=>y, t)')
+        self.assertRaises(exceptions.YaqlGrammarException,
+                          self.eval, 'func(x=>y, ,t)')
+        self.assertRaises(exceptions.YaqlGrammarException,
+                          self.eval, 'func(a, x=>y, ,t)')
 
     def test_super(self):
         @specs.parameter('string', yaqltypes.String())

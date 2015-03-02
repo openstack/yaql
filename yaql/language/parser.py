@@ -79,6 +79,8 @@ class Parser(object):
                         tuple(value)
                     )
         precedence.insert(1, ('left', 'LIST', 'INDEXER', 'MAP'))
+        precedence.insert(0, ('left', 'MAPPING'))
+        precedence.insert(0, ('left', ','))
         precedence.reverse()
         self.precedence = tuple(precedence)
 
@@ -117,16 +119,18 @@ class Parser(object):
     @staticmethod
     def p_args(p):
         """
-        args : arglist ',' named_arglist
-             | arglist
+        args : arglist
              | named_arglist
+             | arglist ',' named_arglist
+             | incomplete_arglist ',' named_arglist
+             |
         """
-        arg = ()
-        if len(p) >= 2:
-            arg = p[1]
-        if len(p) >= 4:
-            arg += p[3]
-        p[0] = arg
+        if len(p) == 1:
+            p[0] = []
+        elif len(p) == 2:
+            p[0] = p[1]
+        else:
+            p[0] = p[1] + p[3]
 
     @staticmethod
     def p_indexer(p):
@@ -143,25 +147,11 @@ class Parser(object):
         p[0] = expressions.ListExpression(*p[2])
 
     @staticmethod
-    def p_empty_list(p):
-        """
-        value : INDEXER ']' %prec LIST
-        """
-        p[0] = expressions.ListExpression()
-
-    @staticmethod
     def p_map(p):
         """
         value : MAP args '}'
         """
         p[0] = expressions.MapExpression(*p[2])
-
-    @staticmethod
-    def p_empty_map(p):
-        """
-        value : MAP '}'
-        """
-        p[0] = expressions.MapExpression()
 
     @staticmethod
     def p_val_to_function(p):
@@ -181,18 +171,23 @@ class Parser(object):
     def p_arg_list(p):
         """
         arglist : value
-                | arglist ',' value
-                |
-                | arglist ','
+                | ',' arglist
+                | arglist ',' arglist
+                | incomplete_arglist ',' arglist
         """
-        if len(p) == 1:
-            p[0] = [utils.NO_VALUE]
-        elif len(p) == 2:
+        if len(p) == 2:
             p[0] = [p[1]]
         elif len(p) == 3:
-            p[0] = p[1] + [utils.NO_VALUE]
+            p[0] = [utils.NO_VALUE] + p[2]
         elif len(p) == 4:
-            p[0] = p[1] + [p[3]]
+            p[0] = p[1] + p[3]
+
+    @staticmethod
+    def p_incomplete_arg_list(p):
+        """
+        incomplete_arglist : arglist ','
+        """
+        p[0] = p[1] + [utils.NO_VALUE]
 
     @staticmethod
     def p_named_arg_list(p):
@@ -208,8 +203,7 @@ class Parser(object):
     @staticmethod
     def p_function(p):
         """
-        func : FUNC ')'
-             | FUNC args ')'
+        func : FUNC args ')'
         """
         arg = ()
         if len(p) > 3:

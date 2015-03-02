@@ -226,6 +226,7 @@ class YaqlFactory(object):
         ply_lexer = lex.lex(object=lexer_rules, reflags=re.UNICODE)
         ply_parser = yacc.yacc(
             module=self._create_parser(lexer_rules, operators),
-            debug=False, tabmodule=None, write_tables=False)
+            debug=False if not options else options.get("yaql.debug", False),
+            tabmodule=None, write_tables=False)
 
         return YaqlEngine(ply_lexer, ply_parser, options, self)
