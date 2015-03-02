@@ -12,6 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os.path
+import pkg_resources
+
 from yaql.language import conventions
 from yaql.language import context as yaqlcontext
 from yaql.language import factory
@@ -27,10 +30,6 @@ from yaql.standard_library import queries as std_queries
 from yaql.standard_library import regex as std_regex
 from yaql.standard_library import strings as std_strings
 from yaql.standard_library import system as std_system
-
-
-__versioninfo__ = (1, 0, 0)
-__version__ = '.'.join(map(str, __versioninfo__))
 
 _cached_expressions = {}
 _cached_engine = None
@@ -92,6 +91,20 @@ def create_context(data=utils.NO_VALUE, context=None, system=True,
     return context
 
 YaqlFactory = factory.YaqlFactory
+
+
+def detect_version():
+    try:
+        dist = pkg_resources.get_distribution('yaql')
+        location = os.path.normcase(dist.location)
+        this_location = os.path.normcase(__file__)
+        if not this_location.startswith(os.path.join(location, 'yaql')):
+            raise pkg_resources.DistributionNotFound()
+        return dist.version
+    except pkg_resources.DistributionNotFound:
+        return 'Undefined (package was not installed with setuptools)'
+
+__version__ = detect_version()
 
 
 def eval(expression, data=None):
