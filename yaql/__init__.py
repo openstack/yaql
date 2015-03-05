@@ -15,8 +15,8 @@
 import os.path
 import pkg_resources
 
-from yaql.language import conventions
 from yaql.language import context as yaqlcontext
+from yaql.language import conventions
 from yaql.language import factory
 from yaql.language import specs
 from yaql.language import utils

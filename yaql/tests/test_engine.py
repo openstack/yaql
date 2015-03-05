@@ -19,8 +19,8 @@ import six
 import yaql
 from yaql.language import exceptions
 from yaql.language import specs
-from yaql.language import yaqltypes
 from yaql.language import utils
+from yaql.language import yaqltypes
 from yaql import tests
 
 

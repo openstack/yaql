@@ -18,8 +18,8 @@ import types
 import six
 
 from yaql.language import exceptions
-from yaql.language import yaqltypes
 from yaql.language import utils
+from yaql.language import yaqltypes
 
 NO_DEFAULT = utils.create_marker('<NoValue>')
 
