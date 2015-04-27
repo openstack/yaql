@@ -14,6 +14,7 @@
 
 import collections
 import re
+import uuid
 
 from ply import lex
 from ply import yacc
@@ -227,6 +228,6 @@ class YaqlFactory(object):
         ply_parser = yacc.yacc(
             module=self._create_parser(lexer_rules, operators),
             debug=False if not options else options.get("yaql.debug", False),
-            tabmodule=None, write_tables=False)
+            tabmodule='m' + uuid.uuid4().hex, write_tables=False)
 
         return YaqlEngine(ply_lexer, ply_parser, options, self)
