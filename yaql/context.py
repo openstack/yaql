@@ -17,7 +17,7 @@ import inspect
 from exceptions import NoArgumentFound
 
 
-class Context():
+class Context(object):
     def __init__(self, parent_context=None, data=None):
         self.parent_context = parent_context
         self.functions = {}

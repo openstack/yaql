@@ -17,7 +17,7 @@ import examples.ns.definition
 # DEPRECATED. Use cli to run samples
 
 
-class Customer():
+class Customer(object):
     def __init__(self, _id, email):
         self.id = _id
         self.email = email
