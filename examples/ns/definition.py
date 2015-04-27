@@ -27,7 +27,7 @@ def register_shortening(short_name, fqns):
 
 def register_symbol(fqns, symbol):
     if not fqns in values:
-        values[fqns] = {symbol}
+        values[fqns] = set(symbol)
     else:
         values[fqns].add(symbol)
 
