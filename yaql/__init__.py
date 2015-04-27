@@ -16,7 +16,7 @@ import parser
 import context
 from yaql.functions import builtin, extended
 
-__versioninfo__ = (0, 2, 4)
+__versioninfo__ = (0, 2, 5)
 __version__ = '.'.join(map(str, __versioninfo__))
 __grammar_version__ = '1.0'
 
