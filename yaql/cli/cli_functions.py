@@ -14,9 +14,11 @@
 
 import itertools
 import json
+import locale
 import os
 import re
 import readline
+import sys
 
 from yaql.language.exceptions import YaqlParsingException
 
@@ -43,7 +45,8 @@ def main(context, show_tokens, parser):
     comm = True
     while comm != 'exit':
         try:
-            comm = raw_input(PROMPT)
+            comm = raw_input(PROMPT).decode(sys.stdin.encoding or
+                                            locale.getpreferredencoding(True))
         except EOFError:
             return
         if not comm:
@@ -79,13 +82,9 @@ def main(context, show_tokens, parser):
             res = expr.evaluate(context=context)
             if utils.is_iterator(res):
                 res = list(itertools.islice(res, LIMIT))
-            print(json.dumps(res, indent=4))
+            print(json.dumps(res, indent=4, ensure_ascii=False))
         except Exception as ex:
-            print('Execution exception:')
-            if hasattr(ex, 'message'):
-                print(ex.message)
-            else:
-                print('Unknown')
+            print(u'Execution exception: {0}'.format(ex))
 
 
 def load_data(data_file, context):
