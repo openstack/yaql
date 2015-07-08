@@ -22,7 +22,7 @@ __grammar_version__ = '1.0'
 
 
 def parse(expression, write_tables=False):
-    tabmodule = 'yaql_parser_t_v%s' % __grammar_version__
+    tabmodule = 'yaql_parser_t_v%s' % __grammar_version__.replace('.', '_')
     return parser.parse(expression, write_tables, tabmodule)
 
 
