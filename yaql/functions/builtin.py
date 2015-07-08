@@ -48,7 +48,7 @@ def collection_attribution(self, att_name):
             yield val
 
 
-@EvalArg('self', arg_type=types.DictionaryType)
+@EvalArg('self', arg_type=dict)
 def dict_attribution(self, arg_name):
     return self.get(arg_name())
 
@@ -63,7 +63,7 @@ def wrap(value):
 
 # Collection filtering
 
-@EvalArg("index", types.IntType)
+@EvalArg("index", int)
 def get_by_index(this, index):
     this = this()
     if isinstance(this, types.GeneratorType):
@@ -132,19 +132,19 @@ def divide(a, b):
 
 # Boolean operations
 
-@EvalArg('a', arg_type=types.BooleanType)
-@EvalArg('b', arg_type=types.BooleanType)
+@EvalArg('a', arg_type=bool)
+@EvalArg('b', arg_type=bool)
 def _and(a, b):
     return a and b
 
 
-@EvalArg('a', arg_type=types.BooleanType)
-@EvalArg('b', arg_type=types.BooleanType)
+@EvalArg('a', arg_type=bool)
+@EvalArg('b', arg_type=bool)
 def _or(a, b):
     return a or b
 
 
-@EvalArg('self', arg_type=types.BooleanType)
+@EvalArg('self', arg_type=bool)
 def _not(self):
     return not self
 

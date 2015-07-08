@@ -66,7 +66,7 @@ def _list(self):
 
 
 @ContextAware()
-@EvalArg('levels', types.IntType)
+@EvalArg('levels', int)
 def parent(context, levels, func):
     con = context
     traversed = 0

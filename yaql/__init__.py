@@ -13,7 +13,7 @@
 #    under the License.
 
 import parser
-import context
+import yaql.context as context
 from yaql.functions import builtin, extended
 
 __versioninfo__ = (0, 2, 5)

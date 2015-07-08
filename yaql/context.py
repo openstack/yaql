@@ -14,7 +14,7 @@
 
 from functools import wraps
 import inspect
-from exceptions import NoArgumentFound
+from yaql.exceptions import NoArgumentFound
 
 
 class Context(object):
