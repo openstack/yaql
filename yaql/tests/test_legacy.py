@@ -50,29 +50,29 @@ class TestLegacy(yaql.tests.TestCase):
 
     def test_int(self):
         self.assertEqual(5, self.eval("'5'.int()"))
-        self.assertEqual(5, self.eval("5.2.int()"))
-        self.assertEqual(5, self.eval("int('5')"))
-        self.assertEqual(5, self.eval("int(5.2)"))
+        self.assertEqual(5, self.eval('5.2.int()'))
+        self.assertEqual(0, self.eval('null.int()'))
 
     def test_float(self):
         self.assertAlmostEqual(5.1, self.eval("'5.1'.float()"))
-        self.assertAlmostEqual(5.0, self.eval("5.float()"))
+        self.assertAlmostEqual(5.0, self.eval('5.float()'))
         self.assertAlmostEqual(5.1, self.eval("float('5.1')"))
         self.assertAlmostEqual(5.0, self.eval("float(5)"))
+        self.assertEqual(0, self.eval('null.float()'))
 
     def test_bool(self):
-        self.assertFalse(self.eval("null.bool()"))
+        self.assertFalse(self.eval('null.bool()'))
         self.assertFalse(self.eval("''.bool()"))
-        self.assertFalse(self.eval("0.bool()"))
-        self.assertFalse(self.eval("false.bool()"))
-        self.assertFalse(self.eval("[].bool()"))
-        self.assertFalse(self.eval("{}.bool()"))
+        self.assertFalse(self.eval('0.bool()'))
+        self.assertFalse(self.eval('false.bool()'))
+        self.assertFalse(self.eval('[].bool()'))
+        self.assertFalse(self.eval('{}.bool()'))
         self.assertTrue(self.eval("' '.bool()"))
-        self.assertTrue(self.eval("x.bool()"))
-        self.assertTrue(self.eval("1.bool()"))
-        self.assertTrue(self.eval("true.bool()"))
-        self.assertTrue(self.eval("[1].bool()"))
-        self.assertTrue(self.eval("{a=>b}.bool()"))
+        self.assertTrue(self.eval('x.bool()'))
+        self.assertTrue(self.eval('1.bool()'))
+        self.assertTrue(self.eval('true.bool()'))
+        self.assertTrue(self.eval('[1].bool()'))
+        self.assertTrue(self.eval('{a=>b}.bool()'))
 
     def test_filter(self):
         self.assertEqual(2, self.eval("list(1,2,3)[1]"))

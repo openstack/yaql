@@ -123,12 +123,14 @@ class TestMath(yaql.tests.TestCase):
         self.assertIsInstance(res, bool)
         self.assertTrue(res)
         self.assertFalse(self.eval('3 < 3'))
+        self.assertTrue(self.eval('2.5 < 3'))
 
     def test_gte(self):
         res = self.eval('5 >= 3')
         self.assertIsInstance(res, bool)
         self.assertTrue(res)
         self.assertTrue(self.eval('3 >= 3'))
+        self.assertTrue(self.eval('3.5 > 3'))
         self.assertFalse(self.eval('2 >= 3'))
 
     def test_lte(self):
@@ -140,10 +142,12 @@ class TestMath(yaql.tests.TestCase):
 
     def test_eq(self):
         self.assertTrue(self.eval('5 = 5'))
+        self.assertTrue(self.eval('1.0 = 1'))
         self.assertFalse(self.eval('5 = 6'))
 
     def test_neq(self):
         self.assertFalse(self.eval('5 != 5'))
+        self.assertFalse(self.eval('0 != 0.0'))
         self.assertTrue(self.eval('5 != 6'))
 
     def test_zero_division(self):
@@ -153,8 +157,14 @@ class TestMath(yaql.tests.TestCase):
         self.assertTrue(self.eval('with(random()) -> $ >= 0 and $ < 1'))
         self.assertTrue(self.eval('with(random(2, 5)) -> $ >= 2 and $ <= 5'))
 
+    def test_int(self):
+        self.assertEqual(5, self.eval("int('5')"))
+        self.assertEqual(5, self.eval('int(5.2)'))
+        self.assertEqual(0, self.eval('int(null)'))
+
     def test_float(self):
         self.assertAlmostEqual(-1.23, self.eval("float('-1.23')"))
+        self.assertEqual(0.0, self.eval('float(null)'))
 
     def test_bitwise_or(self):
         self.assertEqual(3, self.eval('bitwiseOr(1, 3)'))

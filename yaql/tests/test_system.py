@@ -66,3 +66,72 @@ class TestSystem(yaql.tests.TestCase):
         self.assertEqual(
             3,
             self.eval('[2].select($ + 1).assert(len($) = 1).first()'))
+
+    def test_lambda_passing(self):
+        delegate = lambda x: x ** 2
+        self.assertEqual(
+            9,
+            self.eval('$(3)', data=delegate))
+
+    def test_function_passing(self):
+        def func(x, y, z):
+            return (x - y) * z
+
+        context = self.context
+        context['func'] = func
+        self.assertEqual(
+            8,
+            self.eval('$func(5, z => 2, y => 1)', data=func))
+
+    def test_lambda_expression(self):
+        delegate = lambda x: x ** 2
+        self.assertEqual(
+            9,
+            self.eval('$.x[0](3)', data={'x': [delegate]}))
+
+        self.assertEqual(
+            9,
+            self.eval('($.x[0])(3)', data={'x': [delegate]}))
+
+    def test_2nd_order_lambda(self):
+        delegate = lambda y: lambda x: x ** y
+        self.assertEqual(
+            16,
+            self.eval('$(2)(4)', data=delegate))
+
+    def test_2nd_order_lambda_expression(self):
+        delegate = lambda y: {'key': lambda x: x ** y}
+        self.assertEqual(
+            16,
+            self.eval('$(2)[key](4)', data=delegate))
+
+    def test_2nd_order_lambda_collection_expression(self):
+        delegate = lambda y: lambda x: y ** x
+        self.assertEqual(
+            [1, 8, 27],
+            self.eval(
+                'let(func => $) -> [1, 2, 3].select($func($)).select($(3))',
+                data=delegate))
+
+    def test_lambda_func(self):
+        self.assertEqual(
+            [2, 4, 6],
+            self.eval('let(func => lambda(2 * $)) -> $.select($func($))',
+                      data=[1, 2, 3]))
+
+    def test_lambda_func_2nd_order(self):
+        self.assertEqual(
+            5,
+            self.eval('lambda(let(outer => $) -> lambda($outer - $))(7)(2)'))
+
+    def test_lambda_closure(self):
+        data = [1, 2, 3, 4, 5, 6]
+        self.assertEqual([3, 4, 5, 6], self.eval(
+            '$.where(lambda($ > 3)($+1))',
+            data=data))
+
+        # lambda can access value from "where"'s context
+        # so we can omit parameter
+        self.assertEqual([4, 5, 6], self.eval(
+            '$.where(lambda($ > 3)())',
+            data=data))

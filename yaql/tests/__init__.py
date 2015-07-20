@@ -38,7 +38,7 @@ class TestCase(testtools.TestCase):
     def create_engine(self):
         func = TestCase._default_engine
         if func is None:
-            engine_factory = factory.YaqlFactory()
+            engine_factory = factory.YaqlFactory(allow_delegates=True)
             TestCase._default_engine = func = engine_factory.create(
                 options=self.engine_options)
         return func
@@ -54,7 +54,7 @@ class TestCase(testtools.TestCase):
     @property
     def context(self):
         if self._context is None:
-            self._context = yaql.create_context()
+            self._context = yaql.create_context(delegates=True)
         return self._context
 
     @property

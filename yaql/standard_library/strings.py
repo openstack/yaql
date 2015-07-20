@@ -103,9 +103,18 @@ def right_split(string, separator=None, max_splits=-1):
 
 @specs.parameter('sequence', yaqltypes.Iterable())
 @specs.parameter('separator', yaqltypes.String())
+@specs.inject('str_delegate', yaqltypes.Delegate('str'))
 @specs.method
-def join(sequence, separator):
-    return separator.join(sequence)
+def join(sequence, separator, str_delegate):
+    return separator.join(six.moves.map(str_delegate, sequence))
+
+
+@specs.parameter('sequence', yaqltypes.Iterable())
+@specs.parameter('separator', yaqltypes.String())
+@specs.inject('str_delegate', yaqltypes.Delegate('str'))
+@specs.method
+def join_(separator, sequence, str_delegate):
+    return join(sequence, separator, str_delegate)
 
 
 @specs.parameter('value', nullable=True)
@@ -184,10 +193,10 @@ def replace_with_dict(string, str_func, replacements, count=-1):
     return string
 
 
-@specs.parameter('__format_string__', yaqltypes.String())
+@specs.parameter('__format_string', yaqltypes.String())
 @specs.extension_method
-def format_(__format_string__, *args, **kwargs):
-    return __format_string__.format(*args, **kwargs)
+def format_(__format_string, *args, **kwargs):
+    return __format_string.format(*args, **kwargs)
 
 
 @specs.parameter('left', yaqltypes.String())
@@ -342,6 +351,7 @@ def register(context):
     context.register_function(split)
     context.register_function(right_split)
     context.register_function(join)
+    context.register_function(join_)
     context.register_function(str_)
     context.register_function(concat)
     context.register_function(concat, name='#operator_+')

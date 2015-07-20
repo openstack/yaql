@@ -96,8 +96,9 @@ class TestCollections(yaql.tests.TestCase):
                          self.eval('$.toDict($, $*$)', data=[1, 2, 3]))
 
     def test_keyword_dict_access(self):
-        data = {'a': 12, 'b c': 44}
-        self.assertEqual(12, self.eval('$.a', data=data))
+        data = {'A': 12, 'b c': 44, '__d': 99, '_e': 999}
+        self.assertEqual(12, self.eval('$.A', data=data))
+        self.assertEqual(999, self.eval('$._e', data=data))
 
         self.assertRaises(exceptions.NoMatchingFunctionException,
                           self.eval, "$.'b c'", data=data)
@@ -105,6 +106,8 @@ class TestCollections(yaql.tests.TestCase):
                           self.eval, "$.123", data=data)
         self.assertRaises(KeyError,
                           self.eval, "$.b", data=data)
+        self.assertRaises(exceptions.YaqlLexicalException,
+                          self.eval, "$.__d", data=data)
 
     def test_keyword_collection_access(self):
         data = [{'a': 2}, {'a': 4}]

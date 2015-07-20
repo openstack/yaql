@@ -82,8 +82,9 @@ class YaqlEngine(object):
 
 
 class YaqlFactory(object):
-    def __init__(self, keyword_operator='=>'):
+    def __init__(self, keyword_operator='=>', allow_delegates=False):
         self._keyword_operator = keyword_operator
+        self._allow_delegates = allow_delegates
         self.operators = self._standard_operators()
         if keyword_operator:
             self.operators.insert(0, (keyword_operator,
@@ -92,6 +93,10 @@ class YaqlFactory(object):
     @property
     def keyword_operator(self):
         return self._keyword_operator
+
+    @property
+    def allow_delegates(self):
+        return self._allow_delegates
 
     # noinspection PyMethodMayBeStatic
     def _standard_operators(self):
@@ -218,7 +223,7 @@ class YaqlFactory(object):
 
     # noinspection PyMethodMayBeStatic
     def _create_parser(self, lexer_rules, operators):
-        return parser.Parser(lexer_rules, operators)
+        return parser.Parser(lexer_rules, operators, self)
 
     def create(self, options=None):
         names = self._name_generator()
@@ -227,7 +232,7 @@ class YaqlFactory(object):
         ply_lexer = lex.lex(object=lexer_rules, reflags=re.UNICODE)
         ply_parser = yacc.yacc(
             module=self._create_parser(lexer_rules, operators),
-            debug=False if not options else options.get("yaql.debug", False),
+            debug=False if not options else options.get('yaql.debug', False),
             tabmodule='m' + uuid.uuid4().hex, write_tables=False)
 
         return YaqlEngine(ply_lexer, ply_parser, options, self)

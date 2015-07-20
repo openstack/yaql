@@ -23,7 +23,7 @@ from yaql.language import utils
 
 class HiddenParameterType(object):
     # noinspection PyMethodMayBeStatic,PyUnusedLocal
-    def check(self, value):
+    def check(self, value, context):
         return True
 
 
@@ -35,13 +35,13 @@ class SmartType(object):
     def __init__(self, nullable):
         self.nullable = nullable
 
-    def check(self, value):
+    def check(self, value, context):
         if value is None and not self.nullable:
             return False
         return True
 
     def convert(self, value, sender, context, function_spec, engine):
-        if not self.check(value):
+        if not self.check(value, context):
             raise exceptions.ArgumentValueException()
         utils.limit_memory_usage(engine, (1, value))
 
@@ -49,7 +49,35 @@ class SmartType(object):
         return False
 
 
-class PythonType(SmartType):
+class GenericType(SmartType):
+    def __init__(self, nullable, checker=None, converter=None):
+        super(GenericType, self).__init__(nullable)
+        self.checker = checker
+        self.converter = converter
+
+    def check(self, value, context):
+        if isinstance(value, expressions.Constant):
+            value = value.value
+
+        if not super(GenericType, self).check(value, context):
+            return False
+        if value is None or isinstance(value, expressions.Expression):
+            return True
+        if not self.checker:
+            return True
+        return self.checker(value, context)
+
+    def convert(self, value, sender, context, function_spec, engine):
+        if isinstance(value, expressions.Constant):
+            value = value.value
+        super(GenericType, self).convert(
+            value, sender, context, function_spec, engine)
+        if value is None or not self.converter:
+            return value
+        return self.converter(value, sender, context, function_spec, engine)
+
+
+class PythonType(GenericType):
     def __init__(self, python_type, nullable=True, validators=None):
         self.python_type = python_type
         if not validators:
@@ -57,45 +85,39 @@ class PythonType(SmartType):
         if not isinstance(validators, (list, tuple)):
             validators = [validators]
         self.validators = validators
-        super(PythonType, self).__init__(nullable)
 
-    def check(self, value):
-        if isinstance(value, expressions.Constant):
-            value = value.value
-
-        return super(PythonType, self).check(value) and (
-            value is None or isinstance(value, expressions.Expression) or (
-                isinstance(value, self.python_type) and all(
-                    map(lambda t: t(value), self.validators))))
-
-    def convert(self, value, sender, context, function_spec, engine):
-        super(PythonType, self).convert(value, sender, context,
-                                        function_spec, engine)
-        if isinstance(value, expressions.Constant):
-            value = value.value
-        super(PythonType, self).convert(value, sender, context,
-                                        function_spec, engine)
-        return value
+        super(PythonType, self).__init__(
+            nullable,
+            lambda value, context: isinstance(
+                value, self.python_type) and all(
+                map(lambda t: t(value), self.validators)))
 
     def is_specialization_of(self, other):
-        return (
-            isinstance(other, PythonType)
-            and issubclass(self.python_type, other.python_type)
-            and not issubclass(other.python_type, self.python_type)
-        )
+        if not isinstance(other, PythonType):
+            return False
+        try:
+            len(self.python_type)
+            len(other.python_type)
+        except Exception:
+            return (
+                issubclass(self.python_type, other.python_type)
+                and not issubclass(other.python_type, self.python_type)
+            )
+        else:
+            return False
 
 
 class MappingRule(LazyParameterType, SmartType):
     def __init__(self):
         super(MappingRule, self).__init__(False)
 
-    def check(self, value):
+    def check(self, value, context):
         return isinstance(value, expressions.MappingRuleExpression)
 
     def convert(self, value, sender, context, function_spec, engine):
         super(MappingRule, self).convert(value, sender, context,
                                          function_spec, engine)
-        wrap = lambda func: lambda: func(sender, context, engine)[0]
+        wrap = lambda func: lambda: func(sender, context, engine)
 
         return utils.MappingRule(wrap(value.source), wrap(value.destination))
 
@@ -145,17 +167,16 @@ class Number(PythonType):
 
 
 class Lambda(LazyParameterType, SmartType):
-    def __init__(self, with_context=False, method=False, return_context=False):
+    def __init__(self, with_context=False, method=False):
         super(Lambda, self).__init__(True)
-        self.return_context = return_context
         self.with_context = with_context
         self.method = method
 
-    def check(self, value):
+    def check(self, value, context):
         if self.method and isinstance(
                 value, expressions.Expression) and not value.uses_sender:
             return False
-        return super(Lambda, self).check(value)
+        return super(Lambda, self).check(value, context)
 
     @staticmethod
     def _publish_params(context, args, kwargs):
@@ -168,17 +189,17 @@ class Lambda(LazyParameterType, SmartType):
         self._publish_params(context, args, kwargs)
         if isinstance(value, expressions.Expression):
             result = value(sender, context, engine)
-        elif six.callable(value):
-            result = value, context
         else:
             result = value, context
-        return result[0] if not self.return_context else result
+        return result
 
     def convert(self, value, sender, context, function_spec, engine):
         super(Lambda, self).convert(value, sender, context,
                                     function_spec, engine)
         if value is None:
             return None
+        elif six.callable(value) and hasattr(value, '__unwrapped__'):
+            value = value.__unwrapped__
 
         def func(*args, **kwargs):
             if self.method and self.with_context:
@@ -198,13 +219,12 @@ class Lambda(LazyParameterType, SmartType):
             return self._call(value, new_sender, new_context,
                               engine, args, kwargs)
 
+        func.__unwrapped__ = value
         return func
 
 
 class Super(HiddenParameterType, SmartType):
-    def __init__(self, with_context=False, method=None, return_context=False,
-                 with_name=False):
-        self.return_context = return_context
+    def __init__(self, with_context=False, method=None, with_name=False):
         self.with_context = with_context
         self.method = method
         self.with_name = with_name
@@ -221,6 +241,9 @@ class Super(HiddenParameterType, SmartType):
             spec.name)
 
     def convert(self, value, sender, context, function_spec, engine):
+        if six.callable(value) and hasattr(value, '__unwrapped__'):
+            value = value.__unwrapped__
+
         def func(*args, **kwargs):
             function_context = self._find_function_context(
                 function_spec, context)
@@ -248,8 +271,8 @@ class Super(HiddenParameterType, SmartType):
                 new_context = context.create_child_context()
 
             return parent_function_context(
-                new_name, engine, new_sender, new_context,
-                self.return_context)(*args, **kwargs)
+                new_name, engine, new_sender, new_context)(*args, **kwargs)
+        func.__unwrapped__ = value
         return func
 
 
@@ -262,15 +285,16 @@ class Context(HiddenParameterType, SmartType):
 
 
 class Delegate(HiddenParameterType, SmartType):
-    def __init__(self, name=None, with_context=False, method=False,
-                 return_context=False):
+    def __init__(self, name=None, with_context=False, method=False):
         super(Delegate, self).__init__(False)
         self.name = name
-        self.return_context = return_context
         self.with_context = with_context
         self.method = method
 
     def convert(self, value, sender, context, function_spec, engine):
+        if six.callable(value) and hasattr(value, '__unwrapped__'):
+            value = value.__unwrapped__
+
         def func(*args, **kwargs):
             name = self.name
             if not name:
@@ -288,8 +312,8 @@ class Delegate(HiddenParameterType, SmartType):
                 new_context = context.create_child_context()
 
             return new_context(
-                name, engine, new_sender, return_context=self.return_context,
-                use_convention=True)(*args, **kwargs)
+                name, engine, new_sender, use_convention=True)(*args, **kwargs)
+        func.__unwrapped__ = value
         return func
 
 
@@ -322,8 +346,8 @@ class Constant(SmartType):
         self.expand = expand
         super(Constant, self).__init__(nullable)
 
-    def check(self, value):
-        return super(Constant, self).check(value.value) and (
+    def check(self, value, context):
+        return super(Constant, self).check(value.value, context) and (
             value is None or isinstance(value, expressions.Constant))
 
     def convert(self, value, sender, context, function_spec, engine):
@@ -336,7 +360,7 @@ class YaqlExpression(LazyParameterType, SmartType):
     def __init__(self):
         super(YaqlExpression, self).__init__(False)
 
-    def check(self, value):
+    def check(self, value, context):
         return isinstance(value, expressions.Expression)
 
     def convert(self, value, sender, context, function_spec, engine):
@@ -349,8 +373,8 @@ class StringConstant(Constant):
     def __init__(self, nullable=False):
         super(StringConstant, self).__init__(nullable)
 
-    def check(self, value):
-        return super(StringConstant, self).check(value) and (
+    def check(self, value, context):
+        return super(StringConstant, self).check(value, context) and (
             value is None or isinstance(value.value, six.string_types))
 
 
@@ -358,7 +382,7 @@ class Keyword(Constant):
     def __init__(self, expand=True):
         super(Keyword, self).__init__(False, expand)
 
-    def check(self, value):
+    def check(self, value, context):
         return isinstance(value, expressions.KeywordConstant)
 
 
@@ -366,8 +390,8 @@ class BooleanConstant(Constant):
     def __init__(self, nullable=False, expand=True):
         super(BooleanConstant, self).__init__(nullable, expand)
 
-    def check(self, value):
-        return super(BooleanConstant, self).check(value) and (
+    def check(self, value, context):
+        return super(BooleanConstant, self).check(value, context) and (
             value is None or type(value.value) is bool)
 
 
@@ -375,8 +399,8 @@ class NumericConstant(Constant):
     def __init__(self, nullable=False, expand=True):
         super(NumericConstant, self).__init__(nullable, expand)
 
-    def check(self, value):
-        return super(NumericConstant, self).check(value) and (
+    def check(self, value, context):
+        return super(NumericConstant, self).check(value, context) and (
             value is None or isinstance(
                 value.value, six.integer_types + (float,)) and
             type(value.value) is not bool)

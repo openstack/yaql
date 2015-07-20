@@ -202,3 +202,19 @@ def limit_memory_usage(engine, *args):
         total += t[0] * sys.getsizeof(t[1], 0)
         if total > quota:
             raise exceptions.MemoryQuotaExceededException()
+
+
+def to_extension_method(name, context):
+    layers = context.collect_functions(
+        name,
+        lambda t, ctx: not t.is_function or not t.is_method,
+        use_convention=True)
+    if len(layers) > 1:
+        raise ValueError(
+            'Multi layer functions are not supported by this helper method')
+    if len(layers) > 0:
+        for spec in layers[0]:
+            spec = spec.clone()
+            spec.is_function = True
+            spec.is_method = True
+            yield spec

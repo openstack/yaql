@@ -34,8 +34,7 @@ class Function(Expression):
         self.uses_sender = True
 
     def __call__(self, sender, context, engine):
-        return context(self.name, engine, sender, context,
-                       return_context=True)(*self.args)
+        return context(self.name, engine, sender, context)(*self.args)
 
     def __str__(self):
         return u'{0}({1})'.format(self.name, ', '.join(
@@ -105,7 +104,7 @@ class Constant(Expression):
         return six.text_type(self.value)
 
     def __call__(self, sender, context, engine):
-        return self.value, context
+        return self.value
 
 
 class KeywordConstant(Constant):
@@ -137,8 +136,8 @@ class MappingRuleExpression(Expression):
 
     def __call__(self, sender, context, engine):
         return utils.MappingRule(
-            self.source(sender, context, engine)[0],
-            self.destination(sender, context, engine)[0]), context
+            self.source(sender, context, engine),
+            self.destination(sender, context, engine))
 
 
 @six.python_2_unicode_compatible
@@ -158,12 +157,12 @@ class Statement(Function):
         except exceptions.WrappedException as e:
             six.reraise(type(e.wrapped), e.wrapped, sys.exc_info()[2])
 
-    def evaluate(self, data=utils.NO_VALUE, context=utils.NO_VALUE):
-        if context is utils.NO_VALUE:
+    def evaluate(self, data=utils.NO_VALUE, context=None):
+        if context is None or context is utils.NO_VALUE:
             context = yaql.create_context()
         if data is not utils.NO_VALUE:
             context['$'] = utils.convert_input_data(data)
-        return self(utils.NO_VALUE, context, self.engine)[0]
+        return self(utils.NO_VALUE, context, self.engine)
 
     def __str__(self):
         return str(self.expression)

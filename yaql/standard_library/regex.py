@@ -42,6 +42,13 @@ def matches(regexp, string):
     return regexp.search(string) is not None
 
 
+@specs.parameter('string', yaqltypes.String())
+@specs.parameter('regexp', yaqltypes.String())
+@specs.method
+def matches_(string, regexp):
+    return re.search(regexp, string) is not None
+
+
 @specs.parameter('regexp', REGEX_TYPE)
 @specs.parameter('string', yaqltypes.String())
 @specs.name('#operator_=~')
@@ -189,6 +196,7 @@ def escape_regex(string):
 def register(context):
     context.register_function(regex)
     context.register_function(matches)
+    context.register_function(matches_)
     context.register_function(matches_operator_string)
     context.register_function(matches_operator_regex)
     context.register_function(not_matches_operator_string)

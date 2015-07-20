@@ -20,12 +20,12 @@ from yaql.language import utils
 
 
 class Parser(object):
-    def __init__(self, lexer, yaql_operators):
+    def __init__(self, lexer, yaql_operators, engine):
         self.tokens = lexer.tokens
         self._aliases = {}
-        self._generate_operator_funcs(yaql_operators)
+        self._generate_operator_funcs(yaql_operators, engine)
 
-    def _generate_operator_funcs(self, yaql_operators):
+    def _generate_operator_funcs(self, yaql_operators, engine):
         binary_doc = ''
         unary_doc = ''
         precedence_dict = {}
@@ -83,6 +83,18 @@ class Parser(object):
         precedence.insert(0, ('left', ','))
         precedence.reverse()
         self.precedence = tuple(precedence)
+
+        def p_value_call(this, p):
+            """
+            func : value '(' args ')'
+            """
+            arg = ()
+            if len(p) > 4:
+                arg = p[3]
+            p[0] = expressions.Function('#call', p[1], *arg)
+
+        if engine.allow_delegates:
+            self.p_value_call = six.create_bound_method(p_value_call, self)
 
     @staticmethod
     def p_value_to_const(p):

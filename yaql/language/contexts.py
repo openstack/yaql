@@ -21,8 +21,11 @@ from yaql.language import utils
 
 
 class ContextBase(object):
-    def __init__(self, parent_context):
+    def __init__(self, parent_context=None, convention=None):
         self._parent_context = parent_context
+        self._convention = convention
+        if convention is None and parent_context:
+            self._convention = parent_context.convention
 
     @property
     def parent(self):
@@ -31,8 +34,11 @@ class ContextBase(object):
     def register_function(self, spec, *args, **kwargs):
         pass
 
+    def get_data(self, name, default=None, ask_parent=True):
+        return default
+
     def __getitem__(self, name):
-        return None
+        return self.get_data(name)
 
     def __setitem__(self, name, value):
         pass
@@ -40,10 +46,15 @@ class ContextBase(object):
     def __delitem__(self, name):
         pass
 
+    def __contains__(self, item):
+        return self.get_data(item, utils.NO_VALUE) is not utils.NO_VALUE
+
     def __call__(self, name, engine, sender=utils.NO_VALUE,
-                 data_context=None, return_context=False,
-                 use_convention=False):
-        raise exceptions.NoFunctionRegisteredException(name)
+                 data_context=None, use_convention=False,
+                 function_filter=None):
+        return lambda *args, **kwargs: runner.call(
+            name, self, args, kwargs, engine, sender,
+            data_context, use_convention, function_filter)
 
     def get_functions(self, name, predicate=None, use_convention=False):
         return []
@@ -54,14 +65,17 @@ class ContextBase(object):
     def create_child_context(self):
         return type(self)(self)
 
+    @property
+    def convention(self):
+        return self._convention
+
 
 class Context(ContextBase):
     def __init__(self, parent_context=None, data=utils.NO_VALUE,
                  convention=None):
-        super(Context, self).__init__(parent_context)
+        super(Context, self).__init__(parent_context, convention)
         self._functions = {}
         self._data = {}
-        self._convention = convention
         if data is not utils.NO_VALUE:
             self['$'] = data
 
@@ -84,6 +98,7 @@ class Context(ContextBase):
         self._functions.setdefault(spec.name, list()).append((spec, exclusive))
 
     def get_functions(self, name, predicate=None, use_convention=False):
+        name = name.rstrip('_')
         if use_convention and self._convention is not None:
             name = self._convention.convert_function_name(name)
         if predicate is None:
@@ -93,6 +108,7 @@ class Context(ContextBase):
             self._functions.get(name, list()))))
 
     def collect_functions(self, name, predicate=None, use_convention=False):
+        name = name.rstrip('_')
         if use_convention and self._convention is not None:
             name = self._convention.convert_function_name(name)
         overloads = []
@@ -105,19 +121,12 @@ class Context(ContextBase):
                 for spec, exclusive in layer_overloads:
                     if exclusive:
                         p = None
-                    if predicate and not predicate(spec):
+                    if predicate and not predicate(spec, self):
                         continue
                     layer.append(spec)
                 if layer:
                     overloads.append(layer)
         return overloads
-
-    def __call__(self, name, engine, sender=utils.NO_VALUE,
-                 data_context=None, return_context=False,
-                 use_convention=False):
-        return lambda *args, **kwargs: runner.call(
-            name, self, args, kwargs, engine, sender,
-            data_context, return_context, use_convention)
 
     @staticmethod
     def _normalize_name(name):
@@ -130,15 +139,80 @@ class Context(ContextBase):
     def __setitem__(self, name, value):
         self._data[self._normalize_name(name)] = value
 
-    def __getitem__(self, name):
+    def get_data(self, name, default=None, ask_parent=True):
         name = self._normalize_name(name)
         if name in self._data:
             return self._data[name]
-        if self.parent:
-            return self.parent[name]
+        if self.parent and ask_parent:
+            return self.parent.get_data(name, default, ask_parent)
+        return default
 
     def __delitem__(self, name):
         self._data.pop(self._normalize_name(name))
 
     def create_child_context(self):
         return Context(self, convention=self._convention)
+
+
+class MultiContext(ContextBase):
+    def __init__(self, context_list, convention=None):
+        self._context_list = context_list
+        if convention is None:
+            convention = context_list[0].convention
+        parents = six.moves.filter(
+            lambda t: t,
+            six.moves.map(lambda t: t.parent, context_list))
+        if not parents:
+            super(MultiContext, self).__init__(None, convention)
+        elif len(parents) == 1:
+            super(MultiContext, self).__init__(parents[0], convention)
+        else:
+            super(MultiContext, self).__init__(MultiContext(parents),
+                                               convention)
+
+    def register_function(self, spec, *args, **kwargs):
+        self._context_list[0].register_function(spec, *args, **kwargs)
+
+    def get_data(self, name, default=None, ask_parent=True):
+        for context in self._context_list:
+            result = context.get_data(name, utils.NO_VALUE, False)
+            if result is not utils.NO_VALUE:
+                return result
+        if ask_parent and self.parent:
+            return self.parent.get_data(name, default, ask_parent)
+        return default
+
+    def __setitem__(self, name, value):
+        self._context_list[0][name] = value
+
+    def get_functions(self, name, predicate=None, use_convention=False):
+        result = []
+        for context in self._context_list:
+            result.extend(context.get_functions(
+                name, predicate, use_convention))
+        return result
+
+    def collect_functions(self, name, predicate=None, use_convention=False):
+        functions = six.moves.map(
+            lambda ctx: ctx.collect_functions(name, predicate, use_convention),
+            self._context_list)
+        i = 0
+        result = []
+        while True:
+            level = []
+            has_level = False
+            for f in functions:
+                if len(f) > i:
+                    has_level = True
+                    level.extend(f[i])
+            if not has_level:
+                return result
+            i += 1
+            result.append(level)
+
+    def __delitem__(self, name):
+        for context in self._context_list:
+            del context[name]
+
+    def create_child_context(self):
+        return Context(self)

@@ -28,13 +28,13 @@ class PythonConvention(Convention):
         if not name or not name[0].isalpha():
             return name
 
-        return name.rstrip('_')
+        return name
 
     def convert_parameter_name(self, name):
         if not name or not name[0].isalpha():
             return name
 
-        return name.rstrip('_')
+        return name
 
 
 class CamelCaseConvention(Convention):
@@ -45,12 +45,12 @@ class CamelCaseConvention(Convention):
         if not name or not name[0].isalpha():
             return name
 
-        return self._to_camel_case(name.strip('_'))
+        return self._to_camel_case(name)
 
     def convert_parameter_name(self, name):
         if not name or not name[0].isalpha():
             return name
-        return self._to_camel_case(name.rstrip('_', ))
+        return self._to_camel_case(name)
 
     def _to_camel_case(self, name):
         return self.regex.sub(lambda m: m.group(1).upper(), name)

@@ -20,6 +20,10 @@ class TestRegex(yaql.tests.TestCase):
         self.assertTrue(self.eval("regex('a.b').matches(axb)"))
         self.assertFalse(self.eval("regex('a.b').matches(abx)"))
 
+    def test_matches_string_method(self):
+        self.assertTrue(self.eval("axb.matches('a.b')"))
+        self.assertFalse(self.eval("abx.matches('a.b')"))
+
     def test_matches_operator_regex(self):
         self.assertTrue(self.eval("axb =~ regex('a.b')"))
         self.assertFalse(self.eval("abx =~ regex('a.b')"))

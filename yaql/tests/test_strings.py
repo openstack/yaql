@@ -68,6 +68,9 @@ class TestStrings(yaql.tests.TestCase):
     def test_join(self):
         self.assertEqual('some-text', self.eval("[some, text].join('-')"))
 
+    def test_join_pythonic(self):
+        self.assertEqual('some-text', self.eval("'-'.join([some, text])"))
+
     def test_is_empty(self):
         self.assertTrue(self.eval("isEmpty('')"))
         self.assertTrue(self.eval("isEmpty(null)"))

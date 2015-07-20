@@ -35,6 +35,17 @@ def list_(delegate, *args):
 
 @specs.method
 @specs.parameter('collection', yaqltypes.Iterable())
+def flatten(collection):
+    for t in collection:
+        if utils.is_iterable(t):
+            for t2 in flatten(t):
+                yield t2
+        else:
+            yield t
+
+
+@specs.method
+@specs.parameter('collection', yaqltypes.Iterable())
 def to_list(collection):
     if isinstance(collection, tuple):
         return collection
@@ -499,6 +510,7 @@ def register(context, no_sets=False):
     context.register_function(list_)
     context.register_function(build_list)
     context.register_function(to_list)
+    context.register_function(flatten)
     context.register_function(list_indexer)
     context.register_function(dict_)
     context.register_function(dict_, name='#map')

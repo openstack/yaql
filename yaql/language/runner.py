@@ -23,15 +23,18 @@ from yaql.language import yaqltypes
 
 
 def call(name, context, args, kwargs, engine, sender=utils.NO_VALUE,
-         data_context=None, return_context=False, use_convention=False):
+         data_context=None, use_convention=False, function_filter=None):
 
     if data_context is None:
         data_context = context
 
+    if function_filter is None:
+        function_filter = lambda fd, ctx: True
+
     if sender is utils.NO_VALUE:
-        predicate = lambda fd: fd.is_function
+        predicate = lambda fd, ctx: fd.is_function and function_filter(fd, ctx)
     else:
-        predicate = lambda fd: fd.is_method
+        predicate = lambda fd, ctx: fd.is_method and function_filter(fd, ctx)
 
     all_overloads = context.collect_functions(
         name, predicate, use_convention=use_convention)
@@ -46,8 +49,8 @@ def call(name, context, args, kwargs, engine, sender=utils.NO_VALUE,
                                    data_context, args, kwargs)
         try:
             result = delegate()
-            utils.limit_memory_usage(engine, (1, result[0]))
-            return result if return_context else result[0]
+            utils.limit_memory_usage(engine, (1, result))
+            return result
         except StopIteration as e:
             six.reraise(
                 exceptions.WrappedException,
@@ -82,7 +85,7 @@ def choose_overload(name, candidates, engine, sender, context, args, kwargs):
             elif no_kwargs != c.no_kwargs:
                 raise_ambiguous()
 
-            mapping = c.map_args(args, kwargs)
+            mapping = c.map_args(args, kwargs, context)
             if mapping is None:
                 continue
             pos, kwd = mapping
@@ -105,7 +108,7 @@ def choose_overload(name, candidates, engine, sender, context, args, kwargs):
         raise_not_found()
 
     arg_evaluator = lambda i, arg: (
-        arg(utils.NO_VALUE, context, engine)[0]
+        arg(utils.NO_VALUE, context, engine)
         if (i not in lazy_params and isinstance(arg, expressions.Expression)
             and not isinstance(arg, expressions.Constant))
         else arg
@@ -120,7 +123,7 @@ def choose_overload(name, candidates, engine, sender, context, args, kwargs):
     for level in candidates2:
         for c, mapping in level:
             try:
-                d = c.get_delegate(sender, engine, args, kwargs)
+                d = c.get_delegate(sender, engine, context, args, kwargs)
             except exceptions.ArgumentException:
                 pass
             else:
@@ -136,7 +139,7 @@ def choose_overload(name, candidates, engine, sender, context, args, kwargs):
 
     if delegate is None:
         raise_not_found()
-    return lambda: delegate(context)
+    return lambda: delegate()
 
 
 def _translate_args(without_kwargs, args, kwargs):
@@ -145,13 +148,13 @@ def _translate_args(without_kwargs, args, kwargs):
             raise exceptions.ArgumentException(six.next(iter(kwargs)))
         return args, {}
     pos_args = []
-    kw_args = dict(kwargs)
+    kw_args = {}
     for t in args:
         if isinstance(t, expressions.MappingRuleExpression):
             param_name = t.source
-            if isinstance(param_name, expressions.Constant):
+            if isinstance(param_name, expressions.KeywordConstant):
                 param_name = param_name.value
-            if not isinstance(param_name, six.string_types):
+            else:
                 raise exceptions.MappingTranslationException()
             kw_args[param_name] = t.destination
         else:

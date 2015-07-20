@@ -104,7 +104,7 @@ class Lexer(object):
 
     def t_KEYWORD_STRING(self, t):
         """
-        \\b[^\\W\\d]\\w*\\b
+        (?!__)\\b[^\\W\\d]\\w*\\b
         """
         if t.value in self._operators_table:
             t.type = self._operators_table[t.value][2]

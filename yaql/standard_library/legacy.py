@@ -16,6 +16,7 @@ import itertools
 
 import six
 
+from yaql.language import contexts
 from yaql.language import expressions
 from yaql.language import specs
 from yaql.language import utils
@@ -26,9 +27,9 @@ from yaql.language import yaqltypes
 @specs.name('#operator_=>')
 def build_tuple(left, right, context, engine):
     if isinstance(left, expressions.BinaryOperator) and left.operator == '=>':
-        return left(utils.NO_VALUE, context, engine)[0] + (right,)
+        return left(utils.NO_VALUE, context, engine) + (right,)
     else:
-        return left(utils.NO_VALUE, context, engine)[0], right
+        return left(utils.NO_VALUE, context, engine), right
 
 
 @specs.parameter('tuples', tuple)
@@ -82,6 +83,13 @@ def switch(*conditions):
     return None
 
 
+@specs.parameter('sender', contexts.ContextBase)
+@specs.parameter('expr', yaqltypes.Lambda(with_context=True, method=True))
+@specs.name('#operator_.')
+def op_dot_context(sender, expr):
+    return expr(sender['$0'], sender)
+
+
 @specs.parameter('mappings', yaqltypes.Lambda())
 @specs.method
 def as_(context, sender, *mappings):
@@ -92,17 +100,8 @@ def as_(context, sender, *mappings):
         if len(tt) != 2:
             raise ValueError('as() tuples must be of size 2')
         context[tt[1]] = tt[0]
-    return sender
-
-
-def _to_extension_method(name, context):
-    for spec in context.parent.get_functions(
-            name, lambda t: not t.is_function or not t.is_method,
-            use_convention=True):
-        spec = spec.clone()
-        spec.is_function = True
-        spec.is_method = True
-        context.register_function(spec)
+        context['$0'] = sender
+    return context
 
 
 def register(context, tuples):
@@ -117,7 +116,9 @@ def register(context, tuples):
     context.register_function(range_)
     context.register_function(switch, exclusive=True)
     context.register_function(as_)
+    context.register_function(op_dot_context)
 
     for t in ('get', 'list', 'bool', 'int', 'float', 'select', 'where',
-              'join', 'sum', 'take_while'):
-        _to_extension_method(t, context)
+              'join', 'sum', 'take_while', 'len'):
+        for spec in utils.to_extension_method(t, context):
+            context.register_function(spec)

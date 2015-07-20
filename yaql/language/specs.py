@@ -13,7 +13,6 @@
 #    under the License.
 
 import inspect
-import types
 
 import six
 
@@ -43,21 +42,23 @@ class ParameterDefinition(object):
 
 
 class FunctionDefinition(object):
-    def __init__(self, name, parameters, payload, doc='',
-                 is_function=True, is_method=False,
-                 returns_context=False, no_kwargs=False):
+    def __init__(self, name, payload, parameters=None, doc='', meta=None,
+                 is_function=True, is_method=False, no_kwargs=False):
         self.is_method = is_method
         self.is_function = is_function
         self.name = name
-        self.parameters = parameters
+        self.parameters = {} if not parameters else parameters
         self.payload = payload
         self.doc = doc
-        self.returns_context = returns_context
         self.no_kwargs = no_kwargs
+        self.meta = meta or {}
 
-    def __call__(self, sender, engine, context):
-        return lambda *args, **kwargs: \
-            self.get_delegate(sender, engine, args, kwargs)(context)[0]
+    def __call__(self, engine, context, sender=utils.NO_VALUE):
+        def func(*args, **kwargs):
+            if sender is not utils.NO_VALUE:
+                args = (sender,) + args
+            return self.get_delegate(sender, engine, context, args, kwargs)()
+        return func
 
     def clone(self):
         parameters = dict(
@@ -65,12 +66,135 @@ class FunctionDefinition(object):
             for key, p in six.iteritems(self.parameters))
 
         res = FunctionDefinition(
-            self.name, parameters, self.payload,
-            self.doc, self.is_function, self.is_method,
-            self.returns_context, self.no_kwargs)
+            self.name, self.payload, parameters, self.doc,
+            self.meta, self.is_function, self.is_method, self.no_kwargs)
         return res
 
-    def map_args(self, args, kwargs):
+    def strip_hidden_parameters(self):
+        fd = self.clone()
+        keys_to_remove = set()
+
+        for k, v in fd.parameters.iteritems():
+            if not isinstance(v.value_type, yaqltypes.HiddenParameterType):
+                continue
+            keys_to_remove.add(k)
+            if v.position is not None:
+                for v2 in fd.parameters.itervalues():
+                    if v2.position is not None and v2.position > v.position:
+                        v2.position -= 1
+        for key in keys_to_remove:
+            del fd.parameters[key]
+        return fd
+
+    def set_parameter(self, name, value_type=None, nullable=None,
+                      alias=None, overwrite=False):
+        if isinstance(name, ParameterDefinition):
+            if name.name in self.parameters and not overwrite:
+                raise exceptions.DuplicateParameterDecoratorException(
+                    function_name=self.name or self.payload.__name__,
+                    param_name=name.name)
+            self.parameters[name.name] = name
+            return name
+
+        if six.PY2:
+            spec = inspect.getargspec(self.payload)
+            if isinstance(name, int):
+                if 0 <= name < len(spec.args):
+                    name = spec.args[name]
+                elif name == inspect.getargspec(self.payload) \
+                        and spec.varargs is not None:
+                    name = spec.varargs
+                else:
+                    raise IndexError('argument position is out of range')
+
+            arg_name = name
+            if name == spec.keywords:
+                position = None
+                arg_name = '**'
+            elif name == spec.varargs:
+                position = len(spec.args)
+                arg_name = '*'
+            elif name not in spec.args:
+                raise exceptions.NoParameterFoundException(
+                    function_name=self.name or self.payload.__name__,
+                    param_name=name)
+            else:
+                position = spec.args.index(name)
+            default = NO_DEFAULT
+            if spec.defaults is not None and name in spec.args:
+                index = spec.args.index(name) - len(spec.args)
+                if index >= -len(spec.defaults):
+                    default = spec.defaults[index]
+        else:
+            spec = inspect.getfullargspec(self.payload)
+            if isinstance(name, int):
+                if 0 <= name < len(spec.args):
+                    name = spec.args[name]
+                elif name == inspect.getargspec(self.payload) \
+                        and spec.varargs is not None:
+                    name = spec.varargs
+                else:
+                    raise IndexError('argument position is out of range')
+
+            arg_name = name
+            if name == spec.varkw:
+                position = None
+                arg_name = '**'
+            elif name == spec.varargs:
+                position = len(spec.args)
+                arg_name = '*'
+            elif name in spec.kwonlyargs:
+                position = None
+            elif name not in spec.args:
+                raise exceptions.NoParameterFoundException(
+                    function_name=self.name or self.payload.__name__,
+                    param_name=name)
+            else:
+                position = spec.args.index(name)
+
+            default = NO_DEFAULT
+            if spec.defaults is not None and name in spec.args:
+                index = spec.args.index(name) - len(spec.args)
+                if index >= -len(spec.defaults):
+                    default = spec.defaults[index]
+            elif spec.kwonlydefaults is not None:
+                default = spec.kwonlydefaults.get(name, NO_DEFAULT)
+
+        if arg_name in self.parameters and not overwrite:
+            raise exceptions.DuplicateParameterDecoratorException(
+                function_name=self.name or self.payload.__name__,
+                param_name=name)
+
+        yaql_type = value_type
+        p_nullable = nullable
+        if value_type is None:
+            if p_nullable is None:
+                p_nullable = True
+            base_type = object \
+                if default in (None, NO_DEFAULT, utils.NO_VALUE) \
+                else type(default)
+            yaql_type = yaqltypes.PythonType(base_type, p_nullable)
+        elif not isinstance(value_type, yaqltypes.SmartType):
+            if p_nullable is None:
+                p_nullable = default is None
+            yaql_type = yaqltypes.PythonType(value_type, p_nullable)
+
+        pd = ParameterDefinition(
+            name, yaql_type, position, alias, default
+        )
+        self.parameters[arg_name] = pd
+        return pd
+
+    def insert_parameter(self, name, value_type=None, nullable=None,
+                         alias=None, overwrite=False):
+        pd = self.set_parameter(name, value_type, nullable, alias, overwrite)
+        for p in self.parameters.itervalues():
+            if p is pd:
+                continue
+            if p.position is not None and p.position >= pd.position:
+                p.position += 1
+
+    def map_args(self, args, kwargs, context):
         kwargs = dict(kwargs)
         positional_args = len(args) * [
             self.parameters.get('*', utils.NO_VALUE)]
@@ -126,27 +250,29 @@ class FunctionDefinition(object):
             value = args[i]
             if value is utils.NO_VALUE:
                 value = positional_args[i].default
-            if not positional_args[i].value_type.check(value):
+            if not positional_args[i].value_type.check(value, context):
                 return None
         for kwd in six.iterkeys(kwargs):
-            if not keyword_args[kwd].value_type.check(kwargs[kwd]):
+            if not keyword_args[kwd].value_type.check(kwargs[kwd], context):
                 return None
 
         return tuple(positional_args), keyword_args
 
-    def get_delegate(self, sender, engine, args, kwargs):
+    def get_delegate(self, sender, engine, context, args, kwargs):
         def checked(val, param):
-            if not param.value_type.check(val):
+            if not param.value_type.check(val, context):
                 raise exceptions.ArgumentException(param.name)
 
-            def convert_arg_func(context):
+            def convert_arg_func(context2):
                 try:
                     return param.value_type.convert(
-                        val, sender, context, self, engine)
+                        val, sender, context2, self, engine)
                 except exceptions.ArgumentValueException:
                     raise exceptions.ArgumentException(param.name)
             return convert_arg_func
 
+        kwargs = kwargs.copy()
+        kwargs = dict(kwargs)
         positional = 0
         for arg_name, p in six.iteritems(self.parameters):
             if p.position is not None and arg_name != '*':
@@ -207,7 +333,7 @@ class FunctionDefinition(object):
             else:
                 raise exceptions.ArgumentException('**')
 
-        def func(context):
+        def func():
             new_context = context.create_child_context()
             result = self.payload(
                 *tuple(map(lambda t: t(new_context),
@@ -215,14 +341,7 @@ class FunctionDefinition(object):
                 **dict(map(lambda t: (t[0], t[1](new_context)),
                            six.iteritems(keyword_args)))
             )
-            if self.returns_context:
-                if isinstance(result, types.GeneratorType):
-                    result_context = next(result)
-                    return result, result_context
-                result_value, result_context = result
-                return result_value, result_context
-            else:
-                return result, new_context
+            return result
 
         return func
 
@@ -241,40 +360,53 @@ class FunctionDefinition(object):
 
 def _get_function_definition(func):
     if not hasattr(func, '__yaql_function__'):
-        fd = FunctionDefinition(None, {}, func, func.__doc__)
+        fd = FunctionDefinition(None, func, {}, func.__doc__)
         func.__yaql_function__ = fd
     return func.__yaql_function__
 
 
+def _infer_parameter_type(name):
+    if name == 'context' or name == '__context':
+        return yaqltypes.Context()
+    elif name == 'engine' or name == '__engine':
+        return yaqltypes.Engine()
+
+
 def get_function_definition(func, name=None, function=None, method=None,
-                            convention=None):
+                            convention=None, parameter_type_func=None):
+    if parameter_type_func is None:
+        parameter_type_func = _infer_parameter_type
     fd = _get_function_definition(func).clone()
     if six.PY2:
         spec = inspect.getargspec(func)
         for arg in spec.args:
             if arg not in fd.parameters:
-                parameter(arg, function_definition=fd)(func)
+                fd.set_parameter(arg, parameter_type_func(arg))
         if spec.varargs and '*' not in fd.parameters:
-            parameter(spec.varargs, function_definition=fd)(func)
+            fd.set_parameter(spec.varargs, parameter_type_func(spec.varargs))
         if spec.keywords and '**' not in fd.parameters:
-            parameter(spec.keywords, function_definition=fd)(func)
+            fd.set_parameter(spec.keywords, parameter_type_func(spec.keywords))
     else:
         spec = inspect.getfullargspec(func)
         for arg in spec.args + spec.kwonlyargs:
             if arg not in fd.parameters:
-                parameter(arg, function_definition=fd)(func)
+                fd.set_parameter(arg, parameter_type_func(arg))
         if spec.varargs and '*' not in fd.parameters:
-            parameter(spec.varargs, function_definition=fd)(func)
+            fd.set_parameter(spec.varargs, parameter_type_func(spec.varargs))
         if spec.varkw and '**' not in fd.parameters:
-            parameter(spec.varkw, function_definition=fd)(func)
+            fd.set_parameter(spec.varkw, parameter_type_func(spec.varkw))
 
     if name is not None:
         fd.name = name
     elif fd.name is None:
         if convention is not None:
-            fd.name = convention.convert_function_name(fd.payload.__name__)
+            fd.name = convention.convert_function_name(
+                fd.payload.__name__.rstrip('_'))
         else:
-            fd.name = fd.payload.__name__
+            fd.name = fd.payload.__name__.rstrip('_')
+    elif convention is not None:
+        fd.name = convention.convert_function_name(fd.name.rstrip('_'))
+
     if function is not None:
         fd.is_function = function
     if method is not None:
@@ -282,109 +414,31 @@ def get_function_definition(func, name=None, function=None, method=None,
     if convention:
         for p in six.itervalues(fd.parameters):
             if p.alias is None:
-                p.alias = convention.convert_parameter_name(p.name)
+                p.alias = convention.convert_parameter_name(p.name.rstrip('_'))
 
     return fd
 
 
-def _parameter(name, value_type=None, nullable=None, alias=None,
-               function_definition=None):
+def _parameter(name, value_type=None, nullable=None, alias=None):
     def wrapper(func):
-        fd = function_definition or _get_function_definition(func)
-        if six.PY2:
-            spec = inspect.getargspec(func)
-            arg_name = name
-            if name == spec.keywords:
-                position = None
-                arg_name = '**'
-            elif name == spec.varargs:
-                position = len(spec.args)
-                arg_name = '*'
-            elif name not in spec.args:
-                raise exceptions.NoParameterFoundException(
-                    function_name=fd.name or func.__name__,
-                    param_name=name)
-            else:
-                position = spec.args.index(name)
-            default = NO_DEFAULT
-            if spec.defaults is not None and name in spec.args:
-                index = spec.args.index(name) - len(spec.args)
-                if index >= -len(spec.defaults):
-                    default = spec.defaults[index]
-        else:
-            spec = inspect.getfullargspec(func)
-            arg_name = name
-            if name == spec.varkw:
-                position = None
-                arg_name = '**'
-            elif name == spec.varargs:
-                position = len(spec.args)
-                arg_name = '*'
-            elif name in spec.kwonlyargs:
-                position = None
-            elif name not in spec.args:
-                raise exceptions.NoParameterFoundException(
-                    function_name=fd.name or func.__name__,
-                    param_name=name)
-            else:
-                position = spec.args.index(name)
-
-            default = NO_DEFAULT
-            if spec.defaults is not None and name in spec.args:
-                index = spec.args.index(name) - len(spec.args)
-                if index >= -len(spec.defaults):
-                    default = spec.defaults[index]
-            elif spec.kwonlydefaults is not None:
-                default = spec.kwonlydefaults.get(name, NO_DEFAULT)
-
-        if arg_name in fd.parameters:
-            raise exceptions.DuplicateParameterDecoratorException(
-                function_name=fd.name or func.__name__,
-                param_name=name)
-
-        yaql_type = value_type
-        p_nullable = nullable
-        if value_type is None:
-            if p_nullable is None:
-                p_nullable = True
-            if name == 'context':
-                yaql_type = yaqltypes.Context()
-            elif name == 'engine':
-                yaql_type = yaqltypes.Engine()
-            else:
-                base_type = object \
-                    if default in (None, NO_DEFAULT, utils.NO_VALUE) \
-                    else type(default)
-                yaql_type = yaqltypes.PythonType(base_type, p_nullable)
-        elif not isinstance(value_type, yaqltypes.SmartType):
-            if p_nullable is None:
-                p_nullable = default is None
-            yaql_type = yaqltypes.PythonType(value_type, p_nullable)
-
-        fd.parameters[arg_name] = ParameterDefinition(
-            name, yaql_type, position, alias, default
-        )
-
+        fd = _get_function_definition(func)
+        fd.set_parameter(name, value_type, nullable, alias)
         return func
     return wrapper
 
 
-def parameter(name, value_type=None, nullable=None, alias=None,
-              function_definition=None):
+def parameter(name, value_type=None, nullable=None, alias=None):
     if value_type is not None and isinstance(
             value_type, yaqltypes.HiddenParameterType):
         raise ValueError('Use inject() for hidden parameters')
-    return _parameter(name, value_type, nullable=nullable, alias=alias,
-                      function_definition=function_definition)
+    return _parameter(name, value_type, nullable=nullable, alias=alias)
 
 
-def inject(name, value_type=None, nullable=None, alias=None,
-           function_definition=None):
+def inject(name, value_type=None, nullable=None, alias=None):
     if value_type is not None and not isinstance(
             value_type, yaqltypes.HiddenParameterType):
         raise ValueError('Use parameter() for normal function parameters')
-    return _parameter(name, value_type, nullable=nullable, alias=alias,
-                      function_definition=function_definition)
+    return _parameter(name, value_type, nullable=nullable, alias=alias)
 
 
 def name(function_name):
@@ -409,13 +463,15 @@ def extension_method(func):
     return func
 
 
-def returns_context(func):
-    fd = _get_function_definition(func)
-    fd.returns_context = True
-    return func
-
-
 def no_kwargs(func):
     fd = _get_function_definition(func)
     fd.no_kwargs = True
     return func
+
+
+def meta(name, value):
+    def wrapper(func):
+        fd = _get_function_definition(func)
+        fd.meta[name] = value
+        return func
+    return wrapper

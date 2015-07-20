@@ -16,6 +16,7 @@ import itertools
 
 import six
 
+from yaql.language import contexts
 from yaql.language import specs
 from yaql.language import utils
 from yaql.language import yaqltypes
@@ -27,26 +28,19 @@ def get_context_data(name, context):
     return context[name]
 
 
-@specs.parameter('sender', yaqltypes.Lambda(with_context=True,
-                                            return_context=True))
-@specs.parameter('expr', yaqltypes.Lambda(with_context=True, method=True,
-                                          return_context=True))
+@specs.parameter('expr', yaqltypes.Lambda(method=True))
 @specs.name('#operator_.')
-@specs.returns_context
-def op_dot(context, sender, expr):
-    return expr(*sender(context))
+def op_dot(sender, expr):
+    return expr(sender)
 
 
-@specs.parameter('sender',
-                 yaqltypes.Lambda(with_context=True, return_context=True))
 @specs.parameter('expr', yaqltypes.YaqlExpression())
-@specs.inject('operator', yaqltypes.Delegate('#operator_.', with_context=True))
+@specs.inject('operator', yaqltypes.Delegate('#operator_.'))
 @specs.name('#operator_?.')
-def elvis_operator(context, operator, sender, expr):
-    sender, context = sender(context)
+def elvis_operator(operator, sender, expr):
     if sender is None:
         return None
-    return operator(context, sender, expr)
+    return operator(sender, expr)
 
 
 @specs.parameter('sequence', yaqltypes.Iterable())
@@ -63,12 +57,13 @@ def unpack(sequence, context, *args):
     else:
         for i, t in enumerate(sequence, 1):
             context[str(i)] = t
-    return lst
+    return context
 
 
 def with_(context, *args):
     for i, t in enumerate(args, 1):
         context[str(i)] = t
+    return context
 
 
 @specs.inject('__context__', yaqltypes.Context())
@@ -78,6 +73,7 @@ def let(__context__, *args, **kwargs):
 
     for key, value in six.iteritems(kwargs):
         __context__[key] = value
+    return __context__
 
 
 @specs.parameter('name', yaqltypes.String())
@@ -88,20 +84,20 @@ def def_(name, func, context):
         return func(*args, **kwargs)
 
     context.register_function(wrapper)
+    return context
 
 
-@specs.parameter('left', yaqltypes.Lambda(return_context=True))
+@specs.parameter('left', contexts.ContextBase)
 @specs.parameter('right', yaqltypes.Lambda(with_context=True))
 @specs.name('#operator_->')
 def send_context(left, right):
-    context = left()[1]
-    return right(context)
+    return right(left)
 
 
 @specs.method
 @specs.parameter('condition', yaqltypes.Lambda())
 @specs.parameter('message', yaqltypes.String())
-def assert_(engine, obj, condition, message=u'Assertion failed'):
+def assert__(engine, obj, condition, message=u'Assertion failed'):
     if utils.is_iterator(obj):
         obj = utils.memorize(obj, engine)
     if not condition(obj):
@@ -109,7 +105,17 @@ def assert_(engine, obj, condition, message=u'Assertion failed'):
     return obj
 
 
-def register(context):
+@specs.name('#call')
+def call(callable_, *args, **kwargs):
+    return callable_(*args, **kwargs)
+
+
+@specs.parameter('func', yaqltypes.Lambda())
+def lambda_(func):
+    return func
+
+
+def register(context, delegates=False):
     context.register_function(get_context_data)
     context.register_function(op_dot)
     context.register_function(unpack)
@@ -118,4 +124,7 @@ def register(context):
     context.register_function(let)
     context.register_function(def_)
     context.register_function(elvis_operator)
-    context.register_function(assert_)
+    context.register_function(assert__)
+    if delegates:
+        context.register_function(call)
+        context.register_function(lambda_)

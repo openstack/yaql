@@ -19,7 +19,6 @@ import six
 import yaql
 from yaql.language import exceptions
 from yaql.language import specs
-from yaql.language import utils
 from yaql.language import yaqltypes
 from yaql import tests
 
@@ -31,11 +30,11 @@ class TestEngine(tests.TestCase):
         sys.stderr = six.StringIO()
         try:
             debug_opts = dict(self.engine_options)
-            debug_opts["yaql.debug"] = True
+            debug_opts['yaql.debug'] = True
             yaql.factory.YaqlFactory().create(options=debug_opts)
             sys.stderr.seek(0)
             err_out = sys.stderr.read()
-            self.assertEqual("Generating LALR tables\n", err_out)
+            self.assertEqual('Generating LALR tables\n', err_out)
         finally:
             # put stderr back
             sys.stderr = copy
@@ -123,12 +122,12 @@ class TestEngine(tests.TestCase):
 
         self.assertEqual(
             (1, 2, (5, 7), {'kw1': 'x', 'kw2': None}),
-            fd(utils.NO_VALUE, self.engine, self.context)(
+            fd(self.engine, self.context)(
                 1, 2, 5, 7, kw1='x', kw2=None))
 
         self.assertEqual(
             (1, 5, (), {}),
-            fd(utils.NO_VALUE, self.engine, self.context)(1, b=5))
+            fd(self.engine, self.context)(1, b=5))
 
     def test_eval(self):
         self.assertEqual(

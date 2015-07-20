@@ -18,9 +18,10 @@ from yaql.standard_library import legacy as std_legacy
 
 
 class YaqlFactory(factory.YaqlFactory):
-    def __init__(self):
+    def __init__(self, allow_delegates=False):
         # noinspection PyTypeChecker
-        super(YaqlFactory, self).__init__(keyword_operator=None)
+        super(YaqlFactory, self).__init__(
+            keyword_operator=None, allow_delegates=allow_delegates)
         self.insert_operator(
             'or', True, '=>',
             factory.OperatorType.BINARY_LEFT_ASSOCIATIVE, True)

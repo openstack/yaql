@@ -15,7 +15,7 @@
 import os.path
 import pkg_resources
 
-from yaql.language import context as yaqlcontext
+from yaql.language import contexts
 from yaql.language import conventions
 from yaql.language import factory
 from yaql.language import specs
@@ -36,10 +36,10 @@ _cached_engine = None
 _default_context = None
 
 
-def _setup_context(data, context, finalizer):
+def _setup_context(data, context, finalizer, convention):
     if context is None:
-        context = yaqlcontext.Context(
-            convention=conventions.CamelCaseConvention())
+        context = contexts.Context(
+            convention=convention or conventions.CamelCaseConvention())
 
     if finalizer is None:
         @specs.parameter('iterator', yaqltypes.Iterable())
@@ -67,11 +67,12 @@ def create_context(data=utils.NO_VALUE, context=None, system=True,
                    common=True, boolean=True, strings=True,
                    math=True, collections=True, queries=True,
                    regex=True, branching=True,
-                   no_sets=False, finalizer=None):
+                   no_sets=False, finalizer=None, delegates=False,
+                   convention=None):
 
-    context = _setup_context(data, context, finalizer)
+    context = _setup_context(data, context, finalizer, convention)
     if system:
-        std_system.register(context)
+        std_system.register(context, delegates)
     if common:
         std_common.register(context)
     if boolean:

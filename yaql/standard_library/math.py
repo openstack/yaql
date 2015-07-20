@@ -118,10 +118,14 @@ def neq(left, right):
 
 
 def int_(value):
+    if value is None:
+        return 0
     return int(value)
 
 
 def float_(value):
+    if value is None:
+        return 0.0
     return float(value)
 
 
