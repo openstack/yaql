@@ -101,8 +101,7 @@ class FunctionDefinition(object):
             if isinstance(name, int):
                 if 0 <= name < len(spec.args):
                     name = spec.args[name]
-                elif name == inspect.getargspec(self.payload) \
-                        and spec.varargs is not None:
+                elif name == len(spec.args) and spec.varargs is not None:
                     name = spec.varargs
                 else:
                     raise IndexError('argument position is out of range')
@@ -130,8 +129,7 @@ class FunctionDefinition(object):
             if isinstance(name, int):
                 if 0 <= name < len(spec.args):
                     name = spec.args[name]
-                elif name == inspect.getargspec(self.payload) \
-                        and spec.varargs is not None:
+                elif name == len(spec.args) and spec.varargs is not None:
                     name = spec.varargs
                 else:
                     raise IndexError('argument position is out of range')
