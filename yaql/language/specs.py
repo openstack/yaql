@@ -74,7 +74,7 @@ class FunctionDefinition(object):
         fd = self.clone()
         keys_to_remove = set()
 
-        for k, v in fd.parameters.iteritems():
+        for k, v in six.iteritems(fd.parameters):
             if not isinstance(v.value_type, yaqltypes.HiddenParameterType):
                 continue
             keys_to_remove.add(k)
