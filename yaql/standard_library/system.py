@@ -106,6 +106,8 @@ def assert__(engine, obj, condition, message=u'Assertion failed'):
 
 
 @specs.name('#call')
+@specs.parameter('callable_', yaqltypes.PythonType(
+    object, False, validators=(six.callable,)))
 def call(callable_, *args, **kwargs):
     return callable_(*args, **kwargs)
 

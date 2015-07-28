@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from yaql.language import exceptions
 import yaql.tests
 
 
@@ -72,6 +73,11 @@ class TestSystem(yaql.tests.TestCase):
         self.assertEqual(
             9,
             self.eval('$(3)', data=delegate))
+
+    def test_calling_non_callable(self):
+        self.assertRaises(
+            exceptions.NoMatchingFunctionException,
+            self.eval, '$(a)', data={'a': 9})
 
     def test_function_passing(self):
         def func(x, y, z):
