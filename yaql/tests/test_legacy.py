@@ -12,25 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from yaql.language import exceptions
 import yaql.tests
 
 
-class TestLegacy(yaql.tests.TestCase):
-    def setUp(self):
-        super(TestLegacy, self).setUp()
-        self.eval = self.legacy_eval
-
-    def test_tuples(self):
-        self.assertEqual((1, 2), self.eval('1 => 2'))
-        self.assertEqual((None, 'a b'), self.eval('null => "a b"'))
-        self.assertEqual((1, 2, 3), self.eval('1 => 2 => 3'))
-        self.assertEqual(((1, 2), 3), self.eval('(1 => 2) => 3'))
-        self.assertEqual((1, (2, 3)), self.eval('1 => (2 => 3)'))
-
-    def test_tuples_func(self):
-        self.assertEqual((1, 2), self.eval('tuple(1, 2)'))
-        self.assertEqual((None,), self.eval('tuple(null)'))
-        self.assertEqual(tuple(), self.eval('tuple()'))
+class TestLegacyNewEngine(yaql.tests.TestCase):
+    def __init__(self, *args, **kwargs):
+        super(TestLegacyNewEngine, self).__init__(*args, **kwargs)
+        self.eval = self.legacy_eval_new_engine
 
     def test_dict(self):
         self.assertEqual(
@@ -95,12 +84,52 @@ class TestLegacy(yaql.tests.TestCase):
         self.assertEqual([1, 2], self.eval('takeWhile([1, 2, 3, 4], $ < 3)'))
 
     def test_switch(self):
-        expr = 'switch($ < 10 => 1, $ >= 10 and $ < 100 => 2, $ >= 100 => 3)'
-        self.assertEqual(3, self.eval(expr, data=123))
-        self.assertEqual(2, self.eval(expr, data=50))
-        self.assertEqual(1, self.eval(expr, data=-123))
+        expr = 'switch($, $ > 10 => 1, $ <= 10 => -1)'
+        self.assertEqual(1, self.eval(expr, data=15))
+        self.assertEqual(-1, self.eval(expr, data=5))
 
     def test_as(self):
         self.assertEqual(
             [3, 6],
             self.eval('[1, 2].as(sum($) => a).select($ * $a)'))
+
+    def test_distinct(self):
+        data = [1, 2, 3, 2, 4, 8]
+        self.assertEqual([1, 2, 3, 4, 8], self.eval('$.distinct()', data=data))
+        self.assertEqual([1, 2, 3, 4, 8], self.eval('distinct($)', data=data))
+
+        data = [{'a': 1}, {'b': 2}, {'a': 1}]
+        self.assertEqual(
+            [{'a': 1}, {'b': 2}],
+            self.eval('$.distinct()', data=data))
+
+    def test_keyword_dict_access(self):
+        data = {'A': 12, 'b c': 44, '__d': 99, '_e': 999}
+        self.assertEqual(12, self.eval('$.A', data=data))
+        self.assertEqual(999, self.eval('$._e', data=data))
+
+        self.assertRaises(exceptions.NoMatchingFunctionException,
+                          self.eval, "$.'b c'", data=data)
+        self.assertRaises(exceptions.NoMatchingFunctionException,
+                          self.eval, '$.123', data=data)
+        self.assertIsNone(self.eval('$.b', data=data))
+        self.assertRaises(exceptions.YaqlLexicalException,
+                          self.eval, '$.__d', data=data)
+
+
+class TestLegacy(TestLegacyNewEngine):
+    def __init__(self, *args, **kwargs):
+        super(TestLegacy, self).__init__(*args, **kwargs)
+        self.eval = self.legacy_eval
+
+    def test_tuples_func(self):
+        self.assertEqual((1, 2), self.eval('tuple(1, 2)'))
+        self.assertEqual((None,), self.eval('tuple(null)'))
+        self.assertEqual((), self.eval('tuple()'))
+
+    def test_tuples(self):
+        self.assertEqual((1, 2), self.eval('1 => 2'))
+        self.assertEqual((None, 'a b'), self.eval('null => "a b"'))
+        self.assertEqual((1, 2, 3), self.eval('1 => 2 => 3'))
+        self.assertEqual(((1, 2), 3), self.eval('(1 => 2) => 3'))
+        self.assertEqual((1, (2, 3)), self.eval('1 => (2 => 3)'))

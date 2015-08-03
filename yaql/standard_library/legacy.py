@@ -70,16 +70,24 @@ def range_(start, stop=None):
         return six.moves.range(start, stop)
 
 
-@specs.parameter('conditions', yaqltypes.Lambda())
-def switch(*conditions):
+@specs.parameter('conditions', yaqltypes.Lambda(with_context=True))
+@specs.no_kwargs
+@specs.extension_method
+def switch(value, context, *conditions):
+    context = context.create_child_context()
+    context[''] = value
     for cond in conditions:
-        res = cond()
-        if not isinstance(res, tuple):
-            raise ValueError('switch() must have tuple parameters')
-        if len(res) != 2:
-            raise ValueError('switch() tuples must be of size 2')
-        if res[0]:
-            return res[1]
+        res = cond(context)
+        if isinstance(res, tuple):
+            if len(res) != 2:
+                raise ValueError('switch() tuples must be of size 2')
+            if res[0]:
+                return res[1]
+        elif isinstance(res, utils.MappingRule):
+            if res.source:
+                return res.destination
+        else:
+            raise ValueError('switch() must have tuple or mapping parameters')
     return None
 
 
@@ -92,16 +100,27 @@ def op_dot_context(sender, expr):
 
 @specs.parameter('mappings', yaqltypes.Lambda())
 @specs.method
+@specs.no_kwargs
 def as_(context, sender, *mappings):
     for t in mappings:
         tt = t(sender)
-        if not isinstance(tt, tuple):
+        if isinstance(tt, tuple):
+            if len(tt) != 2:
+                raise ValueError('as() tuples must be of size 2')
+            context[tt[1]] = tt[0]
+        elif isinstance(tt, utils.MappingRule):
+            context[tt.destination] = tt.source
+        else:
             raise ValueError('as() must have tuple parameters')
-        if len(tt) != 2:
-            raise ValueError('as() tuples must be of size 2')
-        context[tt[1]] = tt[0]
-        context['$0'] = sender
+    context['$0'] = sender
     return context
+
+
+@specs.parameter('d', utils.MappingType, alias='dict')
+@specs.parameter('key', yaqltypes.Keyword())
+@specs.name('#operator_.')
+def dict_keyword_access(d, key):
+    return d.get(key)
 
 
 def register(context, tuples):
@@ -117,6 +136,7 @@ def register(context, tuples):
     context.register_function(switch, exclusive=True)
     context.register_function(as_)
     context.register_function(op_dot_context)
+    context.register_function(dict_keyword_access)
 
     for t in ('get', 'list', 'bool', 'int', 'float', 'select', 'where',
               'join', 'sum', 'take_while', 'len'):
