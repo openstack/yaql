@@ -175,8 +175,11 @@ def get_memory_quota(engine):
     return engine.options.get('yaql.memoryQuota', -1)
 
 
-def limit_iterable(iterable, engine):
-    count = get_max_collection_size(engine)
+def limit_iterable(iterable, limit_or_engine):
+    if isinstance(limit_or_engine, int):
+        count = limit_or_engine
+    else:
+        count = get_max_collection_size(limit_or_engine)
 
     if count >= 0 and isinstance(iterable,
                                  (SequenceType, MappingType, SetType)):
@@ -192,8 +195,11 @@ def limit_iterable(iterable, engine):
     return limiting_iterator()
 
 
-def limit_memory_usage(engine, *args):
-    quota = get_memory_quota(engine)
+def limit_memory_usage(quota_or_engine, *args):
+    if isinstance(quota_or_engine, int):
+        quota = quota_or_engine
+    else:
+        quota = get_memory_quota(quota_or_engine)
     if quota <= 0:
         return
 
