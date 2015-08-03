@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import abc
+
 import six
 
 from yaql.language import exceptions
@@ -20,6 +22,7 @@ from yaql.language import specs
 from yaql.language import utils
 
 
+@six.add_metaclass(abc.ABCMeta)
 class ContextBase(object):
     def __init__(self, parent_context=None, convention=None):
         self._parent_context = parent_context
@@ -31,23 +34,28 @@ class ContextBase(object):
     def parent(self):
         return self._parent_context
 
+    @abc.abstractmethod
     def register_function(self, spec, *args, **kwargs):
         pass
 
+    @abc.abstractmethod
     def get_data(self, name, default=None, ask_parent=True):
         return default
 
     def __getitem__(self, name):
         return self.get_data(name)
 
+    @abc.abstractmethod
     def __setitem__(self, name, value):
         pass
 
+    @abc.abstractmethod
     def __delitem__(self, name):
         pass
 
+    @abc.abstractmethod
     def __contains__(self, item):
-        return self.get_data(item, utils.NO_VALUE) is not utils.NO_VALUE
+        return False
 
     def __call__(self, name, engine, sender=utils.NO_VALUE,
                  data_context=None, use_convention=False,
@@ -56,11 +64,27 @@ class ContextBase(object):
             name, self, args, kwargs, engine, sender,
             data_context, use_convention, function_filter)
 
+    @abc.abstractmethod
     def get_functions(self, name, predicate=None, use_convention=False):
-        return []
+        return [], False
+
+    @abc.abstractmethod
+    def delete_function(self, spec):
+        pass
 
     def collect_functions(self, name, predicate=None, use_convention=False):
-        return [[]]
+        overloads = []
+        p = self
+        while p is not None:
+            context_predicate = None
+            if predicate:
+                context_predicate = lambda fd: predicate(fd, p)
+            layer_overloads, is_exclusive = p.get_functions(
+                name, context_predicate, use_convention)
+            p = None if is_exclusive else p.parent
+            if layer_overloads:
+                overloads.append(layer_overloads)
+        return overloads
 
     def create_child_context(self):
         return type(self)(self)
@@ -69,6 +93,10 @@ class ContextBase(object):
     def convention(self):
         return self._convention
 
+    @abc.abstractmethod
+    def keys(self):
+        return six.iterkeys({})
+
 
 class Context(ContextBase):
     def __init__(self, parent_context=None, data=utils.NO_VALUE,
@@ -76,6 +104,7 @@ class Context(ContextBase):
         super(Context, self).__init__(parent_context, convention)
         self._functions = {}
         self._data = {}
+        self._exclusive_funcs = set()
         if data is not utils.NO_VALUE:
             self['$'] = data
 
@@ -95,7 +124,13 @@ class Context(ContextBase):
         if spec.is_method:
             if not spec.is_valid_method():
                 raise exceptions.InvalidMethodException(spec.name)
-        self._functions.setdefault(spec.name, list()).append((spec, exclusive))
+        self._functions.setdefault(spec.name, set()).add(spec)
+        if exclusive:
+            self._exclusive_funcs.add(spec.name)
+
+    def delete_function(self, spec):
+        self._functions.get(spec.name, set()).discard(spec)
+        self._exclusive_funcs.discard(spec.name)
 
     def get_functions(self, name, predicate=None, use_convention=False):
         name = name.rstrip('_')
@@ -103,30 +138,10 @@ class Context(ContextBase):
             name = self._convention.convert_function_name(name)
         if predicate is None:
             predicate = lambda x: True
-        return six.moves.filter(predicate, list(six.moves.map(
-            lambda x: x[0],
-            self._functions.get(name, list()))))
-
-    def collect_functions(self, name, predicate=None, use_convention=False):
-        name = name.rstrip('_')
-        if use_convention and self._convention is not None:
-            name = self._convention.convert_function_name(name)
-        overloads = []
-        p = self
-        while p is not None:
-            layer_overloads = p._functions.get(name)
-            p = p.parent
-            if layer_overloads:
-                layer = []
-                for spec, exclusive in layer_overloads:
-                    if exclusive:
-                        p = None
-                    if predicate and not predicate(spec, self):
-                        continue
-                    layer.append(spec)
-                if layer:
-                    overloads.append(layer)
-        return overloads
+        return (
+            set(six.moves.filter(predicate, self._functions.get(name, set()))),
+            name in self._exclusive_funcs
+        )
 
     @staticmethod
     def _normalize_name(name):
@@ -143,15 +158,27 @@ class Context(ContextBase):
         name = self._normalize_name(name)
         if name in self._data:
             return self._data[name]
-        if self.parent and ask_parent:
-            return self.parent.get_data(name, default, ask_parent)
+        ctx = self.parent
+        while ask_parent and ctx:
+            result = ctx.get_data(name, utils.NO_VALUE, False)
+            if result is utils.NO_VALUE:
+                ctx = ctx.parent
+            else:
+                return result
         return default
 
     def __delitem__(self, name):
         self._data.pop(self._normalize_name(name))
 
-    def create_child_context(self):
-        return Context(self, convention=self._convention)
+    def __contains__(self, item):
+        if isinstance(item, specs.FunctionDefinition):
+            return item in self._functions.get(item.name, [])
+        if isinstance(item, six.string_types):
+            return self._normalize_name(item) in self._data
+        return False
+
+    def keys(self):
+        return six.iterkeys(self._data)
 
 
 class MultiContext(ContextBase):
@@ -159,9 +186,9 @@ class MultiContext(ContextBase):
         self._context_list = context_list
         if convention is None:
             convention = context_list[0].convention
-        parents = six.moves.filter(
+        parents = tuple(six.moves.filter(
             lambda t: t,
-            six.moves.map(lambda t: t.parent, context_list))
+            six.moves.map(lambda t: t.parent, context_list)))
         if not parents:
             super(MultiContext, self).__init__(None, convention)
         elif len(parents) == 1:
@@ -178,37 +205,17 @@ class MultiContext(ContextBase):
             result = context.get_data(name, utils.NO_VALUE, False)
             if result is not utils.NO_VALUE:
                 return result
-        if ask_parent and self.parent:
-            return self.parent.get_data(name, default, ask_parent)
+        ctx = self.parent
+        while ask_parent and ctx:
+            result = ctx.get_data(name, utils.NO_VALUE, False)
+            if result is utils.NO_VALUE:
+                ctx = ctx.parent
+            else:
+                return result
         return default
 
     def __setitem__(self, name, value):
         self._context_list[0][name] = value
-
-    def get_functions(self, name, predicate=None, use_convention=False):
-        result = []
-        for context in self._context_list:
-            result.extend(context.get_functions(
-                name, predicate, use_convention))
-        return result
-
-    def collect_functions(self, name, predicate=None, use_convention=False):
-        functions = six.moves.map(
-            lambda ctx: ctx.collect_functions(name, predicate, use_convention),
-            self._context_list)
-        i = 0
-        result = []
-        while True:
-            level = []
-            has_level = False
-            for f in functions:
-                if len(f) > i:
-                    has_level = True
-                    level.extend(f[i])
-            if not has_level:
-                return result
-            i += 1
-            result.append(level)
 
     def __delitem__(self, name):
         for context in self._context_list:
@@ -216,3 +223,32 @@ class MultiContext(ContextBase):
 
     def create_child_context(self):
         return Context(self)
+
+    def keys(self):
+        prev_keys = set()
+        for context in self._context_list:
+            for key in context.keys():
+                if key not in prev_keys:
+                    prev_keys.add(key)
+                    yield key
+
+    def delete_function(self, spec):
+        for context in self._context_list:
+            context.delete_function(spec)
+
+    def __contains__(self, item):
+        for context in self._context_list:
+            if item in context:
+                return True
+        return False
+
+    def get_functions(self, name, predicate=None, use_convention=False):
+        result = set()
+        is_exclusive = False
+        for context in self._context_list:
+            funcs, exclusive = context.get_functions(
+                name, predicate, use_convention)
+            result.update(funcs)
+            if exclusive:
+                is_exclusive = True
+        return result, is_exclusive

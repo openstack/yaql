@@ -233,8 +233,7 @@ class Super(HiddenParameterType, SmartType):
     @staticmethod
     def _find_function_context(spec, context):
         while context is not None:
-            funcs = context.get_functions(spec.name)
-            if funcs and spec in funcs:
+            if spec in context:
                 return context
             context = context.parent
         raise exceptions.NoFunctionRegisteredException(
