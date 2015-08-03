@@ -50,6 +50,12 @@ class TestQueries(yaql.tests.TestCase):
         self.assertEqual([1, 2, 3, 4, 8], self.eval('$.distinct()', data=data))
         self.assertEqual([1, 2, 3, 4, 8], self.eval('distinct($)', data=data))
 
+    def test_distinct_structures(self):
+        data = [{'a': 1}, {'b': 2}, {'a': 1}]
+        self.assertEqual(
+            [{'a': 1}, {'b': 2}],
+            self.eval('$.distinct()', data=data))
+
     def test_distinct_with_selector(self):
         data = [['a', 1], ['b', 2], ['c', 1], ['d', 3], ['e', 2]]
         self.assertItemsEqual([['a', 1], ['b', 2], ['d', 3]],

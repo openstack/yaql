@@ -103,11 +103,11 @@ class TestCollections(yaql.tests.TestCase):
         self.assertRaises(exceptions.NoMatchingFunctionException,
                           self.eval, "$.'b c'", data=data)
         self.assertRaises(exceptions.NoMatchingFunctionException,
-                          self.eval, "$.123", data=data)
-        self.assertRaises(KeyError,
-                          self.eval, "$.b", data=data)
-        self.assertRaises(exceptions.YaqlLexicalException,
-                          self.eval, "$.__d", data=data)
+                          self.eval, '$.123', data=data)
+        self.assertRaises(KeyError, self.eval, '$.b', data=data)
+        self.assertRaises(
+            exceptions.YaqlLexicalException,
+            self.eval, '$.__d', data=data)
 
     def test_keyword_collection_access(self):
         data = [{'a': 2}, {'a': 4}]
@@ -156,6 +156,28 @@ class TestCollections(yaql.tests.TestCase):
         self.assertEqual(12, self.eval('$.get(a)', data=data))
         self.assertIsNone(self.eval('$.get(b)', data=data))
         self.assertEqual(50, self.eval('$.get(c, 50)', data=data))
+
+    def test_dict_set(self):
+        data = {'a': 12, 'b c': 44}
+        self.assertEqual(
+            {'a': 99, 'b c': 44, 'x': None},
+            self.eval('$.set(a, 99).set(x, null)', data=data))
+        self.assertEqual(data, {'a': 12, 'b c': 44})
+
+    def test_dict_set_many(self):
+        data = {'a': 12, 'b c': 44}
+        self.assertEqual(
+            {'a': 55, 'b c': 44, 'd x': 99, None: None},
+            self.eval('$.set(dict(a => 55, "d x" => 99, null => null))',
+                      data=data))
+        self.assertEqual(data, {'a': 12, 'b c': 44})
+
+    def test_dict_set_many_inline(self):
+        data = {'a': 12, 'b c': 44}
+        self.assertEqual(
+            {'a': 55, 'b c': 44, 'd x': 99},
+            self.eval('$.set(a => 55, "d x" => 99)', data=data))
+        self.assertEqual(data, {'a': 12, 'b c': 44})
 
     def test_dict_keys(self):
         data = {'a': 12, 'b': 44}

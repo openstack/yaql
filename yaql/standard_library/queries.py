@@ -166,9 +166,7 @@ def all_(collection, predicate=None):
 @specs.parameter('collections', yaqltypes.Iterable())
 @specs.extension_method
 def concat(*collections):
-    for collection in collections:
-        for item in collection:
-            yield item
+    return itertools.chain(*collections)
 
 
 @specs.parameter('collection', utils.IteratorType)

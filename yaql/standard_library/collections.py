@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
+
 import six
 
 from yaql.language import specs
@@ -62,11 +64,8 @@ def build_list(engine, *args):
 @specs.no_kwargs
 @specs.parameter('args', utils.MappingRule)
 def dict_(engine, *args):
-    result = {}
-    for t in args:
-        result[t.source] = t.destination
-        utils.limit_memory_usage(engine, (1, result))
-    return utils.FrozenDict(result)
+    utils.limit_memory_usage(engine, *((1, arg) for arg in args))
+    return utils.FrozenDict((t.source, t.destination) for t in args)
 
 
 @specs.parameter('items', yaqltypes.Iterable())
@@ -96,7 +95,7 @@ def to_dict(collection, engine, key_selector, value_selector=None):
     return result
 
 
-@specs.parameter('d', utils.MappingType, alias='dict', nullable=True)
+@specs.parameter('d', utils.MappingType, alias='dict')
 @specs.parameter('key', yaqltypes.Keyword())
 @specs.name('#operator_.')
 def dict_keyword_access(d, key):
@@ -129,6 +128,37 @@ def dict_indexer_with_default(d, key, default):
 @specs.method
 def dict_get(d, key, default=None):
     return d.get(key, default)
+
+
+@specs.parameter('d', utils.MappingType, alias='dict')
+@specs.name('set')
+@specs.method
+@specs.no_kwargs
+def dict_set(engine, d, key, value):
+    utils.limit_memory_usage(engine, (1, d), (1, key), (1, value))
+    return utils.FrozenDict(itertools.chain(six.iteritems(d), ((key, value),)))
+
+
+@specs.parameter('d', utils.MappingType, alias='dict')
+@specs.parameter('replacements', utils.MappingType)
+@specs.name('set')
+@specs.method
+@specs.no_kwargs
+def dict_set_many(engine, d, replacements):
+    utils.limit_memory_usage(engine, (1, d), (1, replacements))
+    return utils.FrozenDict(itertools.chain(
+        six.iteritems(d), six.iteritems(replacements)))
+
+
+@specs.no_kwargs
+@specs.method
+@specs.parameter('args', utils.MappingRule)
+@specs.parameter('d', utils.MappingType, alias='dict')
+@specs.name('set')
+def dict_set_many_inline(engine, d, *args):
+    utils.limit_memory_usage(engine, (1, d), *((1, arg) for arg in args))
+    return utils.FrozenDict(itertools.chain(
+        six.iteritems(d), ((t.source, t.destination) for t in args)))
 
 
 @specs.parameter('d', utils.MappingType, alias='dict')
@@ -184,7 +214,7 @@ def contains_key(d, value):
 @specs.parameter('d', utils.MappingType, alias='dict')
 @specs.method
 def contains_value(d, value):
-    return value in d.values()
+    return value in six.itervalues(d)
 
 
 @specs.parameter('left', yaqltypes.Iterable())
@@ -520,6 +550,9 @@ def register(context, no_sets=False):
     context.register_function(dict_indexer)
     context.register_function(dict_indexer_with_default)
     context.register_function(dict_get)
+    context.register_function(dict_set)
+    context.register_function(dict_set_many)
+    context.register_function(dict_set_many_inline)
     context.register_function(dict_keys)
     context.register_function(dict_values)
     context.register_function(dict_items)
