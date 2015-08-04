@@ -59,40 +59,43 @@ IterableType = collections.Iterable
 IteratorType = collections.Iterator
 
 
-def convert_input_data(obj):
+def convert_input_data(obj, rec=None):
+    if rec is None:
+        rec = convert_input_data
     if isinstance(obj, six.string_types):
         return obj if isinstance(obj, six.text_type) else six.text_type(obj)
     elif isinstance(obj, SequenceType):
-        return tuple(convert_input_data(t) for t in obj)
+        return tuple(rec(t, rec) for t in obj)
     elif isinstance(obj, MappingType):
-        return FrozenDict((convert_input_data(key), convert_input_data(value))
+        return FrozenDict((rec(key, rec), rec(value, rec))
                           for key, value in six.iteritems(obj))
     elif isinstance(obj, MutableSetType):
-        return frozenset(convert_input_data(t) for t in obj)
+        return frozenset(rec(t, rec) for t in obj)
     elif isinstance(obj, IterableType):
-        return six.moves.map(convert_input_data, obj)
+        return six.moves.map(lambda v: rec(v, rec), obj)
     else:
         return obj
 
 
-def convert_output_data(obj, limit_func, engine):
+def convert_output_data(obj, limit_func, engine, rec=None):
+    if rec is None:
+        rec = convert_output_data
     if isinstance(obj, collections.Mapping):
         result = {}
         for key, value in limit_func(six.iteritems(obj)):
-            result[convert_output_data(key, limit_func, engine)] = \
-                convert_output_data(value, limit_func, engine)
+            result[rec(key, limit_func, engine, rec)] = rec(
+                value, limit_func, engine, rec)
         return result
     elif isinstance(obj, SetType):
         set_type = list if convert_sets_to_lists(engine) else set
-        return set_type(convert_output_data(t, limit_func, engine)
+        return set_type(rec(t, limit_func, engine, rec)
                         for t in limit_func(obj))
     elif isinstance(obj, (tuple, list)):
         seq_type = list if convert_tuples_to_lists(engine) else type(obj)
-        return seq_type(convert_output_data(t, limit_func, engine)
+        return seq_type(rec(t, limit_func, engine, rec)
                         for t in limit_func(obj))
     elif is_iterable(obj):
-        return list(convert_output_data(t, limit_func, engine)
-                    for t in limit_func(obj))
+        return list(rec(t, limit_func, engine, rec) for t in limit_func(obj))
     else:
         return obj
 
