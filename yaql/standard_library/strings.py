@@ -75,6 +75,7 @@ def to_upper(string):
 
 
 @specs.parameter('string', yaqltypes.String())
+@specs.extension_method
 def len_(string):
     return len(string)
 
