@@ -33,6 +33,8 @@ LIMIT = 100
 def main(context, show_tokens, parser):
     print("Yet Another Query Language - command-line query tool")
     print("Version {0}".format(version))
+    if context.get_data('legacy', False):
+        print("Running in a legacy (0.2.x compatible) mode")
     print("Copyright (c) 2013-2015 Mirantis, Inc")
     print("")
     if not context['']:
