@@ -20,12 +20,14 @@ import optparse
 
 import yaql
 from yaql.cli import cli_functions
+import yaql.legacy
 
 
 def main():
     p = optparse.OptionParser()
     p.add_option('--data', '-d')
     p.add_option('-t', action='store_true', dest='tokens')
+    p.add_option('--legacy', action='store_true', dest='legacy')
 
     options, arguments = p.parse_args()
     if options.data:
@@ -38,13 +40,21 @@ def main():
     else:
         data = None
 
-    context = yaql.create_context()
     engine_options = {
         'yaql.limitIterators': 100,
         'yaql.treatSetsAsLists': True,
         'yaql.memoryQuota': 10000
     }
-    parser = yaql.YaqlFactory().create(options=engine_options)
+
+    if options.legacy:
+        factory = yaql.legacy.YaqlFactory()
+        context = yaql.legacy.create_context()
+        context['legacy'] = True
+    else:
+        factory = yaql.YaqlFactory()
+        context = yaql.create_context()
+
+    parser = factory.create(options=engine_options)
     cli_functions.register_in_context(context, parser)
     if options.tokens:
         parser('__main(true)').evaluate(data, context)
