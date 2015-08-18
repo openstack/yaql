@@ -44,9 +44,25 @@ def is_boolean(value):
     return isinstance(value, bool)
 
 
+@specs.parameter('right', bool)
+@specs.parameter('left', bool)
+@specs.name('*equal')
+def eq(left, right):
+    return left == right
+
+
+@specs.parameter('right', bool)
+@specs.parameter('left', bool)
+@specs.name('*not_equal')
+def neq(left, right):
+    return left != right
+
+
 def register(context):
     context.register_function(and_)
     context.register_function(or_)
     context.register_function(not_)
     context.register_function(bool_)
     context.register_function(is_boolean)
+    context.register_function(eq)
+    context.register_function(neq)
