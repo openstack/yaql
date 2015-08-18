@@ -116,6 +116,10 @@ class TestLegacyNewEngine(yaql.tests.TestCase):
         self.assertRaises(exceptions.YaqlLexicalException,
                           self.eval, '$.__d', data=data)
 
+    def test_compare_not_comparable(self):
+        self.assertTrue(self.eval('asd != true'))
+        self.assertFalse(self.eval('asd = 0'))
+
 
 class TestLegacy(TestLegacyNewEngine):
     def __init__(self, *args, **kwargs):
