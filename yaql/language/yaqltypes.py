@@ -23,7 +23,7 @@ from yaql.language import utils
 
 class HiddenParameterType(object):
     # noinspection PyMethodMayBeStatic,PyUnusedLocal
-    def check(self, value, context, *args, **kwargs):
+    def check(self, value, context, engine, *args, **kwargs):
         return True
 
 
@@ -35,14 +35,14 @@ class SmartType(object):
     def __init__(self, nullable):
         self.nullable = nullable
 
-    def check(self, value, context, *args, **kwargs):
+    def check(self, value, context, engine, *args, **kwargs):
         if value is None and not self.nullable:
             return False
         return True
 
     def convert(self, value, sender, context, function_spec, engine,
                 *args, **kwargs):
-        if not self.check(value, context, *args, **kwargs):
+        if not self.check(value, context, engine, *args, **kwargs):
             raise exceptions.ArgumentValueException()
         utils.limit_memory_usage(engine, (1, value))
 
@@ -56,11 +56,12 @@ class GenericType(SmartType):
         self.checker = checker
         self.converter = converter
 
-    def check(self, value, context, *args, **kwargs):
+    def check(self, value, context, engine, *args, **kwargs):
         if isinstance(value, expressions.Constant):
             value = value.value
 
-        if not super(GenericType, self).check(value, context, *args, **kwargs):
+        if not super(GenericType, self).check(
+                value, context, engine, *args, **kwargs):
             return False
         if value is None or isinstance(value, expressions.Expression):
             return True
@@ -143,6 +144,13 @@ class Iterable(PythonType):
             collections.Iterable, False, [
                 lambda t: not isinstance(t, six.string_types + (
                     utils.MappingType,))] + (validators or []))
+
+    def check(self, value, context, engine, *args, **kwargs):
+        if isinstance(value, utils.MappingType) and engine.options.get(
+                'yaql.iterableDicts', False):
+            return True
+        return super(Iterable, self).check(
+            value, context, engine, *args, **kwargs)
 
     def convert(self, value, sender, context, function_spec, engine,
                 *args, **kwargs):

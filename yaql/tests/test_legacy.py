@@ -133,3 +133,8 @@ class TestLegacy(TestLegacyNewEngine):
         self.assertEqual((1, 2, 3), self.eval('1 => 2 => 3'))
         self.assertEqual(((1, 2), 3), self.eval('(1 => 2) => 3'))
         self.assertEqual((1, (2, 3)), self.eval('1 => (2 => 3)'))
+
+    def test_dicts_are_iterable(self):
+        data = {'a': 1, 'b': 2}
+        self.assertTrue(self.eval('a in $', data))
+        self.assertItemsEqual('ab', self.eval('$.sum()', data))

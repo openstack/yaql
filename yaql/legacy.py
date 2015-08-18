@@ -29,6 +29,7 @@ class YaqlFactory(factory.YaqlFactory):
     def create(self, options=None):
         options = dict(options or {})
         options['yaql.convertTuplesToLists'] = False
+        options['yaql.iterableDicts'] = True
         return super(YaqlFactory, self).create(options)
 
 

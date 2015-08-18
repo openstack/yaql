@@ -85,7 +85,7 @@ def choose_overload(name, candidates, engine, sender, context, args, kwargs):
             elif no_kwargs != c.no_kwargs:
                 raise_ambiguous()
 
-            mapping = c.map_args(args, kwargs, context)
+            mapping = c.map_args(args, kwargs, context, engine)
             if mapping is None:
                 continue
             pos, kwd = mapping

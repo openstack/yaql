@@ -192,7 +192,7 @@ class FunctionDefinition(object):
             if p.position is not None and p.position >= pd.position:
                 p.position += 1
 
-    def map_args(self, args, kwargs, context):
+    def map_args(self, args, kwargs, context, engine):
         kwargs = dict(kwargs)
         positional_args = len(args) * [
             self.parameters.get('*', utils.NO_VALUE)]
@@ -248,17 +248,18 @@ class FunctionDefinition(object):
             value = args[i]
             if value is utils.NO_VALUE:
                 value = positional_args[i].default
-            if not positional_args[i].value_type.check(value, context):
+            if not positional_args[i].value_type.check(value, context, engine):
                 return None
         for kwd in six.iterkeys(kwargs):
-            if not keyword_args[kwd].value_type.check(kwargs[kwd], context):
+            if not keyword_args[kwd].value_type.check(
+                    kwargs[kwd], context, engine):
                 return None
 
         return tuple(positional_args), keyword_args
 
     def get_delegate(self, sender, engine, context, args, kwargs):
         def checked(val, param):
-            if not param.value_type.check(val, context):
+            if not param.value_type.check(val, context, engine):
                 raise exceptions.ArgumentException(param.name)
 
             def convert_arg_func(context2):
