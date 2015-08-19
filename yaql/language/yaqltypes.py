@@ -369,7 +369,7 @@ class Constant(SmartType):
 
     def check(self, value, context, *args, **kwargs):
         return super(Constant, self).check(
-            value.value, context, *args, **kwargs) and (
+            value, context, *args, **kwargs) and (
             value is None or isinstance(value, expressions.Constant))
 
     def convert(self, value, sender, context, function_spec, engine,
