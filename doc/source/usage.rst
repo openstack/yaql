@@ -1,7 +1,13 @@
-========
 Usage
-========
+=====
 
-To use yaql in a project::
+This section is not ready yet.
 
-	import yaql
+REPL
+~~~~
+
+Embedding YAQL
+~~~~~~~~~~~~~~
+
+Extending YAQL
+~~~~~~~~~~~~~~
