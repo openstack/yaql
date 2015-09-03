@@ -529,7 +529,7 @@ def _merge_dicts(dict1, dict2, list_merge_func, item_merger, max_levels=0):
                         'Cannot merge {0} with {1}'.format(
                             type(value1), type(value2)))
                 result[key] = _merge_dicts(
-                    value1, value2, list_merge_func,
+                    value1, value2, list_merge_func, item_merger,
                     0 if max_levels == 0 else max_levels - 1)
             elif max_levels != 1 and utils.is_sequence(value2):
                 if not utils.is_sequence(value1):
