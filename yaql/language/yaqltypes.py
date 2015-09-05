@@ -40,7 +40,7 @@ class SmartType(object):
             return False
         return True
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
         if not self.check(value, context, engine, *args, **kwargs):
             raise exceptions.ArgumentValueException()
@@ -69,15 +69,15 @@ class GenericType(SmartType):
             return True
         return self.checker(value, context, *args, **kwargs)
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
         if isinstance(value, expressions.Constant):
             value = value.value
         super(GenericType, self).convert(
-            value, sender, context, function_spec, engine, *args, **kwargs)
+            value, receiver, context, function_spec, engine, *args, **kwargs)
         if value is None or not self.converter:
             return value
-        return self.converter(value, sender, context, function_spec, engine,
+        return self.converter(value, receiver, context, function_spec, engine,
                               *args, **kwargs)
 
 
@@ -118,11 +118,11 @@ class MappingRule(LazyParameterType, SmartType):
     def check(self, value, context, *args, **kwargs):
         return isinstance(value, expressions.MappingRuleExpression)
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
         super(MappingRule, self).convert(
-            value, sender, context, function_spec, engine, *args, **kwargs)
-        wrap = lambda func: lambda: func(sender, context, engine)
+            value, receiver, context, function_spec, engine, *args, **kwargs)
+        wrap = lambda func: lambda: func(receiver, context, engine)
 
         return utils.MappingRule(wrap(value.source), wrap(value.destination))
 
@@ -131,10 +131,10 @@ class String(PythonType):
     def __init__(self, nullable=False):
         super(String, self).__init__(six.string_types, nullable=nullable)
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
         value = super(String, self).convert(
-            value, sender, context, function_spec, engine, *args, **kwargs)
+            value, receiver, context, function_spec, engine, *args, **kwargs)
         return None if value is None else six.text_type(value)
 
 
@@ -152,10 +152,10 @@ class Iterable(PythonType):
         return super(Iterable, self).check(
             value, context, engine, *args, **kwargs)
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
         res = super(Iterable, self).convert(
-            value, sender, context, function_spec, engine, *args, **kwargs)
+            value, receiver, context, function_spec, engine, *args, **kwargs)
         return utils.limit_iterable(res, engine)
 
 
@@ -188,7 +188,7 @@ class Lambda(LazyParameterType, SmartType):
 
     def check(self, value, context, *args, **kwargs):
         if self.method and isinstance(
-                value, expressions.Expression) and not value.uses_sender:
+                value, expressions.Expression) and not value.uses_receiver:
             return False
         return super(Lambda, self).check(value, context, *args, **kwargs)
 
@@ -199,18 +199,18 @@ class Lambda(LazyParameterType, SmartType):
         for arg_name, arg_value in kwargs.items():
             context['$' + arg_name] = arg_value
 
-    def _call(self, value, sender, context, engine, args, kwargs):
+    def _call(self, value, receiver, context, engine, args, kwargs):
         self._publish_params(context, args, kwargs)
         if isinstance(value, expressions.Expression):
-            result = value(sender, context, engine)
+            result = value(receiver, context, engine)
         else:
             result = value, context
         return result
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *convert_args, **convert_kwargs):
         super(Lambda, self).convert(
-            value, sender, context, function_spec, engine,
+            value, receiver, context, function_spec, engine,
             *convert_args, **convert_kwargs)
         if value is None:
             return None
@@ -219,20 +219,20 @@ class Lambda(LazyParameterType, SmartType):
 
         def func(*args, **kwargs):
             if self.method and self.with_context:
-                new_sender, new_context = args[:2]
+                new_receiver, new_context = args[:2]
                 args = args[2:]
             elif self.method and not self.with_context:
-                new_sender, new_context = \
+                new_receiver, new_context = \
                     args[0], context.create_child_context()
                 args = args[1:]
             elif not self.method and self.with_context:
-                new_sender, new_context = utils.NO_VALUE, args[0]
+                new_receiver, new_context = utils.NO_VALUE, args[0]
                 args = args[1:]
             else:
-                new_sender, new_context = \
+                new_receiver, new_context = \
                     utils.NO_VALUE, context.create_child_context()
 
-            return self._call(value, new_sender, new_context,
+            return self._call(value, new_receiver, new_context,
                               engine, args, kwargs)
 
         func.__unwrapped__ = value
@@ -255,7 +255,7 @@ class Super(HiddenParameterType, SmartType):
         raise exceptions.NoFunctionRegisteredException(
             spec.name)
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *convert_args, **convert_kwargs):
         if six.callable(value) and hasattr(value, '__unwrapped__'):
             value = value.__unwrapped__
@@ -273,12 +273,12 @@ class Super(HiddenParameterType, SmartType):
                 new_name = args[0]
                 args = args[1:]
 
-            new_sender = sender
+            new_receiver = receiver
             if self.method is True:
-                new_sender = args[0]
+                new_receiver = args[0]
                 args = args[1:]
             elif self.method is False:
-                new_sender = utils.NO_VALUE
+                new_receiver = utils.NO_VALUE
 
             if self.with_context:
                 new_context = args[0]
@@ -287,7 +287,7 @@ class Super(HiddenParameterType, SmartType):
                 new_context = context.create_child_context()
 
             return parent_function_context(
-                new_name, engine, new_sender, new_context)(*args, **kwargs)
+                new_name, engine, new_receiver, new_context)(*args, **kwargs)
         func.__unwrapped__ = value
         return func
 
@@ -296,7 +296,7 @@ class Context(HiddenParameterType, SmartType):
     def __init__(self):
         super(Context, self).__init__(False)
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
         return context
 
@@ -308,7 +308,7 @@ class Delegate(HiddenParameterType, SmartType):
         self.with_context = with_context
         self.method = method
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *convert_args, **convert_kwargs):
         if six.callable(value) and hasattr(value, '__unwrapped__'):
             value = value.__unwrapped__
@@ -319,9 +319,9 @@ class Delegate(HiddenParameterType, SmartType):
                 name = args[0]
                 args = args[1:]
 
-            new_sender = utils.NO_VALUE
+            new_receiver = utils.NO_VALUE
             if self.method:
-                new_sender = args[0]
+                new_receiver = args[0]
                 args = args[1:]
             if self.with_context:
                 new_context = args[0]
@@ -330,25 +330,26 @@ class Delegate(HiddenParameterType, SmartType):
                 new_context = context.create_child_context()
 
             return new_context(
-                name, engine, new_sender, use_convention=True)(*args, **kwargs)
+                name, engine, new_receiver,
+                use_convention=True)(*args, **kwargs)
         func.__unwrapped__ = value
         return func
 
 
-class Sender(HiddenParameterType, SmartType):
+class Receiver(HiddenParameterType, SmartType):
     def __init__(self):
-        super(Sender, self).__init__(False)
+        super(Receiver, self).__init__(False)
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
-        return sender
+        return receiver
 
 
 class Engine(HiddenParameterType, SmartType):
     def __init__(self):
         super(Engine, self).__init__(False)
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
         return engine
 
@@ -357,7 +358,7 @@ class FunctionDefinition(HiddenParameterType, SmartType):
     def __init__(self):
         super(FunctionDefinition, self).__init__(False)
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
         return function_spec
 
@@ -372,10 +373,10 @@ class Constant(SmartType):
             value, context, *args, **kwargs) and (
             value is None or isinstance(value, expressions.Constant))
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
         super(Constant, self).convert(
-            value, sender, context, function_spec, engine, *args, **kwargs)
+            value, receiver, context, function_spec, engine, *args, **kwargs)
         return value.value if self.expand else value
 
 
@@ -386,10 +387,10 @@ class YaqlExpression(LazyParameterType, SmartType):
     def check(self, value, context, *args, **kwargs):
         return isinstance(value, expressions.Expression)
 
-    def convert(self, value, sender, context, function_spec, engine,
+    def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
         super(YaqlExpression, self).convert(
-            value, sender, context, function_spec, engine, *args, **kwargs)
+            value, receiver, context, function_spec, engine, *args, **kwargs)
         return value
 
 

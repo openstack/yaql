@@ -22,7 +22,7 @@ from yaql.language import utils
 from yaql.language import yaqltypes
 
 
-def call(name, context, args, kwargs, engine, sender=utils.NO_VALUE,
+def call(name, context, args, kwargs, engine, receiver=utils.NO_VALUE,
          data_context=None, use_convention=False, function_filter=None):
 
     if data_context is None:
@@ -31,7 +31,7 @@ def call(name, context, args, kwargs, engine, sender=utils.NO_VALUE,
     if function_filter is None:
         function_filter = lambda fd, ctx: True
 
-    if sender is utils.NO_VALUE:
+    if receiver is utils.NO_VALUE:
         predicate = lambda fd, ctx: fd.is_function and function_filter(fd, ctx)
     else:
         predicate = lambda fd, ctx: fd.is_method and function_filter(fd, ctx)
@@ -40,13 +40,13 @@ def call(name, context, args, kwargs, engine, sender=utils.NO_VALUE,
         name, predicate, use_convention=use_convention)
 
     if not all_overloads:
-        if sender is utils.NO_VALUE:
+        if receiver is utils.NO_VALUE:
             raise exceptions.NoFunctionRegisteredException(name)
         else:
-            raise exceptions.NoMethodRegisteredException(name, sender)
+            raise exceptions.NoMethodRegisteredException(name, receiver)
     else:
-        delegate = choose_overload(name, all_overloads, engine, sender,
-                                   data_context, args, kwargs)
+        delegate = choose_overload(
+            name, all_overloads, engine, receiver, data_context, args, kwargs)
         try:
             result = delegate()
             utils.limit_memory_usage(engine, (1, result))
@@ -58,24 +58,24 @@ def call(name, context, args, kwargs, engine, sender=utils.NO_VALUE,
                 sys.exc_info()[2])
 
 
-def choose_overload(name, candidates, engine, sender, context, args, kwargs):
+def choose_overload(name, candidates, engine, receiver, context, args, kwargs):
     def raise_ambiguous():
-        if sender is utils.NO_VALUE:
+        if receiver is utils.NO_VALUE:
             raise exceptions.AmbiguousFunctionException(name)
         else:
-            raise exceptions.AmbiguousMethodException(name, sender)
+            raise exceptions.AmbiguousMethodException(name, receiver)
 
     def raise_not_found():
-        if sender is utils.NO_VALUE:
+        if receiver is utils.NO_VALUE:
             raise exceptions.NoMatchingFunctionException(name)
         else:
-            raise exceptions.NoMatchingMethodException(name, sender)
+            raise exceptions.NoMatchingMethodException(name, receiver)
 
     candidates2 = []
     lazy_params = None
     no_kwargs = None
-    if sender is not utils.NO_VALUE:
-        args = (sender,) + args
+    if receiver is not utils.NO_VALUE:
+        args = (receiver,) + args
     for level in candidates:
         new_level = []
         for c in level:
@@ -123,7 +123,7 @@ def choose_overload(name, candidates, engine, sender, context, args, kwargs):
     for level in candidates2:
         for c, mapping in level:
             try:
-                d = c.get_delegate(sender, engine, context, args, kwargs)
+                d = c.get_delegate(receiver, engine, context, args, kwargs)
             except exceptions.ArgumentException:
                 pass
             else:

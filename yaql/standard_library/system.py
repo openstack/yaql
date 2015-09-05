@@ -30,17 +30,17 @@ def get_context_data(name, context):
 
 @specs.parameter('expr', yaqltypes.Lambda(method=True))
 @specs.name('#operator_.')
-def op_dot(sender, expr):
-    return expr(sender)
+def op_dot(receiver, expr):
+    return expr(receiver)
 
 
 @specs.parameter('expr', yaqltypes.YaqlExpression())
 @specs.inject('operator', yaqltypes.Delegate('#operator_.'))
 @specs.name('#operator_?.')
-def elvis_operator(operator, sender, expr):
-    if sender is None:
+def elvis_operator(operator, receiver, expr):
+    if receiver is None:
         return None
-    return operator(sender, expr)
+    return operator(receiver, expr)
 
 
 @specs.parameter('sequence', yaqltypes.Iterable())

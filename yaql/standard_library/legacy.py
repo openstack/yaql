@@ -91,19 +91,19 @@ def switch(value, context, *conditions):
     return None
 
 
-@specs.parameter('sender', contexts.ContextBase)
+@specs.parameter('receiver', contexts.ContextBase)
 @specs.parameter('expr', yaqltypes.Lambda(with_context=True, method=True))
 @specs.name('#operator_.')
-def op_dot_context(sender, expr):
-    return expr(sender['$0'], sender)
+def op_dot_context(receiver, expr):
+    return expr(receiver['$0'], receiver)
 
 
 @specs.parameter('mappings', yaqltypes.Lambda())
 @specs.method
 @specs.no_kwargs
-def as_(context, sender, *mappings):
+def as_(context, receiver, *mappings):
     for t in mappings:
-        tt = t(sender)
+        tt = t(receiver)
         if isinstance(tt, tuple):
             if len(tt) != 2:
                 raise ValueError('as() tuples must be of size 2')
@@ -112,7 +112,7 @@ def as_(context, sender, *mappings):
             context[tt.destination] = tt.source
         else:
             raise ValueError('as() must have tuple parameters')
-    context['$0'] = sender
+    context['$0'] = receiver
     return context
 
 

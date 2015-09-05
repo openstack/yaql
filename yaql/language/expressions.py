@@ -22,7 +22,7 @@ from yaql.language import utils
 
 
 class Expression(object):
-    def __call__(self, sender, context, engine):
+    def __call__(self, receiver, context, engine):
         pass
 
 
@@ -31,10 +31,10 @@ class Function(Expression):
     def __init__(self, name, *args):
         self.name = name
         self.args = args
-        self.uses_sender = True
+        self.uses_receiver = True
 
-    def __call__(self, sender, context, engine):
-        return context(self.name, engine, sender, context)(*self.args)
+    def __call__(self, receiver, context, engine):
+        return context(self.name, engine, receiver, context)(*self.args)
 
     def __str__(self):
         return u'{0}({1})'.format(self.name, ', '.join(
@@ -49,7 +49,7 @@ class BinaryOperator(Function):
             func_name = '*' + alias
         self.operator = op
         super(BinaryOperator, self).__init__(func_name, obj1, obj2)
-        self.uses_sender = False
+        self.uses_receiver = False
 
 
 class UnaryOperator(Function):
@@ -60,25 +60,25 @@ class UnaryOperator(Function):
             func_name = '*' + alias
         self.operator = op
         super(UnaryOperator, self).__init__(func_name, obj)
-        self.uses_sender = False
+        self.uses_receiver = False
 
 
 class IndexExpression(Function):
     def __init__(self, value, *args):
         super(IndexExpression, self).__init__('#indexer', value, *args)
-        self.uses_sender = False
+        self.uses_receiver = False
 
 
 class ListExpression(Function):
     def __init__(self, *args):
         super(ListExpression, self).__init__('#list', *args)
-        self.uses_sender = False
+        self.uses_receiver = False
 
 
 class MapExpression(Function):
     def __init__(self, *args):
         super(MapExpression, self).__init__('#map', *args)
-        self.uses_sender = False
+        self.uses_receiver = False
 
 
 @six.python_2_unicode_compatible
@@ -86,7 +86,7 @@ class GetContextValue(Function):
     def __init__(self, path):
         super(GetContextValue, self).__init__('#get_context_data', path)
         self.path = path
-        self.uses_sender = False
+        self.uses_receiver = False
 
     def __str__(self):
         return self.path.value
@@ -96,14 +96,14 @@ class GetContextValue(Function):
 class Constant(Expression):
     def __init__(self, value):
         self.value = value
-        self.uses_sender = False
+        self.uses_receiver = False
 
     def __str__(self):
         if isinstance(self.value, six.text_type):
             return u"'{0}'".format(self.value)
         return six.text_type(self.value)
 
-    def __call__(self, sender, context, engine):
+    def __call__(self, receiver, context, engine):
         return self.value
 
 
@@ -115,13 +115,13 @@ class KeywordConstant(Constant):
 class Wrap(Expression):
     def __init__(self, expression):
         self.expr = expression
-        self.uses_sender = False
+        self.uses_receiver = False
 
     def __str__(self):
         return str(self.expr)
 
-    def __call__(self, sender, context, engine):
-        return self.expr(sender, context, engine)
+    def __call__(self, receiver, context, engine):
+        return self.expr(receiver, context, engine)
 
 
 @six.python_2_unicode_compatible
@@ -129,31 +129,31 @@ class MappingRuleExpression(Expression):
     def __init__(self, source, destination):
         self.source = source
         self.destination = destination
-        self.uses_sender = False
+        self.uses_receiver = False
 
     def __str__(self):
         return u'{0} => {1}'.format(self.source, self.destination)
 
-    def __call__(self, sender, context, engine):
+    def __call__(self, receiver, context, engine):
         return utils.MappingRule(
-            self.source(sender, context, engine),
-            self.destination(sender, context, engine))
+            self.source(receiver, context, engine),
+            self.destination(receiver, context, engine))
 
 
 @six.python_2_unicode_compatible
 class Statement(Function):
     def __init__(self, expression, engine):
         self.expression = expression
-        self.uses_sender = False
+        self.uses_receiver = False
         self.engine = engine
         super(Statement, self).__init__('#finalize', expression)
 
-    def __call__(self, sender, context, engine):
+    def __call__(self, receiver, context, engine):
         if not context.collect_functions('#finalize'):
             context = context.create_child_context()
             context.register_function(lambda x: x, name='#finalize')
         try:
-            return super(Statement, self).__call__(sender, context, engine)
+            return super(Statement, self).__call__(receiver, context, engine)
         except exceptions.WrappedException as e:
             six.reraise(type(e.wrapped), e.wrapped, sys.exc_info()[2])
 

@@ -57,11 +57,11 @@ class ContextBase(object):
     def __contains__(self, item):
         return False
 
-    def __call__(self, name, engine, sender=utils.NO_VALUE,
+    def __call__(self, name, engine, receiver=utils.NO_VALUE,
                  data_context=None, use_convention=False,
                  function_filter=None):
         return lambda *args, **kwargs: runner.call(
-            name, self, args, kwargs, engine, sender,
+            name, self, args, kwargs, engine, receiver,
             data_context, use_convention, function_filter)
 
     @abc.abstractmethod

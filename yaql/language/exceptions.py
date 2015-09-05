@@ -36,9 +36,9 @@ class NoFunctionRegisteredException(FunctionResolutionError):
 
 
 class NoMethodRegisteredException(MethodResolutionError):
-    def __init__(self, name, sender):
+    def __init__(self, name, receiver):
         super(NoMethodRegisteredException, self).__init__(
-            u'Unknown method "{0}" for sender {1}'.format(name, sender))
+            u'Unknown method "{0}" for receiver {1}'.format(name, receiver))
 
 
 class NoMatchingFunctionException(FunctionResolutionError):
@@ -48,10 +48,10 @@ class NoMatchingFunctionException(FunctionResolutionError):
 
 
 class NoMatchingMethodException(MethodResolutionError):
-    def __init__(self, name, sender):
+    def __init__(self, name, receiver):
         super(NoMatchingMethodException, self).__init__(
-            u'No method "{0}" for sender {1} matches '
-            u'supplied arguments'.format(name, sender))
+            u'No method "{0}" for receiver {1} matches '
+            u'supplied arguments'.format(name, receiver))
 
 
 class AmbiguousFunctionException(FunctionResolutionError):
@@ -61,9 +61,9 @@ class AmbiguousFunctionException(FunctionResolutionError):
 
 
 class AmbiguousMethodException(MethodResolutionError):
-    def __init__(self, name, sender):
+    def __init__(self, name, receiver):
         super(AmbiguousMethodException, self).__init__(
-            u'Ambiguous method "{0}" for sender {1}'.format(name, sender))
+            u'Ambiguous method "{0}" for receiver {1}'.format(name, receiver))
 
 
 class ArgumentException(YaqlException):

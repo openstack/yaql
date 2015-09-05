@@ -53,11 +53,11 @@ class FunctionDefinition(object):
         self.no_kwargs = no_kwargs
         self.meta = meta or {}
 
-    def __call__(self, engine, context, sender=utils.NO_VALUE):
+    def __call__(self, engine, context, receiver=utils.NO_VALUE):
         def func(*args, **kwargs):
-            if sender is not utils.NO_VALUE:
-                args = (sender,) + args
-            return self.get_delegate(sender, engine, context, args, kwargs)()
+            if receiver is not utils.NO_VALUE:
+                args = (receiver,) + args
+            return self.get_delegate(receiver, engine, context, args, kwargs)()
         return func
 
     def clone(self):
@@ -257,7 +257,7 @@ class FunctionDefinition(object):
 
         return tuple(positional_args), keyword_args
 
-    def get_delegate(self, sender, engine, context, args, kwargs):
+    def get_delegate(self, receiver, engine, context, args, kwargs):
         def checked(val, param):
             if not param.value_type.check(val, context, engine):
                 raise exceptions.ArgumentException(param.name)
@@ -265,7 +265,7 @@ class FunctionDefinition(object):
             def convert_arg_func(context2):
                 try:
                     return param.value_type.convert(
-                        val, sender, context2, self, engine)
+                        val, receiver, context2, self, engine)
                 except exceptions.ArgumentValueException:
                     raise exceptions.ArgumentException(param.name)
             return convert_arg_func
