@@ -117,6 +117,14 @@ def lambda_(func):
     return func
 
 
+@specs.name('#operator_.')
+@specs.parameter('name', yaqltypes.Keyword())
+@specs.inject('func', yaqltypes.Delegate(use_convention=False))
+def get_property(func, obj, name):
+    func_name = '#property#{0}'.format(name)
+    return func(func_name, obj)
+
+
 def register(context, delegates=False):
     context.register_function(get_context_data)
     context.register_function(op_dot)
@@ -130,3 +138,7 @@ def register(context, delegates=False):
     if delegates:
         context.register_function(call)
         context.register_function(lambda_)
+
+
+def register_fallbacks(context):
+    context.register_function(get_property)

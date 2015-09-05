@@ -302,11 +302,13 @@ class Context(HiddenParameterType, SmartType):
 
 
 class Delegate(HiddenParameterType, SmartType):
-    def __init__(self, name=None, with_context=False, method=False):
+    def __init__(self, name=None, with_context=False, method=False,
+                 use_convention=True):
         super(Delegate, self).__init__(False)
         self.name = name
         self.with_context = with_context
         self.method = method
+        self.use_convention = use_convention
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *convert_args, **convert_kwargs):
@@ -331,7 +333,7 @@ class Delegate(HiddenParameterType, SmartType):
 
             return new_context(
                 name, engine, new_receiver,
-                use_convention=True)(*args, **kwargs)
+                use_convention=self.use_convention)(*args, **kwargs)
         func.__unwrapped__ = value
         return func
 

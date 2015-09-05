@@ -493,3 +493,13 @@ def meta(name, value):
         fd.meta[name] = value
         return func
     return wrapper
+
+
+def yaql_property(python_type):
+    def decorator(func):
+        @name('#property#{0}'.format(get_function_definition(func).name))
+        @parameter('obj', yaqltypes.PythonType(python_type, False))
+        def wrapper(obj):
+            return func(obj)
+        return wrapper
+    return decorator
