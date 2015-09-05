@@ -12,28 +12,28 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import abc
 import re
 
+import six
 
+
+@six.add_metaclass(abc.ABCMeta)
 class Convention(object):
+    @abc.abstractmethod
     def convert_function_name(self, name):
-        return name
+        pass
 
+    @abc.abstractmethod
     def convert_parameter_name(self, name):
-        return name
+        pass
 
 
 class PythonConvention(Convention):
     def convert_function_name(self, name):
-        if not name or not name[0].isalpha():
-            return name
-
         return name
 
     def convert_parameter_name(self, name):
-        if not name or not name[0].isalpha():
-            return name
-
         return name
 
 
@@ -42,14 +42,9 @@ class CamelCaseConvention(Convention):
         self.regex = re.compile(r'(?!^)_(\w)', flags=re.UNICODE)
 
     def convert_function_name(self, name):
-        if not name or not name[0].isalpha():
-            return name
-
         return self._to_camel_case(name)
 
     def convert_parameter_name(self, name):
-        if not name or not name[0].isalpha():
-            return name
         return self._to_camel_case(name)
 
     def _to_camel_case(self, name):
