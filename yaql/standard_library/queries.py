@@ -98,6 +98,15 @@ def select(collection, selector):
 
 
 @specs.parameter('collection', yaqltypes.Iterable())
+@specs.parameter('attribute', yaqltypes.Keyword(expand=False))
+@specs.inject('operator', yaqltypes.Delegate('#operator_.'))
+@specs.name('#operator_.')
+def collection_attribution(collection, attribute, operator):
+    return six.moves.map(
+        lambda t: operator(t, attribute), collection)
+
+
+@specs.parameter('collection', yaqltypes.Iterable())
 @specs.parameter('count', int, nullable=False)
 @specs.method
 def skip(collection, count):
@@ -617,6 +626,7 @@ def register(context):
     context.register_function(where, name='filter')
     context.register_function(select)
     context.register_function(select, name='map')
+    context.register_function(collection_attribution)
     context.register_function(limit)
     context.register_function(limit, name='take')
     context.register_function(skip)

@@ -102,15 +102,6 @@ def dict_keyword_access(d, key):
     return d[key]
 
 
-@specs.parameter('collection', yaqltypes.Sequence())
-@specs.parameter('attribute', yaqltypes.Keyword(expand=False))
-@specs.inject('operator', yaqltypes.Delegate('#operator_.'))
-@specs.name('#operator_.')
-def collection_attribute(collection, attribute, operator):
-    return six.moves.map(
-        lambda t: operator(t, attribute), collection)
-
-
 @specs.parameter('d', utils.MappingType, alias='dict')
 @specs.name('#indexer')
 def dict_indexer(d, key):
@@ -560,7 +551,6 @@ def register(context, no_sets=False):
     context.register_function(contains_key)
     context.register_function(contains_value)
     context.register_function(combine_lists)
-    context.register_function(collection_attribute)
     context.register_function(list_by_int)
     context.register_function(int_by_list)
     context.register_function(combine_dicts)

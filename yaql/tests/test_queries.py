@@ -25,6 +25,11 @@ class TestQueries(yaql.tests.TestCase):
         data = [1, 2, 3]
         self.assertEqual([1, 4, 9], self.eval('$.select($ * $)', data=data))
 
+    def test_keyword_collection_access(self):
+        data = [{'a': 2}, {'a': 4}]
+        self.assertEqual([2, 4], self.eval('$.a', data=data))
+        self.assertEqual([2, 4], self.eval('$.select($).a', data=data))
+
     def test_skip(self):
         data = [1, 2, 3, 4]
         self.assertEqual([2, 3, 4], self.eval('$.skip(1)', data=data))

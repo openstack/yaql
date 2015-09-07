@@ -109,10 +109,6 @@ class TestCollections(yaql.tests.TestCase):
             exceptions.YaqlLexicalException,
             self.eval, '$.__d', data=data)
 
-    def test_keyword_collection_access(self):
-        data = [{'a': 2}, {'a': 4}]
-        self.assertEqual([2, 4], self.eval('$.a', data=data))
-
     def test_indexer_dict_access(self):
         data = {'a': 12, 'b c': 44}
         self.assertEqual(12, self.eval('$[a]', data=data))
