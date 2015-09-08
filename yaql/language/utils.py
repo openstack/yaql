@@ -57,6 +57,7 @@ MappingType = collections.Mapping
 MutableMappingType = collections.MutableMapping
 IterableType = collections.Iterable
 IteratorType = collections.Iterator
+QueueType = collections.deque
 
 
 def convert_input_data(obj, rec=None):

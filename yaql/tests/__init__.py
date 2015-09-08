@@ -88,7 +88,9 @@ class TestCase(testtools.TestCase):
 
     def eval(self, expression, data=None, context=None):
         expr = self.engine(expression)
-        return expr.evaluate(data=data, context=context or self.context)
+        context = context or self.context
+        context['data'] = data
+        return expr.evaluate(data=data, context=context)
 
     def legacy_eval(self, expression, data=None, context=None):
         expr = self.legacy_engine(expression)
