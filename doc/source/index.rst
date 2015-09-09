@@ -4,16 +4,33 @@
    contain the root `toctree` directive.
 
 Welcome to yaql's documentation!
-========================================================
+================================
 
-Contents:
+Introduction
+~~~~~~~~~~~~
 
 .. toctree::
    :maxdepth: 2
 
    readme
-   installation
+   what_is_yaql
+
+Usage
+~~~~~
+
+.. toctree::
+   :maxdepth: 1
+
    usage
+   language_description
+   standard_library
+
+Contributing
+~~~~~~~~~~~~
+
+.. toctree::
+   :maxdepth: 1
+
    contributing
 
 Indices and tables
