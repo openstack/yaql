@@ -25,6 +25,7 @@ from yaql.standard_library import boolean as std_boolean
 from yaql.standard_library import branching as std_branching
 from yaql.standard_library import collections as std_collections
 from yaql.standard_library import common as std_common
+from yaql.standard_library import date_time as std_datetime
 from yaql.standard_library import math as std_math
 from yaql.standard_library import queries as std_queries
 from yaql.standard_library import regex as std_regex
@@ -68,7 +69,7 @@ def create_context(data=utils.NO_VALUE, context=None, system=True,
                    math=True, collections=True, queries=True,
                    regex=True, branching=True,
                    no_sets=False, finalizer=None, delegates=False,
-                   convention=None):
+                   convention=None, datetime=True):
 
     context = _setup_context(data, context, finalizer, convention)
     if system:
@@ -91,6 +92,9 @@ def create_context(data=utils.NO_VALUE, context=None, system=True,
         std_regex.register(context)
     if branching:
         std_branching.register(context)
+    if datetime:
+        std_datetime.register(context)
+
     return context
 
 YaqlFactory = factory.YaqlFactory

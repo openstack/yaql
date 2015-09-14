@@ -13,7 +13,9 @@
 #    under the License.
 
 import collections
+import datetime
 
+from dateutil import tz
 import six
 
 from yaql.language import exceptions
@@ -136,6 +138,26 @@ class String(PythonType):
         value = super(String, self).convert(
             value, receiver, context, function_spec, engine, *args, **kwargs)
         return None if value is None else six.text_type(value)
+
+
+class Integer(PythonType):
+    def __init__(self, nullable=False):
+        super(Integer, self).__init__(six.integer_types, nullable=nullable)
+
+
+class DateTime(PythonType):
+    utctz = tz.tzutc()
+
+    def __init__(self, nullable=False):
+        super(DateTime, self).__init__(datetime.datetime, nullable=nullable)
+
+    def convert(self, value, *args, **kwargs):
+        if isinstance(value, datetime.datetime):
+            if value.tzinfo is None:
+                return value.replace(tzinfo=self.utctz)
+            else:
+                return value
+        return super(DateTime, self).convert(value, *args, **kwargs)
 
 
 class Iterable(PythonType):
