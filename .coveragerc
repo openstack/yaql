@@ -4,4 +4,4 @@ source = yaql
 omit = yaql/tests/*
 
 [report]
-ignore-errors = True
+ignore_errors = True
