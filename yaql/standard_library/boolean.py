@@ -30,7 +30,6 @@ def or_(left, right):
     return left() or right()
 
 
-@specs.parameter('arg', bool)
 @specs.name('#unary_operator_not')
 def not_(arg):
     return not arg

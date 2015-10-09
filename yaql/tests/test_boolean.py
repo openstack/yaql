@@ -22,6 +22,7 @@ class TestBoolean(yaql.tests.TestCase):
         self.assertFalse(self.eval('false and false'))
         self.assertFalse(self.eval('false and true'))
         self.assertEqual(12, self.eval('true and 12'))
+        self.assertFalse(self.eval('null and null'))
 
     def test_or(self):
         self.assertTrue(self.eval('true or true'))
@@ -29,10 +30,16 @@ class TestBoolean(yaql.tests.TestCase):
         self.assertFalse(self.eval('false or false'))
         self.assertTrue(self.eval('false or true'))
         self.assertEqual(12, self.eval('12 or true'))
+        self.assertFalse(self.eval('null or null'))
 
     def test_not(self):
         self.assertFalse(self.eval('not true'))
         self.assertTrue(self.eval('not false'))
+        self.assertTrue(self.eval('not 0'))
+        self.assertFalse(self.eval('not 123'))
+        self.assertTrue(self.eval("not ''"))
+        self.assertFalse(self.eval("not True"))
+        self.assertTrue(self.eval('not null'))
 
     def test_lazy(self):
         self.assertEqual(1, self.eval('$ or 10/($-1)', data=1))
