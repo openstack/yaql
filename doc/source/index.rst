@@ -14,6 +14,7 @@ Introduction
 
    readme
    what_is_yaql
+   getting_started
 
 Usage
 ~~~~~
