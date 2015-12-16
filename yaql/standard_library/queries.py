@@ -371,7 +371,8 @@ def zip_longest(*collections, **kwargs):
 @specs.parameter('collection2', yaqltypes.Iterable())
 @specs.parameter('predicate', yaqltypes.Lambda())
 @specs.parameter('selector', yaqltypes.Lambda())
-def join(collection1, collection2, predicate, selector):
+def join(engine, collection1, collection2, predicate, selector):
+    collection2 = utils.memorize(collection2, engine)
     for self_item in collection1:
         for other_item in collection2:
             if predicate(self_item, other_item):
