@@ -42,7 +42,7 @@ def main():
 
     engine_options = {
         'yaql.limitIterators': 100,
-        'yaql.treatSetsAsLists': True,
+        'yaql.convertSetsToLists': True,
         'yaql.memoryQuota': 10000
     }
 
