@@ -15,11 +15,14 @@
 from yaql.language import specs
 
 
-@specs.parameter('right', type(None), nullable=True)
-@specs.parameter('left', nullable=False)
 @specs.name('*equal')
-def left_eq_null(left, right):
-    return False
+def eq(left, right):
+    return left == right
+
+
+@specs.name('*not_equal')
+def neq(left, right):
+    return left != right
 
 
 @specs.parameter('right', type(None), nullable=True)
@@ -52,13 +55,6 @@ def left_gte_null(left, right):
 
 @specs.parameter('left', type(None), nullable=True)
 @specs.parameter('right', nullable=False)
-@specs.name('*equal')
-def null_eq_right(left, right):
-    return False
-
-
-@specs.parameter('left', type(None), nullable=True)
-@specs.parameter('right', nullable=False)
 @specs.name('#operator_<')
 def null_lt_right(left, right):
     return True
@@ -82,34 +78,6 @@ def null_gt_right(left, right):
 @specs.parameter('right', nullable=False)
 @specs.name('#operator_>=')
 def null_gte_right(left, right):
-    return False
-
-
-@specs.parameter('right', type(None), nullable=True)
-@specs.parameter('left', nullable=False)
-@specs.name('*not_equal')
-def left_neq_null(left, right):
-    return True
-
-
-@specs.parameter('left', type(None), nullable=True)
-@specs.parameter('right', nullable=False)
-@specs.name('*not_equal')
-def null_neq_right(left, right):
-    return True
-
-
-@specs.parameter('left', type(None), nullable=True)
-@specs.parameter('right', type(None), nullable=True)
-@specs.name('*equal')
-def null_eq_null(left, right):
-    return True
-
-
-@specs.parameter('left', type(None), nullable=True)
-@specs.parameter('right', type(None), nullable=True)
-@specs.name('*not_equal')
-def null_neq_null(left, right):
     return False
 
 
@@ -142,22 +110,18 @@ def null_gte_null(left, right):
 
 
 def register(context):
-    context.register_function(left_eq_null)
-    context.register_function(left_neq_null)
+    context.register_function(eq)
+    context.register_function(neq)
     context.register_function(left_lt_null)
     context.register_function(left_lte_null)
     context.register_function(left_gt_null)
     context.register_function(left_gte_null)
 
-    context.register_function(null_eq_right)
-    context.register_function(null_neq_right)
     context.register_function(null_lt_right)
     context.register_function(null_lte_right)
     context.register_function(null_gt_right)
     context.register_function(null_gte_right)
 
-    context.register_function(null_eq_null)
-    context.register_function(null_neq_null)
     context.register_function(null_lt_null)
     context.register_function(null_lte_null)
     context.register_function(null_gt_null)

@@ -123,16 +123,6 @@ def dict_keyword_access(d, key):
     return d.get(key)
 
 
-@specs.name('*equal')
-def eq(left, right):
-    return left == right
-
-
-@specs.name('*not_equal')
-def neq(left, right):
-    return left != right
-
-
 def register(context, tuples):
     if tuples:
         context.register_function(build_tuple)
@@ -147,8 +137,6 @@ def register(context, tuples):
     context.register_function(as_)
     context.register_function(op_dot_context)
     context.register_function(dict_keyword_access)
-    context.register_function(eq)
-    context.register_function(neq)
 
     for t in ('get', 'list', 'bool', 'int', 'float', 'select', 'where',
               'join', 'sum', 'take_while'):

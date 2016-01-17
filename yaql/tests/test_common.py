@@ -67,3 +67,13 @@ class TestCommon(yaql.tests.TestCase):
         self.assertEqual(1, self.eval('min(1, 5)'))
         self.assertIsNone(self.eval('min(null, -1)'))
         self.assertIsNone(self.eval('min(null, null)'))
+
+    def test_comparision_of_incomparable(self):
+        self.assertFalse(self.eval('a = 1'))
+        self.assertFalse(self.eval('a = false'))
+        self.assertFalse(self.eval('a = null'))
+        self.assertFalse(self.eval('[a] = [false]'))
+        self.assertTrue(self.eval('a != 1'))
+        self.assertTrue(self.eval('a != false'))
+        self.assertTrue(self.eval('[a] != [false]'))
+        self.assertTrue(self.eval('a != null'))

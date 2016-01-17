@@ -205,20 +205,6 @@ def datetime_lte_datetime(dt1, dt2):
     return dt1 <= dt2
 
 
-@specs.name('*equal')
-@specs.parameter('dt1', yaqltypes.DateTime())
-@specs.parameter('dt2', yaqltypes.DateTime())
-def datetime_eq_datetime(dt1, dt2):
-    return dt1 == dt2
-
-
-@specs.name('*not_equal')
-@specs.parameter('dt1', yaqltypes.DateTime())
-@specs.parameter('dt2', yaqltypes.DateTime())
-def datetime_neq_datetime(dt1, dt2):
-    return dt1 != dt2
-
-
 @specs.name('#operator_>')
 @specs.parameter('ts1', TIMESPAN_TYPE)
 @specs.parameter('ts2', TIMESPAN_TYPE)
@@ -245,20 +231,6 @@ def timespan_lt_timespan(ts1, ts2):
 @specs.parameter('ts2', TIMESPAN_TYPE)
 def timespan_lte_timespan(ts1, ts2):
     return ts1 <= ts2
-
-
-@specs.name('*equal')
-@specs.parameter('ts1', TIMESPAN_TYPE)
-@specs.parameter('ts2', TIMESPAN_TYPE)
-def timespan_eq_timespan(ts1, ts2):
-    return ts1 == ts2
-
-
-@specs.name('*not_equal')
-@specs.parameter('ts1', TIMESPAN_TYPE)
-@specs.parameter('ts2', TIMESPAN_TYPE)
-def timespan_neq_timespan(ts1, ts2):
-    return ts1 != ts2
 
 
 @specs.name('#operator_*')
@@ -417,10 +389,8 @@ def register(context):
         timespan_plus_timespan, timespan_minus_timespan,
         datetime_gt_datetime, datetime_gte_datetime,
         datetime_lt_datetime, datetime_lte_datetime,
-        datetime_eq_datetime, datetime_neq_datetime,
         timespan_gt_timespan, timespan_gte_timespan,
         timespan_lt_timespan, timespan_lte_timespan,
-        timespan_eq_timespan, timespan_neq_timespan,
         negative_timespan, positive_timespan,
         timespan_by_num, num_by_timespan, div_timespans, div_timespan_by_num,
         year, month, day, hour, minute, second, microsecond, weekday,

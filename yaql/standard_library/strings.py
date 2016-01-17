@@ -49,20 +49,6 @@ def lte(left, right):
     return left < right
 
 
-@specs.parameter('left', yaqltypes.String())
-@specs.parameter('right', yaqltypes.String())
-@specs.name('*equal')
-def eq(left, right):
-    return left == right
-
-
-@specs.parameter('left', yaqltypes.String())
-@specs.parameter('right', yaqltypes.String())
-@specs.name('*not_equal')
-def neq(left, right):
-    return left != right
-
-
 @specs.parameter('args', yaqltypes.String())
 def concat(*args):
     return ''.join(args)
@@ -344,8 +330,6 @@ def register(context):
     context.register_function(lt)
     context.register_function(gte)
     context.register_function(lte)
-    context.register_function(eq)
-    context.register_function(neq)
     context.register_function(len_)
     context.register_function(to_lower)
     context.register_function(to_upper)

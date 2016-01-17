@@ -103,20 +103,6 @@ def abs_(op):
     return abs(op)
 
 
-@specs.parameter('left', yaqltypes.Number())
-@specs.parameter('right', yaqltypes.Number())
-@specs.name('*equal')
-def eq(left, right):
-    return left == right
-
-
-@specs.parameter('left', yaqltypes.Number())
-@specs.parameter('right', yaqltypes.Number())
-@specs.name('*not_equal')
-def neq(left, right):
-    return left != right
-
-
 def int_(value):
     if value is None:
         return 0
@@ -223,8 +209,6 @@ def register(context):
     context.register_function(gte)
     context.register_function(lt)
     context.register_function(lte)
-    context.register_function(eq)
-    context.register_function(neq)
     context.register_function(int_)
     context.register_function(float_)
     context.register_function(random_)
