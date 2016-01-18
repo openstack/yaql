@@ -411,21 +411,19 @@ def skip_while(collection, predicate):
 
 @specs.method
 @specs.parameter('collection', yaqltypes.Iterable())
-@specs.inject('operator', yaqltypes.Delegate('*equal'))
-def index_of(collection, item, operator):
+def index_of(collection, item):
     for i, t in enumerate(collection):
-        if operator(t, item):
+        if t == item:
             return i
     return -1
 
 
 @specs.method
 @specs.parameter('collection', yaqltypes.Iterable())
-@specs.inject('operator', yaqltypes.Delegate('*equal'))
-def last_index_of(collection, item, operator):
+def last_index_of(collection, item):
     index = -1
     for i, t in enumerate(collection):
-        if operator(t, item):
+        if t == item:
             index = i
     return index
 
