@@ -405,11 +405,16 @@ class Constant(SmartType):
 
 
 class YaqlExpression(LazyParameterType, SmartType):
-    def __init__(self):
+    def __init__(self, expression_type=None):
         super(YaqlExpression, self).__init__(False)
+        if expression_type and not utils.is_sequence(expression_type):
+            expression_type = (expression_type,)
+        self._expression_types = expression_type
 
     def check(self, value, context, *args, **kwargs):
-        return isinstance(value, expressions.Expression)
+        if not self._expression_types:
+            return isinstance(value, expressions.Expression)
+        return any(t == type(value) for t in self._expression_types)
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):

@@ -31,6 +31,7 @@ from yaql.standard_library import queries as std_queries
 from yaql.standard_library import regex as std_regex
 from yaql.standard_library import strings as std_strings
 from yaql.standard_library import system as std_system
+from yaql.standard_library import yaqlized as std_yaqlized
 
 _cached_expressions = {}
 _cached_engine = None
@@ -69,7 +70,7 @@ def create_context(data=utils.NO_VALUE, context=None, system=True,
                    math=True, collections=True, queries=True,
                    regex=True, branching=True,
                    no_sets=False, finalizer=None, delegates=False,
-                   convention=None, datetime=True):
+                   convention=None, datetime=True, yaqlized=True):
 
     context = _setup_context(data, context, finalizer, convention)
     if system:
@@ -94,6 +95,8 @@ def create_context(data=utils.NO_VALUE, context=None, system=True,
         std_branching.register(context)
     if datetime:
         std_datetime.register(context)
+    if yaqlized:
+        context = std_yaqlized.register(context)
 
     return context
 
