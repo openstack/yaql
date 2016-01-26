@@ -104,6 +104,9 @@ class YaqlFactory(object):
             ('.', OperatorType.BINARY_LEFT_ASSOCIATIVE),
             ('?.', OperatorType.BINARY_LEFT_ASSOCIATIVE),
             (),
+            ('[]', OperatorType.BINARY_LEFT_ASSOCIATIVE),
+            ('{}', OperatorType.BINARY_LEFT_ASSOCIATIVE),
+            (),
             ('+', OperatorType.PREFIX_UNARY),
             ('-', OperatorType.PREFIX_UNARY),
             (),
@@ -212,7 +215,12 @@ class YaqlFactory(object):
                 if bp:
                     raise exceptions.InvalidOperatorTableException(record[0])
                 bp = -precedence
-            name = name or 'OP_' + next(name_generator)
+            if record[0] == '[]':
+                name = 'INDEXER'
+            elif record[0] == '{}':
+                name = 'MAP'
+            else:
+                name = name or 'OP_' + next(name_generator)
             operators[record[0]] = (
                 up, bp, name, record[2] if len(record) > 2 else None)
         return YaqlOperators(operators, name_value_op)
