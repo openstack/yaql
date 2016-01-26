@@ -180,20 +180,19 @@ def get_memory_quota(engine):
 
 def limit_iterable(iterable, limit_or_engine):
     if isinstance(limit_or_engine, int):
-        count = limit_or_engine
+        max_count = limit_or_engine
     else:
-        count = get_max_collection_size(limit_or_engine)
+        max_count = get_max_collection_size(limit_or_engine)
 
-    if count >= 0 and isinstance(iterable,
-                                 (SequenceType, MappingType, SetType)):
-        if len(iterable) > count:
-            raise exceptions.CollectionTooLargeException(count)
+    if isinstance(iterable, (SequenceType, MappingType, SetType)):
+        if 0 <= max_count < len(iterable):
+            raise exceptions.CollectionTooLargeException(max_count)
         return iterable
 
     def limiting_iterator():
         for i, t in enumerate(iterable):
-            if 0 <= count <= i:
-                raise exceptions.CollectionTooLargeException(count)
+            if 0 <= max_count <= i:
+                raise exceptions.CollectionTooLargeException(max_count)
             yield t
     return limiting_iterator()
 
