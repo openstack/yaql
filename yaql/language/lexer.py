@@ -40,8 +40,6 @@ def decode_escapes(s):
 # noinspection PyPep8Naming
 class Lexer(object):
     t_ignore = ' \t\r\n'
-    t_INDEXER = '\\['
-    t_MAP = '{'
 
     literals = '()],}'
     keywords = {
@@ -69,11 +67,17 @@ class Lexer(object):
             'MAP'
         ] + list(self.keywords.values())
         for op_symbol, op_record in six.iteritems(self._operators_table):
+            if op_symbol in ('[]', '{}'):
+                continue
             lexem_name = op_record[2]
             setattr(self, 't_' + lexem_name, re.escape(op_symbol))
             self.tokens.append(lexem_name)
         self.t_MAPPING = re.escape(yaql_operators.name_value_op) \
             if yaql_operators.name_value_op else NEVER_MATCHING_RE
+        self.t_INDEXER = '\\[' \
+            if '[]' in self._operators_table else NEVER_MATCHING_RE
+        self.t_MAP = '{' \
+            if '{}' in self._operators_table else NEVER_MATCHING_RE
 
     @staticmethod
     def t_DOLLAR(t):

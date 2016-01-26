@@ -46,9 +46,15 @@ class Parser(object):
             if bp:
                 l = precedence_dict.setdefault(
                     (abs(bp), 'l' if bp > 0 else 'r'), [])
-                l.append(op_name)
-                binary_doc += ('value : ' if not binary_doc else '\n| ') + \
-                    'value {0} value'.format(op_name)
+                if op_name == 'INDEXER':
+                    l.extend(('LIST', 'INDEXER'))
+                elif op_name == 'MAP':
+                    l.append('MAP')
+                else:
+                    l.append(op_name)
+                    binary_doc += ((
+                        'value : ' if not binary_doc else '\n| ') +
+                        'value {0} value'.format(op_name))
 
         # noinspection PyProtectedMember
         def p_binary(this, p):
@@ -78,8 +84,6 @@ class Parser(object):
                         (('left',) if oa is 'l' else ('right',)) +
                         tuple(value)
                     )
-        precedence.insert(1, ('left', 'LIST', 'INDEXER', 'MAP'))
-        precedence.insert(0, ('left', 'MAPPING'))
         precedence.insert(0, ('left', ','))
         precedence.reverse()
         self.precedence = tuple(precedence)
