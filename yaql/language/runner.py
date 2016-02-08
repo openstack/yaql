@@ -81,7 +81,7 @@ def choose_overload(name, candidates, engine, receiver, context, args, kwargs):
         for c in level:
             if no_kwargs is None:
                 no_kwargs = c.no_kwargs
-                args, kwargs = _translate_args(no_kwargs, args, kwargs)
+                args, kwargs = translate_args(no_kwargs, args, kwargs)
             elif no_kwargs != c.no_kwargs:
                 raise_ambiguous()
 
@@ -142,7 +142,7 @@ def choose_overload(name, candidates, engine, receiver, context, args, kwargs):
     return lambda: delegate()
 
 
-def _translate_args(without_kwargs, args, kwargs):
+def translate_args(without_kwargs, args, kwargs):
     if without_kwargs:
         if len(kwargs) > 0:
             raise exceptions.ArgumentException(six.next(iter(kwargs)))
