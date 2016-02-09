@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import abc
 import collections
 import datetime
 
@@ -48,6 +49,7 @@ class SmartType(object):
         if not self.check(value, context, engine, *args, **kwargs):
             raise exceptions.ArgumentValueException()
         utils.limit_memory_usage(engine, (1, value))
+        return value
 
     def is_specialization_of(self, other):
         return False
@@ -466,6 +468,118 @@ class NumericConstant(Constant):
             value is None or isinstance(
                 value.value, six.integer_types + (float,)) and
             type(value.value) is not bool)
+
+
+@six.add_metaclass(abc.ABCMeta)
+class SmartTypeAggregation(SmartType):
+    def __init__(self, *args, **kwargs):
+        self.nullable = kwargs.pop('nullable', False)
+        super(SmartTypeAggregation, self).__init__(self.nullable)
+
+        self.types = []
+        for item in args:
+            if isinstance(item, (type, tuple)):
+                item = PythonType(item)
+            if isinstance(item, (HiddenParameterType, LazyParameterType)):
+                raise ValueError('Special smart types are not supported')
+            self.types.append(item)
+
+
+class AnyOf(SmartTypeAggregation):
+    def _check_match(self, value, context, engine, *args, **kwargs):
+        for type_to_check in self.types:
+            check_result = type_to_check.check(
+                value, context, engine, *args, **kwargs)
+            if check_result:
+                return type_to_check
+
+    def check(self, value, context, engine, *args, **kwargs):
+        if isinstance(value, expressions.Constant):
+            value = value.value
+
+        if value is None:
+            return self.nullable
+
+        check_result = self._check_match(
+            value, context, engine, *args, **kwargs)
+        return True if check_result else False
+
+    def convert(self, value, receiver, context, function_spec, engine,
+                *args, **kwargs):
+        if isinstance(value, expressions.Constant):
+            value = value.value
+
+        if value is None:
+            if self.nullable:
+                return None
+            else:
+                suitable_type = None
+        else:
+            suitable_type = self._check_match(
+                value, context, engine, *args, **kwargs)
+        if suitable_type:
+            return suitable_type.convert(
+                value, receiver, context, function_spec,
+                engine, *args, **kwargs)
+        raise exceptions.ArgumentValueException()
+
+
+class Chain(SmartTypeAggregation):
+    def _check_match(self, value, context, engine, *args, **kwargs):
+        for type_to_check in self.types:
+            check_result = type_to_check.check(
+                value, context, engine, *args, **kwargs)
+            if check_result:
+                return type_to_check
+
+    def check(self, value, context, engine, *args, **kwargs):
+        if isinstance(value, expressions.Constant):
+            value = value.value
+
+        if value is None:
+            return self.nullable
+
+        for type_to_check in self.types:
+            if not type_to_check.check(
+                    value, context, engine, *args, **kwargs):
+                return False
+
+        return True
+
+    def convert(self, value, receiver, context, function_spec, engine,
+                *args, **kwargs):
+        if isinstance(value, expressions.Constant):
+            value = value.value
+
+        if value is None:
+            if self.nullable:
+                return None
+            raise exceptions.ArgumentValueException()
+
+        for smart_type in self.types:
+            value = smart_type.convert(
+                value, receiver, context, function_spec,
+                engine, *args, **kwargs)
+        return value
+
+
+class NotOfType(SmartType):
+    def __init__(self, smart_type, nullable=True):
+        if isinstance(smart_type, (type, tuple)):
+            smart_type = PythonType(smart_type, nullable=nullable)
+        self.smart_type = smart_type
+        super(NotOfType, self).__init__(nullable)
+
+    def check(self, value, context, engine, *args, **kwargs):
+        if isinstance(value, expressions.Constant):
+            value = value.value
+        if not super(NotOfType, self).check(
+                value, context, engine, *args, **kwargs):
+            return False
+        if value is None or isinstance(value, expressions.Expression):
+            return True
+        return not self.smart_type.check(
+            value, context, engine, *args, **kwargs)
 
 
 class YaqlInterface(HiddenParameterType, SmartType):
