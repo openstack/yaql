@@ -37,6 +37,20 @@ _cached_engine = None
 _default_context = None
 
 
+def detect_version():
+    try:
+        dist = pkg_resources.get_distribution('yaql')
+        location = os.path.normcase(dist.location)
+        this_location = os.path.normcase(__file__)
+        if not this_location.startswith(os.path.join(location, 'yaql')):
+            raise pkg_resources.DistributionNotFound()
+        return dist.version
+    except pkg_resources.DistributionNotFound:
+        return 'Undefined (package was not installed with setuptools)'
+
+__version__ = detect_version()
+
+
 def _setup_context(data, context, finalizer, convention):
     if context is None:
         context = contexts.Context(
@@ -100,33 +114,19 @@ def create_context(data=utils.NO_VALUE, context=None, system=True,
 YaqlFactory = factory.YaqlFactory
 
 
-def detect_version():
-    try:
-        dist = pkg_resources.get_distribution('yaql')
-        location = os.path.normcase(dist.location)
-        this_location = os.path.normcase(__file__)
-        if not this_location.startswith(os.path.join(location, 'yaql')):
-            raise pkg_resources.DistributionNotFound()
-        return dist.version
-    except pkg_resources.DistributionNotFound:
-        return 'Undefined (package was not installed with setuptools)'
-
-__version__ = detect_version()
-
-
 def eval(expression, data=None):
     global _cached_engine, _cached_expressions, _default_context
 
     if _cached_engine is None:
         _cached_engine = YaqlFactory().create()
 
-    engine = _cached_expressions.get(expression)
-    if engine is None:
-        engine = _cached_engine(expression)
-        _cached_expressions[expression] = engine
+    parsed_expression = _cached_expressions.get(expression)
+    if parsed_expression is None:
+        parsed_expression = _cached_engine(expression)
+        _cached_expressions[expression] = parsed_expression
 
     if _default_context is None:
         _default_context = create_context()
 
-    return engine.evaluate(
+    return parsed_expression.evaluate(
         data=data, context=_default_context.create_child_context())
