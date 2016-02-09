@@ -196,6 +196,15 @@ def round_(number, ndigits=0):
     return round(number, ndigits)
 
 
+def is_integer(value):
+    return isinstance(value, six.integer_types) and not isinstance(value, bool)
+
+
+def is_number(value):
+    return (isinstance(value, six.integer_types + (float,))
+            and not isinstance(value, bool))
+
+
 def register(context):
     context.register_function(binary_plus)
     context.register_function(binary_minus)
@@ -224,3 +233,5 @@ def register(context):
     context.register_function(pow_)
     context.register_function(sign)
     context.register_function(round_)
+    context.register_function(is_integer)
+    context.register_function(is_number)

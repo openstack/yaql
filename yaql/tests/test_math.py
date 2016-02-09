@@ -200,3 +200,17 @@ class TestMath(yaql.tests.TestCase):
     def test_round(self):
         self.assertAlmostEqual(2.0, self.eval('round(2.3)'))
         self.assertAlmostEqual(2.3, self.eval('round(2.345, 1)'))
+
+    def test_is_integer(self):
+        self.assertTrue(self.eval('isInteger(-2)'))
+        self.assertTrue(self.eval('isInteger(2)'))
+        self.assertFalse(self.eval('isInteger(2.3)'))
+        self.assertFalse(self.eval('isInteger(abc)'))
+        self.assertFalse(self.eval('isInteger(true)'))
+
+    def test_is_number(self):
+        self.assertTrue(self.eval('isNumber(-2)'))
+        self.assertTrue(self.eval('isNumber(2)'))
+        self.assertTrue(self.eval('isNumber(2.3)'))
+        self.assertFalse(self.eval('isNumber(abc)'))
+        self.assertFalse(self.eval('isNumber(true)'))

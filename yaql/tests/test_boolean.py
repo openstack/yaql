@@ -54,3 +54,9 @@ class TestBoolean(yaql.tests.TestCase):
         self.assertFalse(self.eval('false = true'))
         self.assertFalse(self.eval('false != false'))
         self.assertFalse(self.eval('true != true'))
+
+    def test_is_boolean(self):
+        self.assertTrue(self.eval('isBoolean(true)'))
+        self.assertTrue(self.eval('isBoolean(false)'))
+        self.assertFalse(self.eval('isBoolean(123)'))
+        self.assertFalse(self.eval('isBoolean(abc)'))

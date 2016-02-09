@@ -159,3 +159,13 @@ class TestDatetime(yaql.tests.TestCase):
         self.assertFalse(self.eval('$dt2 - $dt1 < $', delta2))
         self.assertFalse(self.eval('$dt2 - $dt1 <= $', delta2))
         self.assertTrue(self.eval('($dt2 - $dt1) + $ > $', delta2))
+
+    def test_is_datetime(self):
+        self.assertTrue(self.eval('isDatetime(datetime("2015-8-29"))'))
+        self.assertFalse(self.eval('isDatetime(123)'))
+        self.assertFalse(self.eval('isDatetime(abc)'))
+
+    def test_is_timespan(self):
+        self.assertTrue(self.eval('isTimespan(timespan(milliseconds => -1))'))
+        self.assertFalse(self.eval('isTimespan(123)'))
+        self.assertFalse(self.eval('isTimespan(abc)'))

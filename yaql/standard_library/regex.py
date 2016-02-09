@@ -193,6 +193,10 @@ def escape_regex(string):
     return re.escape(string)
 
 
+def is_regex(value):
+    return isinstance(value, REGEX_TYPE)
+
+
 def register(context):
     context.register_function(regex)
     context.register_function(matches)
@@ -210,3 +214,4 @@ def register(context):
     context.register_function(replace_string)
     context.register_function(replace_by_string)
     context.register_function(escape_regex)
+    context.register_function(is_regex)
