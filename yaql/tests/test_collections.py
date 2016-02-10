@@ -358,9 +358,9 @@ class TestCollections(yaql.tests.TestCase):
             [1, 7],
             self.eval('[1, 2, 3, 4].replace(1, 7, -1)'))
 
-        self.assertRaises(
-            exceptions.NoMatchingMethodException,
-            self.eval, 'set(1, 2, 3, 4).replace(1, 7)')
+        self.assertEqual(
+            7,
+            self.eval('set(1, 2, 3, 4).replace(1, 7)')[1])
 
         self.assertEqual(
             [1, 7, 3, 4],

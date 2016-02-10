@@ -287,9 +287,7 @@ def delete(collection, position, count=1):
 
 
 @specs.method
-@specs.parameter('collection', yaqltypes.Iterable([
-    lambda t: not is_set(t)
-]))
+@specs.parameter('collection', yaqltypes.Iterable())
 @specs.parameter('position', int)
 @specs.parameter('count', int)
 def replace(collection, position, value, count=1):
