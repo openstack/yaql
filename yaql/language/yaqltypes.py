@@ -166,9 +166,9 @@ class DateTime(PythonType):
 
 
 class Iterable(PythonType):
-    def __init__(self, validators=None):
+    def __init__(self, validators=None, nullable=False):
         super(Iterable, self).__init__(
-            collections.Iterable, False, [
+            collections.Iterable, nullable, [
                 lambda t: not isinstance(t, six.string_types + (
                     utils.MappingType,))] + (validators or []))
 
@@ -183,19 +183,20 @@ class Iterable(PythonType):
                 *args, **kwargs):
         res = super(Iterable, self).convert(
             value, receiver, context, function_spec, engine, *args, **kwargs)
-        return utils.limit_iterable(res, engine)
+        return None if res is None else utils.limit_iterable(res, engine)
 
 
 class Iterator(Iterable):
-    def __init__(self, validators=None):
+    def __init__(self, validators=None, nullable=False):
         super(Iterator, self).__init__(
-            validators=[utils.is_iterator] + (validators or []))
+            validators=[utils.is_iterator] + (validators or []),
+            nullable=nullable)
 
 
 class Sequence(PythonType):
-    def __init__(self, validators=None):
+    def __init__(self, validators=None, nullable=False):
         super(Sequence, self).__init__(
-            collections.Sequence, False, [
+            collections.Sequence, nullable, [
                 lambda t: not isinstance(t, six.string_types + (dict,))] + (
                     validators or []))
 
