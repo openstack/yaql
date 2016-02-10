@@ -21,8 +21,6 @@ from yaql.language import specs
 from yaql.language import utils
 from yaql.language import yaqltypes
 
-NO_VALUE = utils.create_marker('NoValue')
-
 
 class OrderingIterable(utils.IterableType):
     def __init__(self, collection, operator_lt, operator_gt):
@@ -224,11 +222,11 @@ def min_(func, collection, initial=utils.NO_VALUE):
 @specs.parameter('collection', yaqltypes.Iterable())
 @specs.parameter('default', nullable=True)
 @specs.method
-def first(collection, default=NO_VALUE):
+def first(collection, default=utils.NO_VALUE):
     try:
         return six.next(iter(collection))
     except StopIteration:
-        if default is NO_VALUE:
+        if default is utils.NO_VALUE:
             raise
         return default
 
@@ -248,10 +246,10 @@ def single(collection):
 @specs.parameter('collection', yaqltypes.Iterable())
 @specs.parameter('default', nullable=True)
 @specs.method
-def last(collection, default=NO_VALUE):
+def last(collection, default=utils.NO_VALUE):
     if isinstance(collection, utils.SequenceType):
         if len(collection) == 0:
-            if default is NO_VALUE:
+            if default is utils.NO_VALUE:
                 raise StopIteration()
             else:
                 return default
@@ -259,7 +257,7 @@ def last(collection, default=NO_VALUE):
     last_value = default
     for t in collection:
         last_value = t
-    if last_value is NO_VALUE:
+    if last_value is utils.NO_VALUE:
         raise StopIteration()
     else:
         return last_value
