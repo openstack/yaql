@@ -143,7 +143,9 @@ class String(PythonType):
 
 class Integer(PythonType):
     def __init__(self, nullable=False):
-        super(Integer, self).__init__(six.integer_types, nullable=nullable)
+        super(Integer, self).__init__(
+            six.integer_types, nullable=nullable,
+            validators=[lambda t: not isinstance(t, bool)])
 
 
 class DateTime(PythonType):
@@ -199,8 +201,8 @@ class Sequence(PythonType):
 class Number(PythonType):
     def __init__(self, nullable=False):
         super(Number, self).__init__(
-            six.integer_types + (float,), nullable, [
-                lambda t: type(t) is not bool])
+            six.integer_types + (float,), nullable,
+            validators=[lambda t: not isinstance(t, bool)])
 
 
 class Lambda(LazyParameterType, SmartType):
