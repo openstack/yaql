@@ -13,11 +13,13 @@
 #    under the License.
 
 import collections
+import re
 import sys
 
 import six
 
 from yaql.language import exceptions
+from yaql.language import lexer
 
 
 def create_marker(msg):
@@ -26,7 +28,7 @@ def create_marker(msg):
             return msg
     return MarkerClass()
 
-
+KEYWORD_REGEX = re.compile(lexer.Lexer.t_KEYWORD_STRING.__doc__.strip())
 NO_VALUE = create_marker('<NoValue>')
 
 
@@ -227,3 +229,15 @@ def to_extension_method(name, context):
             spec.is_function = True
             spec.is_method = True
             yield spec
+
+
+def is_keyword(text):
+    return KEYWORD_REGEX.match(text) is not None
+
+
+def filter_parameters_dict(parameters):
+    parameters = dict(parameters)
+    for name in parameters.keys():
+        if not is_keyword(name):
+            del parameters[name]
+    return parameters
