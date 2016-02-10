@@ -25,16 +25,19 @@ from yaql.language import utils
 from yaql import yaql_interface
 
 
+@six.add_metaclass(abc.ABCMeta)
 class HiddenParameterType(object):
     # noinspection PyMethodMayBeStatic,PyUnusedLocal
     def check(self, value, context, engine, *args, **kwargs):
         return True
 
 
+@six.add_metaclass(abc.ABCMeta)
 class LazyParameterType(object):
     pass
 
 
+@six.add_metaclass(abc.ABCMeta)
 class SmartType(object):
     def __init__(self, nullable):
         self.nullable = nullable
