@@ -203,8 +203,10 @@ class Lambda(LazyParameterType, SmartType):
         self._publish_params(context, args, kwargs)
         if isinstance(value, expressions.Expression):
             result = value(receiver, context, engine)
+        elif six.callable(value):
+            result = value(*args, **kwargs)
         else:
-            result = value, context
+            result = value
         return result
 
     def convert(self, value, receiver, context, function_spec, engine,
