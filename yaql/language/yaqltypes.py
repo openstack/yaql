@@ -21,6 +21,7 @@ import six
 from yaql.language import exceptions
 from yaql.language import expressions
 from yaql.language import utils
+from yaql import yaql_interface
 
 
 class HiddenParameterType(object):
@@ -225,8 +226,10 @@ class Lambda(LazyParameterType, SmartType):
         self._publish_params(context, args, kwargs)
         if isinstance(value, expressions.Expression):
             result = value(receiver, context, engine)
+        elif six.callable(value):
+            result = value(*args, **kwargs)
         else:
-            result = value, context
+            result = value
         return result
 
     def convert(self, value, receiver, context, function_spec, engine,
@@ -461,3 +464,12 @@ class NumericConstant(Constant):
             value is None or isinstance(
                 value.value, six.integer_types + (float,)) and
             type(value.value) is not bool)
+
+
+class YaqlInterface(HiddenParameterType, SmartType):
+    def __init__(self):
+        super(YaqlInterface, self).__init__(False)
+
+    def convert(self, value, receiver, context, function_spec, engine,
+                *args, **kwargs):
+        return yaql_interface.YaqlInterface(context, engine, receiver)

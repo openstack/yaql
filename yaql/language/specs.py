@@ -369,6 +369,8 @@ def _infer_parameter_type(name):
         return yaqltypes.Context()
     elif name == 'engine' or name == '__engine':
         return yaqltypes.Engine()
+    elif name == 'yaql_interface' or name == '__yaql_interface':
+        return yaqltypes.YaqlInterface()
 
 
 def convert_function_name(function_name, convention):
