@@ -273,3 +273,65 @@ class TestContexts(testtools.TestCase):
             mc.delete_function(fd)
         functions, is_exclusive = mc.get_functions('f')
         self.assertThat(functions, matchers.HasLength(0))
+
+    @staticmethod
+    def create_linked_context():
+        def f():
+            pass
+
+        def g():
+            pass
+
+        def g_():
+            pass
+
+        def g__():
+            pass
+
+        context1 = contexts.Context()
+        context2 = contexts.Context()
+        context1.register_function(f)
+        context1.register_function(g)
+        context2.register_function(g_)
+        context1['key'] = 'context1'
+        context1['key1'] = 'context1'
+        context2['key'] = 'context2'
+        context2['key2'] = 'context2'
+
+        context3 = context2.create_child_context()
+        context3.register_function(g__)
+        context3['key'] = 'context3'
+        context2['key3'] = 'context3'
+
+        return contexts.LinkedContext(
+            parent_context=context1, linked_context=context3)
+
+    def test_linked_context_data(self):
+        mc = self.create_linked_context()
+        self.assertEqual(mc['key'], 'context3')
+        self.assertEqual(mc['key2'], 'context2')
+        self.assertEqual(mc['key3'], 'context3')
+        self.assertEqual(mc['key3'], 'context3')
+        self.assertEqual(mc.parent['key'], 'context2')
+        self.assertEqual(mc.parent.parent['key'], 'context1')
+
+    def test_linked_context_collect_functions(self):
+        mc = self.create_linked_context()
+        self.assertThat(mc.collect_functions('f'), matchers.HasLength(1))
+        levels = mc.collect_functions('g')
+        self.assertThat(levels, matchers.HasLength(3))
+        self.assertThat(levels[0], matchers.HasLength(1))
+        self.assertThat(levels[1], matchers.HasLength(1))
+        self.assertThat(levels[2], matchers.HasLength(1))
+
+    def test_linked_context_delete_data(self):
+        mc = self.create_linked_context()
+        self.assertIn('key', mc)
+        del mc['key']
+        self.assertNotIn('key', mc)
+
+    def test_linked_context_function_in(self):
+        mc = self.create_linked_context()
+        functions, is_exclusive = mc.get_functions('f')
+        for fd in functions:
+            self.assertIn(fd, mc)
