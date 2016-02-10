@@ -20,6 +20,17 @@ import yaql.tests
 
 
 class TestMiscellaneous(yaql.tests.TestCase):
+    def test_pass_lambda_from_code(self):
+        self.assertEqual(
+            [],
+            list(self.context('where', self.engine, [1, 2, 3])(False))
+        )
+        self.assertEqual(
+            [2, 3],
+            list(self.context('where', self.engine, [1, 2, 3])(
+                lambda t: t > 1))
+        )
+
     def test_bool_is_not_an_integer(self):
         @specs.parameter('arg', yaqltypes.Integer())
         def foo(arg):
