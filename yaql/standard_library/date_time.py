@@ -379,6 +379,14 @@ def format_(dt, format__):
     return dt.strftime(format__)
 
 
+def is_datetime(value):
+    return isinstance(value, DATETIME_TYPE)
+
+
+def is_timespan(value):
+    return isinstance(value, TIMESPAN_TYPE)
+
+
 def register(context):
     functions = (
         build_datetime, build_timespan, datetime_from_timestamp,
@@ -394,7 +402,8 @@ def register(context):
         negative_timespan, positive_timespan,
         timespan_by_num, num_by_timespan, div_timespans, div_timespan_by_num,
         year, month, day, hour, minute, second, microsecond, weekday,
-        offset, timestamp, date, time, replace, format_
+        offset, timestamp, date, time, replace, format_, is_datetime,
+        is_timespan
     )
 
     for func in functions:
