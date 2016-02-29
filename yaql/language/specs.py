@@ -79,7 +79,7 @@ class FunctionDefinition(object):
                 continue
             keys_to_remove.add(k)
             if v.position is not None:
-                for v2 in fd.parameters.itervalues():
+                for v2 in six.itervalues(fd.parameters):
                     if v2.position is not None and v2.position > v.position:
                         v2.position -= 1
         for key in keys_to_remove:
@@ -186,7 +186,7 @@ class FunctionDefinition(object):
     def insert_parameter(self, name, value_type=None, nullable=None,
                          alias=None, overwrite=False):
         pd = self.set_parameter(name, value_type, nullable, alias, overwrite)
-        for p in self.parameters.itervalues():
+        for p in six.itervalues(self.parameters):
             if p is pd:
                 continue
             if p.position is not None and p.position >= pd.position:
