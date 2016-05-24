@@ -92,7 +92,7 @@ Here is an example how it can be done with the YAML file which looks like:
             - order_id: 3
               item: Piano
               quantity: 1
-        -customer_id: 3
+        - customer_id: 3
           name: Diana
           orders:
             - order_id: 4
