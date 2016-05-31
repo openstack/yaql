@@ -300,6 +300,9 @@ class TestQueries(yaql.tests.TestCase):
         self.assertEqual(
             [[1, 2], [3, 4], [5]],
             self.eval('range(1, 6).slice(2)'))
+        self.assertEqual(
+            [[1, 2], [3, 4], [5]],
+            self.eval('[1,2,3,4,5].slice(2)'))
 
     def test_split(self):
         self.assertEqual(

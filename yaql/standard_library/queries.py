@@ -452,6 +452,7 @@ def last_index_where(collection, predicate):
 @specs.parameter('length', int)
 @specs.inject('to_list', yaqltypes.Delegate('to_list', method=True))
 def slice_(collection, length, to_list):
+    collection = iter(collection)
     while True:
         res = to_list(itertools.islice(collection, length))
         if res:
