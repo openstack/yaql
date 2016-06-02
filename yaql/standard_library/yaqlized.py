@@ -11,6 +11,35 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+"""
+Any Python class or object can be yaqlized. It is possible to call methods,
+access attributes/properties and index of yaqlized objects.
+
+The first way to yaqlize object is using function call:
+
+class A(object):
+    foo = 256
+    def bar(self):
+        print('yaqlization works with methods too')
+
+sample_object = A()
+yaqlization.yaqlize(sample_object)
+
+The second way is using decorator:
+
+@yaqlization.yaqlize
+class A(object):
+    foo = 256
+    def bar(self):
+        print('yaqlization works with methods too')
+
+Any mentioned operation on yaqlized objects can be disabled with additional
+parameters for yaqlization. Also it is possible to specify whitelist/blacklist
+of methods/attributes/keys that are exposed to the yaql.
+
+This module provides implemented operators on Yaqlized objects.
+"""
+
 
 import re
 
@@ -94,6 +123,18 @@ def _auto_yaqlize(value, settings):
 @specs.parameter('expr', yaqltypes.YaqlExpression(expressions.Function))
 @specs.name('#operator_.')
 def op_dot(receiver, expr, context, engine):
+    """:yaql:operator .
+
+    Evaluates expression on receiver and returns its result.
+
+    :signature: receiver.expr
+    :arg receiver: yaqlized receiver
+    :argType receiver: yaqlized object, initialized with
+        yaqlize_methods equal to True
+    :arg expr: expression to be evaluated
+    :argType expr: expression
+    :returnType: any (expression return type)
+    """
     settings = yaqlization.get_yaqlization_settings(receiver)
     mappings = _remap_name(expr.name, settings)
 
@@ -123,6 +164,18 @@ def op_dot(receiver, expr, context, engine):
 @specs.parameter('attr', yaqltypes.Keyword())
 @specs.name('#operator_.')
 def attribution(obj, attr):
+    """:yaql:operator .
+
+    Returns attribute of the object.
+
+    :signature: obj.attr
+    :arg obj: yaqlized object
+    :argType obj: yaqlized object, initialized with
+        yaqlize_attributes equal to True
+    :arg attr: attribute name
+    :argType attr: keyword
+    :returnType: any
+    """
     settings = yaqlization.get_yaqlization_settings(obj)
     _validate_name(attr, settings)
     attr = _remap_name(attr, settings)
@@ -134,6 +187,18 @@ def attribution(obj, attr):
 @specs.parameter('obj', Yaqlized(can_index=True))
 @specs.name('#indexer')
 def indexation(obj, key):
+    """:yaql:operator indexer
+
+    Returns value of attribute/property key of the object.
+
+    :signature: obj[key]
+    :arg obj: yaqlized object
+    :argType obj: yaqlized object, initialized with
+        yaqlize_indexer equal to True
+    :arg key: index name
+    :argType key: keyword
+    :returnType: any
+    """
     settings = yaqlization.get_yaqlization_settings(obj)
     _validate_name(key, settings, KeyError)
     res = obj[key]
