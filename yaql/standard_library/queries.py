@@ -11,7 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
+"""
+Queries module.
+"""
 
 import itertools
 
@@ -85,6 +87,23 @@ class OrderingIterable(utils.IterableType):
 @specs.parameter('predicate', yaqltypes.Lambda())
 @specs.method
 def where(collection, predicate):
+    """:yaql:where
+
+    Returns only those collection elements, for which the filtering query
+    (predicate) is true.
+
+    :signature: collection.where(predicate)
+    :receiverArg collection: collection to be filtered
+    :argType collection: iterable
+    :arg predicate: filter for collection elements
+    :argType predicate: lambda
+    :returnType: iterable
+
+    .. code::
+
+        yaql> [1, 2, 3, 4, 5].where($ > 3)
+        [4, 5]
+    """
     return six.moves.filter(predicate, collection)
 
 
@@ -92,6 +111,25 @@ def where(collection, predicate):
 @specs.parameter('selector', yaqltypes.Lambda())
 @specs.method
 def select(collection, selector):
+    """:yaql:select
+
+    Applies the selector to every item of the collection and returns a list of
+    results.
+
+    :signature: collection.select(selector)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg selector: expression for processing elements
+    :argType selector: lambda
+    :returnType: iterable
+
+    .. code::
+
+        yaql> [1, 2, 3, 4, 5].select($ * $)
+        [1, 4, 9, 16, 25]
+        yaql> [{'a'=> 2}, {'a'=> 4}].select($.a)
+        [2, 4]
+    """
     return six.moves.map(selector, collection)
 
 
@@ -100,6 +138,23 @@ def select(collection, selector):
 @specs.inject('operator', yaqltypes.Delegate('#operator_.'))
 @specs.name('#operator_.')
 def collection_attribution(collection, attribute, operator):
+    """:yaql:operator .
+
+    Retrieves the value of an attribute for each element in a collection and
+    returns a list of results.
+
+    :signature: collection.attribute
+    :arg collection: input collection
+    :argType collection: iterable
+    :arg attribute: attribute to get on every collection item
+    :argType attribute: keyword
+    :returnType: list
+
+    .. code::
+
+        yaql> [{"a" => 1}, {"a" => 2, "b" => 3}].a
+        [1, 2]
+    """
     return six.moves.map(
         lambda t: operator(t, attribute), collection)
 
@@ -108,6 +163,23 @@ def collection_attribution(collection, attribute, operator):
 @specs.parameter('count', int, nullable=False)
 @specs.method
 def skip(collection, count):
+    """:yaql:skip
+
+    Returns a collection without first count elements.
+
+    :signature: collection.skip(count)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg count: how many elements to skip. If count is greater or equal to
+        collection size, return value is empty list
+    :argType count: integer
+    :returnType: iterable
+
+    .. code::
+
+        yaql> [1, 2, 3, 4, 5].skip(2)
+        [3, 4, 5]
+    """
     return itertools.islice(collection, count, None)
 
 
@@ -115,12 +187,45 @@ def skip(collection, count):
 @specs.parameter('count', int, nullable=False)
 @specs.method
 def limit(collection, count):
+    """:yaql:limit
+
+    Returns the first count elements of a collection.
+
+    :signature: collection.limit(count)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg count: how many first elements of a collection to return. If count is
+        greater or equal to collection size, return value is input collection
+    :argType count: integer
+    :returnType: iterable
+
+    .. code::
+
+        yaql> [1, 2, 3, 4, 5].limit(4)
+        [1, 2, 3, 4]
+    """
     return itertools.islice(collection, count)
 
 
 @specs.parameter('collection', yaqltypes.Iterable())
 @specs.extension_method
 def append(collection, *args):
+    """:yaql:append
+
+    Returns a collection with appended args.
+
+    :signature: collection.append([args])
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg [args]: arguments to be appended to input collection
+    :argType [args]: chain of any types
+    :returnType: iterable
+
+    .. code::
+
+        yaql> [1, 2, 3].append(4, 5)
+        [1, 2, 3, 4, 5]
+    """
     for t in collection:
         yield t
     for t in args:
@@ -131,6 +236,29 @@ def append(collection, *args):
 @specs.parameter('key_selector', yaqltypes.Lambda())
 @specs.extension_method
 def distinct(engine, collection, key_selector=None):
+    """:yaql:distinct
+
+    Returns only unique members of the collection. If keySelector is
+    specified, it is used to determine uniqueness.
+
+    :signature: collection.distinct(keySelector => null)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg keySelector: specifies a function of one argument that is used
+        to extract a comparison key from each collection element. The default
+        value is null, which means elements are compared directly
+    :argType keySelector: lambda
+    :returnType: iterable
+
+    .. code::
+
+        yaql> [1, 2, 3, 1].distinct()
+        [1, 2, 3]
+        yaql> [{'a'=> 1}, {'b'=> 2}, {'a'=> 1}].distinct()
+        [{"a": 1}, {"b": 2}]
+        yaql> [['a', 1], ['b', 2], ['c', 1], ['a', 3]].distinct($[1])
+        [['a', 1], ['b', 2], ['a', 3]]
+    """
     distinct_values = set()
     for t in collection:
         key = t if key_selector is None else key_selector(t)
@@ -143,6 +271,26 @@ def distinct(engine, collection, key_selector=None):
 @specs.parameter('collection', yaqltypes.Iterable())
 @specs.extension_method
 def enumerate_(collection, start=0):
+    """:yaql:enumerate
+
+    Returns an iterator over pairs (index, value), obtained from iterating over
+    a collection.
+
+    :signature: collection.enumerate(start => 0)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg start: a value to start with numerating first element of each pair,
+        0 is a default value
+    :argType start: integer
+    :returnType: list
+
+    .. code::
+
+        yaql> ['a', 'b', 'c'].enumerate()
+        [[0, 'a'], [1, 'b'], [2, 'c']]
+        yaql> ['a', 'b', 'c'].enumerate(2)
+        [[2, 'a'], [3, 'b'], [4, 'c']]
+    """
     for i, t in enumerate(collection, start):
         yield [i, t]
 
@@ -151,6 +299,26 @@ def enumerate_(collection, start=0):
 @specs.parameter('predicate', yaqltypes.Lambda())
 @specs.extension_method
 def any_(collection, predicate=None):
+    """:yaql:any
+
+    Returns true if a collection is not empty. If a predicate is specified,
+    determines whether any element of the collection satisfies the predicate.
+
+    :signature: collection.any(predicate => null)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg predicate: lambda function to apply to every collection value. null
+        by default, which means checking collection length
+    :argType predicate: lambda
+    :returnType: boolean
+
+    .. code::
+
+        yaql> [[], 0, ''].any()
+        true
+        yaql> [[], 0, ''].any(predicate => $)
+        false
+    """
     for t in collection:
         if predicate is None or predicate(t):
             return True
@@ -161,6 +329,28 @@ def any_(collection, predicate=None):
 @specs.parameter('predicate', yaqltypes.Lambda())
 @specs.extension_method
 def all_(collection, predicate=None):
+    """:yaql:all
+
+    Returns true if all the elements of a collection evaluate to true.
+    If a predicate is specified, returns true if the predicate is true for all
+    elements in the collection.
+
+    :signature: collection.all(predicate => null)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg predicate: lambda function to apply to every collection value. null
+        by default, which means evaluating collections elements to boolean
+        with no predicate
+    :argType predicate: lambda
+    :returnType: boolean
+
+    .. code::
+
+        yaql> [1, [], ''].all()
+        false
+        yaql> [1, [0], 'a'].all()
+        true
+    """
     if predicate is None:
         predicate = lambda x: bool(x)
 
@@ -173,6 +363,23 @@ def all_(collection, predicate=None):
 @specs.parameter('collections', yaqltypes.Iterable())
 @specs.extension_method
 def concat(*collections):
+    """:yaql:concat
+
+    Returns an iterator that consequently iterates over elements of the first
+    collection, then proceeds to the next collection and so on.
+
+    :signature: collection.concat([args])
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg [args]: iterables to be concatenated with input collection
+    :argType [args]: chain of iterable
+    :returnType: iterable
+
+    .. code::
+
+        yaql> [1].concat([2, 3], [4, 5])
+        [1, 2, 3, 4, 5]
+    """
     return itertools.chain(*collections)
 
 
@@ -180,6 +387,20 @@ def concat(*collections):
 @specs.name('len')
 @specs.extension_method
 def count_(collection):
+    """:yaql:len
+
+    Returns the size of the collection.
+
+    :signature: collection.len()
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :returnType: integer
+
+    .. code::
+
+        yaql> [1, 2].len()
+        2
+    """
     count = 0
     for t in collection:
         count += 1
@@ -189,12 +410,45 @@ def count_(collection):
 @specs.parameter('collection', yaqltypes.Iterable())
 @specs.method
 def count(collection):
+    """:yaql:count
+
+    Returns the size of the collection.
+
+    :signature: collection.count()
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :returnType: integer
+
+    .. code::
+
+        yaql> [1, 2].count()
+        2
+    """
     return count_(collection)
 
 
 @specs.parameter('collection', yaqltypes.Iterable())
 @specs.method
 def memorize(collection, engine):
+    """:yaql:memorize
+
+    Returns an iterator over collection and memorizes already iterated values.
+    This function can be used for iterating over collection several times
+    as it remembers elements, and when given collection (iterator) is too
+    large to be unwrapped at once.
+
+    :signature: collection.memorize()
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :returnType: iterator to collection
+
+    .. code::
+
+        yaql> let(range(4)) -> $.sum() + $.len()
+        6
+        yaql> let(range(4).memorize()) -> $.sum() + $.len()
+        10
+    """
     return utils.memorize(collection, engine)
 
 
@@ -202,6 +456,25 @@ def memorize(collection, engine):
 @specs.inject('operator', yaqltypes.Delegate('#operator_+'))
 @specs.method
 def sum_(operator, collection, initial=utils.NO_VALUE):
+    """:yaql:sum
+
+    Returns the sum of values in a collection starting from initial if
+    specified.
+
+    :signature: collection.sum(initial => NoValue)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg initial: value to start sum with. NoValue by default
+    :argType initial: collection's elements type
+    :returnType: collection's elements type
+
+    .. code::
+
+        yaql> [3, 1, 2].sum()
+        6
+        yaql> ['a', 'b'].sum('c')
+        "cab"
+    """
     return aggregate(collection, operator, initial)
 
 
@@ -209,6 +482,22 @@ def sum_(operator, collection, initial=utils.NO_VALUE):
 @specs.inject('func', yaqltypes.Delegate('max'))
 @specs.method
 def max_(func, collection, initial=utils.NO_VALUE):
+    """:yaql:max
+
+    Returns max value in collection. Considers initial if specified.
+
+    :signature: collection.max(initial => NoValue)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg initial: value to start with. NoValue by default
+    :argType initial: collection's elements type
+    :returnType: collection's elements type
+
+    .. code::
+
+        yaql> [3, 1, 2].max()
+        3
+    """
     return aggregate(collection, func, initial)
 
 
@@ -216,6 +505,22 @@ def max_(func, collection, initial=utils.NO_VALUE):
 @specs.inject('func', yaqltypes.Delegate('min'))
 @specs.method
 def min_(func, collection, initial=utils.NO_VALUE):
+    """:yaql:min
+
+    Returns min value in collection. Considers initial if specified.
+
+    :signature: collection.min(initial => NoValue)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg initial: value to start with. NoValue by default
+    :argType initial: collection's elements type
+    :returnType: collection's elements type
+
+    .. code::
+
+        yaql> [3, 1, 2].min()
+        1
+    """
     return aggregate(collection, func, initial)
 
 
@@ -223,6 +528,25 @@ def min_(func, collection, initial=utils.NO_VALUE):
 @specs.parameter('default', nullable=True)
 @specs.method
 def first(collection, default=utils.NO_VALUE):
+    """:yaql:first
+
+    Returns the first element of the collection. If the collection is empty,
+    returns the default value or raises StopIteration if default is not
+    specified.
+
+    :signature: collection.first(default => NoValue)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg default: value to be returned if collection is empty. NoValue by
+        default
+    :argType default: any
+    :returnType: type of collection's elements or default value type
+
+    .. code::
+
+        yaql> [3, 1, 2].first()
+        3
+    """
     try:
         return six.next(iter(collection))
     except StopIteration:
@@ -234,6 +558,23 @@ def first(collection, default=utils.NO_VALUE):
 @specs.parameter('collection', yaqltypes.Iterable())
 @specs.method
 def single(collection):
+    """:yaql:single
+
+    Checks that collection has only one element and returns it. If the
+    collection is empty or has more than one element, raises StopIteration.
+
+    :signature: collection.single()
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :returnType: type of collection's elements
+
+    .. code::
+
+        yaql> ["abc"].single()
+        "abc"
+        yaql> [1, 2].single()
+        Execution exception: Collection contains more than one item
+    """
     it = iter(collection)
     result = six.next(it)
     try:
@@ -247,6 +588,25 @@ def single(collection):
 @specs.parameter('default', nullable=True)
 @specs.method
 def last(collection, default=utils.NO_VALUE):
+    """:yaql:last
+
+    Returns the last element of the collection. If the collection is empty,
+    returns the default value or raises StopIteration if default is not
+    specified.
+
+    :signature: collection.last(default => NoValue)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg default: value to be returned if collection is empty. NoValue is
+        default value.
+    :argType default: any
+    :returnType: type of collection's elements or default value type
+
+    .. code::
+
+        yaql> [0, 1, 2].last()
+        2
+    """
     if isinstance(collection, utils.SequenceType):
         if len(collection) == 0:
             if default is utils.NO_VALUE:
@@ -267,6 +627,26 @@ def last(collection, default=utils.NO_VALUE):
 @specs.parameter('selector', yaqltypes.Lambda())
 @specs.method
 def select_many(collection, selector):
+    """:yaql:selectMany
+
+    Applies a selector to each element of the collection and returns an
+    iterator over results. If the selector returns an iterable object,
+    iterates over its elements instead of itself.
+
+    :signature: collection.selectMany(selector)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg selector: function to be applied to every collection element
+    :argType selector: lambda
+    :returnType: iterator
+
+    .. code::
+
+        yaql> [0, 1, 2].selectMany($ + 2)
+        [2, 3, 4]
+        yaql> [0, [1, 2], 3].selectMany($ * 2)
+        [0, 1, 2, 1, 2, 6]
+    """
     for item in collection:
         inner = selector(item)
         if utils.is_iterable(inner):
@@ -278,6 +658,21 @@ def select_many(collection, selector):
 
 @specs.parameter('stop', int)
 def range_(stop):
+    """:yaql:range
+
+    Returns an iterator over values from 0 up to stop, not including
+    stop, i.e. [0, stop).
+
+    :signature: range(stop)
+    :arg stop: right bound for generated list numbers
+    :argType stop: integer
+    :returnType: iterator
+
+    .. code::
+
+        yaql> range(3)
+        [0, 1, 2]
+    """
     return iter(six.moves.range(stop))
 
 
@@ -285,12 +680,51 @@ def range_(stop):
 @specs.parameter('stop', int)
 @specs.parameter('step', int)
 def range__(start, stop, step=1):
+    """:yaql:range
+
+    Returns an iterator over values from start up to stop, not including stop,
+    i.e [start, stop) with step 1 if not specified.
+
+    :signature: range(start, stop, step => 1)
+    :arg start: left bound for generated list numbers
+    :argType start: integer
+    :arg stop: right bound for generated list numbers
+    :argType stop: integer
+    :arg step: the next element in list is equal to previous + step. 1 is value
+        by default
+    :argType step: integer
+    :returnType: iterator
+
+    .. code::
+
+        yaql> range(1, 4)
+        [1, 2, 3]
+        yaql> range(4, 1, -1)
+        [4, 3, 2]
+    """
     return iter(six.moves.range(start, stop, step))
 
 
 @specs.parameter('start', int)
 @specs.parameter('step', int)
 def sequence(start=0, step=1):
+    """:yaql:sequence
+
+    Returns an iterator to the sequence beginning from start with step.
+
+    :signature: sequence(start => 0, step => 1)
+    :arg start: start value of the sequence. 0 is value by default
+    :argType start: integer
+    :arg step: the next element is equal to previous + step. 1 is value by
+        default
+    :argType step: integer
+    :returnType: iterator
+
+    .. code::
+
+        yaql> sequence().take(5)
+        [0, 1, 2, 3, 4]
+    """
     return itertools.count(start, step)
 
 
@@ -300,6 +734,25 @@ def sequence(start=0, step=1):
 @specs.inject('operator_lt', yaqltypes.Delegate('#operator_<'))
 @specs.method
 def order_by(collection, selector, operator_lt, operator_gt):
+    """:yaql:orderBy
+
+    Returns an iterator over collection elements sorted in ascending order.
+    Selector is applied to each element of the collection to extract
+    sorting key.
+
+    :signature: collection.orderBy(selector)
+    :receiverArg collection: collection to be ordered
+    :argType collection: iterable
+    :arg selector: specifies a function of one argument that is used to
+        extract a comparison key from each element
+    :argType selector: lambda
+    :returnType: iterator
+
+    .. code::
+
+        yaql> [[1, 'c'], [2, 'b'], [3, 'c'], [0, 'd']].orderBy($[1])
+        [[2, 'b'], [1, 'c'], [3, 'c'], [0, 'd']]
+    """
     oi = OrderingIterable(collection, operator_lt, operator_gt)
     oi.append_field(selector, True)
     return oi
@@ -311,6 +764,25 @@ def order_by(collection, selector, operator_lt, operator_gt):
 @specs.inject('operator_lt', yaqltypes.Delegate('#operator_<'))
 @specs.method
 def order_by_descending(collection, selector, operator_lt, operator_gt):
+    """:yaql:orderByDescending
+
+    Returns an iterator over collection elements sorted in descending order.
+    Selector is applied to each element of the collection to extract
+    sorting key.
+
+    :signature: collection.orderByDescending(selector)
+    :receiverArg collection: collection to be ordered
+    :argType collection: iterable
+    :arg selector: specifies a function of one argument that is used to
+        extract a comparison key from each element
+    :argType selector: lambda
+    :returnType: iterator
+
+    .. code::
+
+        yaql> [4, 2, 3, 1].orderByDescending($)
+        [4, 3, 2, 1]
+    """
     oi = OrderingIterable(collection, operator_lt, operator_gt)
     oi.append_field(selector, False)
     return oi
@@ -320,6 +792,25 @@ def order_by_descending(collection, selector, operator_lt, operator_gt):
 @specs.parameter('selector', yaqltypes.Lambda())
 @specs.method
 def then_by(collection, selector, context):
+    """:yaql:thenBy
+
+    To be used with orderBy or orderByDescending. Uses selector to extract
+    secondary sort key (ascending) from the elements of the collection and
+    adds it to the iterator.
+
+    :signature: collection.thenBy(selector)
+    :receiverArg collection: collection to be ordered
+    :argType collection: iterable
+    :arg selector: specifies a function of one argument that is used to
+        extract a comparison key from each element
+    :argType selector: lambda
+    :returnType: iterator
+
+    .. code::
+
+        yaql> [[3, 'c'], [2, 'b'], [1, 'c']].orderBy($[1]).thenBy($[0])
+        [[2, 'b'], [1, 'c'], [3, 'c']]
+    """
     collection.append_field(selector, True)
     collection.context = context
     return collection
@@ -329,6 +820,25 @@ def then_by(collection, selector, context):
 @specs.parameter('selector', yaqltypes.Lambda())
 @specs.method
 def then_by_descending(collection, selector, context):
+    """:yaql:thenByDescending
+
+    To be used with orderBy or orderByDescending. Uses selector to extract
+    secondary sort key (descending) from the elements of the collection and
+    adds it to the iterator.
+
+    :signature: collection.thenByDescending(selector)
+    :receiverArg collection: collection to be ordered
+    :argType collection: iterable
+    :arg selector: specifies a function of one argument that is used to
+        extract a comparison key from each element
+    :argType selector: lambda
+    :returnType: iterable
+
+    .. code::
+
+        yaql> [[3,'c'], [2,'b'], [1,'c']].orderBy($[1]).thenByDescending($[0])
+        [[2, 'b'], [3, 'c'], [1, 'c']]
+    """
     collection.append_field(selector, False)
     collection.context = context
     return collection
@@ -341,6 +851,36 @@ def then_by_descending(collection, selector, context):
 @specs.method
 def group_by(engine, collection, key_selector, value_selector=None,
              aggregator=None):
+    """:yaql:groupBy
+
+    Returns a collection grouped by keySelector with applied valueSelector as
+    values. Returns a list of pairs where the first value is a result value
+    of keySelector and the second is a list of values which have common
+    keySelector return value.
+
+    :signature: collection.groupBy(keySelector, valueSelector => null,
+                                   aggregator => null)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg keySelector: function to be applied to every collection element.
+        Values are grouped by return value of this function
+    :argType keySelector: lambda
+    :arg valueSelector: function to be applied to every collection element to
+        put it under appropriate group. null by default, which means return
+        element itself
+    :argType valueSelector: lambda
+    :arg aggregator: function to aggregate value within each group. null by
+        default, which means no function to be evaluated on groups
+    :argType aggregator: lambda
+    :returnType: list
+
+    .. code::
+
+        yaql> [["a", 1], ["b", 2], ["c", 1], ["d", 2]].groupBy($[1], $[0])
+        [[1, ["a", "c"]], [2, ["b", "d"]]]
+        yaql> [["a", 1], ["b", 2], ["c", 1]].groupBy($[1], $[0], $.sum())
+        [[1, "ac"], [2, "b"]]
+    """
     groups = {}
     if aggregator is None:
         new_aggregator = lambda x: x
@@ -356,12 +896,54 @@ def group_by(engine, collection, key_selector, value_selector=None,
 @specs.method
 @specs.parameter('collections', yaqltypes.Iterable())
 def zip_(*collections):
+    """:yaql:zip
+
+    Returns an iterator over collections, where the n-th iterable contains the
+    n-th element from each of collections. Stops iterating as soon as any of
+    the collections is exhausted.
+
+    :signature: collection.zip([args])
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg [args]: collections for zipping with input collection
+    :argType [args]: chain of collections
+    :returnType: iterator
+
+    .. code::
+
+        yaql> [1, 2, 3].zip([4, 5], [6, 7])
+        [[1, 4, 6], [2, 5, 7]]
+    """
     return six.moves.zip(*collections)
 
 
 @specs.method
 @specs.parameter('collections', yaqltypes.Iterable())
 def zip_longest(*collections, **kwargs):
+    """:yaql:zipLongest
+
+    Returns an iterator over collections, where the n-th iterable contains
+    the n-th element from each of collections. Iterates until all the
+    collections are not exhausted and fills lacking values with default value,
+    which is null by default.
+
+    :signature: collection.zipLongest([args], default => null)
+    :receiverArg collection: input collection
+    :argType collection: iterable
+    :arg [args]: collections for zipping with input collection
+    :argType [args]: chain of collections
+    :arg default: default value for lacking values, can be passed only
+        as keyword argument. null by default
+    :argType default: any type
+    :returnType: iterator
+
+    .. code::
+
+        yaql> [1, 2, 3].zipLongest([4, 5])
+        [[1, 4], [2, 5], [3, null]]
+        yaql> [1, 2, 3].zipLongest([4, 5], default => 100)
+        [[1, 4], [2, 5], [3, 100]]
+    """
     return six.moves.zip_longest(
         *collections, fillvalue=kwargs.pop('default', None))
 
