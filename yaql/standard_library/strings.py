@@ -39,14 +39,14 @@ def lt(left, right):
 @specs.parameter('right', yaqltypes.String())
 @specs.name('#operator_>=')
 def gte(left, right):
-    return left > right
+    return left >= right
 
 
 @specs.parameter('left', yaqltypes.String())
 @specs.parameter('right', yaqltypes.String())
 @specs.name('#operator_<=')
 def lte(left, right):
-    return left < right
+    return left <= right
 
 
 @specs.parameter('args', yaqltypes.String())
