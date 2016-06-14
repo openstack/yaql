@@ -111,6 +111,8 @@ class TestQueries(yaql.tests.TestCase):
     def test_sum(self):
         data = range(4)
         self.assertEqual(6, self.eval('$.sum()', data=data))
+        self.assertEqual(106, self.eval('$.sum(100)', data=data))
+        self.assertEqual(100, self.eval('[].sum(100)'))
 
     def test_memorize(self):
         generator_func = lambda: (i for i in range(3))
@@ -304,7 +306,7 @@ class TestQueries(yaql.tests.TestCase):
             [[1, 2], [3, 4], [5]],
             self.eval('[1,2,3,4,5].slice(2)'))
 
-    def test_split(self):
+    def test_split_where(self):
         self.assertEqual(
             [[], [2, 3], [5]],
             self.eval('range(1, 6).splitWhere($ mod 3 = 1)'))
@@ -463,6 +465,26 @@ class TestQueries(yaql.tests.TestCase):
             self.eval(
                 '$.d1.mergeWith($.d2,, min($1, $2))',
                 data={'d1': dict1, 'd2': dict2}))
+
+    def test_is_iterable(self):
+        self.assertEqual(
+            True,
+            self.eval('isIterable([])'))
+        self.assertEqual(
+            True,
+            self.eval('isIterable([1,2])'))
+        self.assertEqual(
+            True,
+            self.eval('isIterable(set(1,2))'))
+        self.assertEqual(
+            False,
+            self.eval('isIterable(1)'))
+        self.assertEqual(
+            False,
+            self.eval('isIterable("foo")'))
+        self.assertEqual(
+            False,
+            self.eval('isIterable({"a" => 1})'))
 
     def test_infinite_collections(self):
         self.assertRaises(
