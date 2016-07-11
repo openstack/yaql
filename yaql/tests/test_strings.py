@@ -153,15 +153,16 @@ class TestStrings(yaql.tests.TestCase):
         self.assertEqual(2, self.eval('$.indexOf(c, 2)', data=data))
         self.assertEqual(-1, self.eval('$.indexOf(x)', data=data))
         self.assertEqual(5, self.eval('$.indexOf(f, 3)', data=data))
-        self.assertEqual(2, self.eval('$.indexOf(c, 0, 3)', data=data))
-        self.assertEqual(-1, self.eval('$.indexOf(c, 0, 2)', data=data))
-        self.assertEqual(9, self.eval('$.indexOf(b, 2, -1)', data=data))
+        self.assertEqual(7, self.eval('$.indexOf(dcb, -4, 3)', data=data))
+        self.assertEqual(7, self.eval('$.indexOf(dcb, -4, 100)', data=data))
+        self.assertEqual(-1, self.eval('$.indexOf(dcb, 0, 5)', data=data))
 
     def test_last_index_of(self):
         data = 'abcdefedcbabc'
         self.assertEqual(12, self.eval('$.lastIndexOf(c)', data=data))
         self.assertEqual(2, self.eval('$.lastIndexOf(c, 0, 4)', data=data))
         self.assertEqual(-1, self.eval('$.lastIndexOf(c, 3, 4)', data=data))
+        self.assertEqual(12, self.eval('$.lastIndexOf(c, -1, 1)', data=data))
 
     def test_max(self):
         self.assertEqual('z', self.eval('max(a, z)'))

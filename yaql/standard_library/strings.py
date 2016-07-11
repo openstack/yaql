@@ -234,11 +234,11 @@ def index_of(string, sub, start=0):
 @specs.parameter('length', int)
 @specs.method
 def index_of_(string, sub, start, length):
-    if length < 0:
-        length = len(string)
     if start < 0:
         start += len(string)
-    return string.find(sub, start, length)
+    if length < 0:
+        length = len(string) - start
+    return string.find(sub, start, start + length)
 
 
 @specs.parameter('string', yaqltypes.String())
@@ -255,11 +255,11 @@ def last_index_of(string, sub, start=0):
 @specs.parameter('length', int)
 @specs.method
 def last_index_of_(string, sub, start, length):
-    if length < 0:
-        length = len(string)
     if start < 0:
         start += len(string)
-    return string.rfind(sub, start, length)
+    if length < 0:
+        length = len(string) - start
+    return string.rfind(sub, start, start + length)
 
 
 @specs.parameter('string', yaqltypes.String())
