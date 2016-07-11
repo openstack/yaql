@@ -53,3 +53,6 @@ ChangeLog
 # Editors
 *~
 .*.swp
+
+# Files created by releasenotes build
+releasenotes/build
