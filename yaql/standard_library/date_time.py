@@ -57,7 +57,7 @@ def build_datetime(year, month, day, hour=0, minute=0, second=0,
 @specs.parameter('offset', TIMESPAN_TYPE)
 def datetime_from_timestamp(timestamp, offset=ZERO_TIMESPAN):
     zone = _get_tz(offset)
-    return datetime.datetime.fromtimestamp(timestamp, tz=zone)
+    return DATETIME_TYPE.fromtimestamp(timestamp, tz=zone)
 
 
 @specs.name('datetime')
