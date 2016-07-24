@@ -146,16 +146,16 @@ def bitwise_not(arg):
     return ~arg
 
 
-@specs.parameter('left', int)
-@specs.parameter('right', int)
-def shift_bits_right(left, right):
-    return left >> right
+@specs.parameter('value', int)
+@specs.parameter('bits_number', int)
+def shift_bits_right(value, bits_number):
+    return value >> bits_number
 
 
-@specs.parameter('left', int)
-@specs.parameter('right', int)
-def shift_bits_left(left, right):
-    return left << right
+@specs.parameter('value', int)
+@specs.parameter('bits_number', int)
+def shift_bits_left(value, bits_number):
+    return value << bits_number
 
 
 @specs.parameter('a', nullable=True)
