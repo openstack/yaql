@@ -100,6 +100,12 @@ class TestRegex(yaql.tests.TestCase):
             'axxb23',
             self.eval(r"regex(`\d+`).replace(a12b23, xx, 1)"))
 
+    def test_replace_backref(self):
+        self.assertEqual(
+            'Foo_Bar_Foo',
+            self.eval(r"regex(`([a-z0-9])([A-Z])`).replace("
+                      "FooBarFoo, `\\1_\\2`)"))
+
     def test_replace_on_string(self):
         self.assertEqual(
             'axxbxx',
