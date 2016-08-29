@@ -238,9 +238,9 @@ def single(collection):
     result = six.next(it)
     try:
         six.next(it)
-        raise ValueError('Collection contains more than one item')
     except StopIteration:
         return result
+    raise StopIteration('Collection contains more than one item')
 
 
 @specs.parameter('collection', yaqltypes.Iterable())

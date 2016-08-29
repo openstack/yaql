@@ -135,7 +135,7 @@ class TestQueries(yaql.tests.TestCase):
     def test_single(self):
         self.assertEqual(2, self.eval('list(2).single()'))
         self.assertRaises(StopIteration, self.eval, 'list().single()')
-        self.assertRaises(ValueError, self.eval, 'list(1, 2).single()')
+        self.assertRaises(StopIteration, self.eval, 'list(1, 2).single()')
 
     def test_last(self):
         self.assertEqual(3, self.eval('list(2, 3).last()'))
