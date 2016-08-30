@@ -343,12 +343,14 @@ def group_by(engine, collection, key_selector, value_selector=None,
              aggregator=None):
     groups = {}
     if aggregator is None:
-        aggregator = lambda x: x
+        new_aggregator = lambda x: x
+    else:
+        new_aggregator = lambda x: (x[0], aggregator(x[1]))
     for t in collection:
         value = t if value_selector is None else value_selector(t)
         groups.setdefault(key_selector(t), []).append(value)
         utils.limit_memory_usage(engine, (1, groups))
-    return select(six.iteritems(groups), aggregator)
+    return select(six.iteritems(groups), new_aggregator)
 
 
 @specs.method
