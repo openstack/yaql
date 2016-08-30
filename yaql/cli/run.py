@@ -25,9 +25,11 @@ import yaql.legacy
 
 def main():
     p = optparse.OptionParser()
-    p.add_option('--data', '-d')
-    p.add_option('-t', action='store_true', dest='tokens')
-    p.add_option('--legacy', action='store_true', dest='legacy')
+    p.add_option('--data', '-d', help="input JSON file")
+    p.add_option('--tokens', '-t', action='store_true', dest='tokens',
+                 help="print lexical tokens info")
+    p.add_option('--legacy', action='store_true', dest='legacy',
+                 help="enable legacy v0.2 compatibility mode")
 
     options, arguments = p.parse_args()
     if options.data:
