@@ -212,18 +212,18 @@ class TestQueries(yaql.tests.TestCase):
         self.assertItemsEqual(
             [[1, 'ac'], [2, 'be'], [3, 'd']],
             self.eval('$.items().orderBy($[0]).'
-                      'groupBy($[1], $[0], [$[0], $[1].sum()])', data=data))
+                      'groupBy($[1], $[0], $.sum())', data=data))
 
         self.assertItemsEqual(
             [[1, ['a', 1, 'c', 1]], [2, ['b', 2, 'e', 2]], [3, ['d', 3]]],
             self.eval('$.items().orderBy($[0]).'
-                      'groupBy($[1],,  [$[0], $[1].sum()])',
+                      'groupBy($[1],,  $.sum())',
                       data=data))
 
         self.assertItemsEqual(
             [[1, ['a', 1, 'c', 1]], [2, ['b', 2, 'e', 2]], [3, ['d', 3]]],
             self.eval('$.items().orderBy($[0]).'
-                      'groupBy($[1], aggregator =>  [$[0], $[1].sum()])',
+                      'groupBy($[1], aggregator => $.sum())',
                       data=data))
 
     def test_join(self):
