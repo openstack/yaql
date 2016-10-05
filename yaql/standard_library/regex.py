@@ -273,12 +273,13 @@ def search(context, regexp, string, selector=None):
         1
     """
     res = regexp.search(string)
+    new_context = context.create_child_context()
     if res is None:
         return None
     if selector is None:
         return res.group()
-    _publish_match(context, res)
-    return selector(context)
+    _publish_match(new_context, res)
+    return selector(new_context)
 
 
 @specs.parameter('regexp', REGEX_TYPE)
