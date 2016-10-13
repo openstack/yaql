@@ -11,6 +11,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+"""
+The module describes functions which are available with backward compatibility
+mode with YAQL v0.2.
+Examples are provided with CLI started with legacy mode.
+"""
 
 import itertools
 
@@ -26,6 +31,24 @@ from yaql.language import yaqltypes
 @specs.parameter('left', yaqltypes.YaqlExpression())
 @specs.name('#operator_=>')
 def build_tuple(left, right, context, engine):
+    """:yaql:operator =>
+
+    Returns tuple.
+
+    :signature: left => right
+    :arg left: left value for tuple
+    :argType left: any
+    :arg right: right value for tuple
+    :argType right: any
+    :returnType: tuple
+
+    .. code::
+
+        yaql> a => b
+        ["a", "b"]
+        yaql> null => 1 => []
+        [null, 1, []]
+    """
     if isinstance(left, expressions.BinaryOperator) and left.operator == '=>':
         return left(utils.NO_VALUE, context, engine) + (right,)
     else:
@@ -37,16 +60,60 @@ def build_tuple(left, right, context, engine):
 @specs.no_kwargs
 @specs.extension_method
 def dict_(delegate, *tuples):
+    """:yaql:dict
+
+    Returns dict built from tuples.
+
+    :signature: dict([args])
+    :arg [args]: chain of tuples to be interpreted as (key, value) for dict
+    :argType [args]: chain of tuples
+    :returnType: dictionary
+
+    .. code::
+
+        yaql> dict(a => 1, b => 2)
+        {"a": 1, "b": 2}
+        yaql> dict(tuple(a, 1), tuple(b, 2))
+        {"a": 1, "b": 2}
+    """
     return delegate('dict', tuples)
 
 
 @specs.method
 @specs.parameter('collection', yaqltypes.Iterable())
 def to_list(collection):
+    """:yaql:toList
+
+    Returns collection converted to list.
+
+    :signature: collection.toList()
+    :receiverArg collection: collection to be converted
+    :argType collection: iterable
+    :returnType: list
+
+    .. code::
+
+        yaql> range(0, 3).toList()
+        [0, 1, 2]
+    """
     return list(collection)
 
 
 def tuple_(*args):
+    """:yaql:tuple
+
+    Returns tuple of args.
+
+    :signature: tuple([args])
+    :arg [args]: chain of values for tuple
+    :argType [args]: chain of any types
+    :returnType: tuple
+
+    .. code::
+
+        yaql> tuple(0, [], "a")
+        [0, [], "a"]
+    """
     return args
 
 
@@ -64,6 +131,25 @@ def indexer(collection, index_expression):
 @specs.parameter('stop', int, nullable=True)
 @specs.extension_method
 def range_(start, stop=None):
+    """:yaql:range
+
+    Returns sequence from [start, stop).
+
+    :signature: start.range(stop => null)
+    :receiverArg start: value to start from
+    :argType start: integer
+    :arg stop: value to end with. null by default, which means returning
+        iterator to sequence
+    :argType stop: integer
+    :returnType: sequence
+
+    .. code::
+
+        yaql> 0.range(3)
+        [0, 1, 2]
+        yaql> 0.range().take(4)
+        [0, 1, 2, 3]
+    """
     if stop is None:
         return itertools.count(start)
     else:
@@ -74,6 +160,23 @@ def range_(start, stop=None):
 @specs.no_kwargs
 @specs.extension_method
 def switch(value, context, *conditions):
+    """:yaql:switch
+
+    Returns the value of the first key-value pair for which condition returned
+    true. If there is no such returns null.
+
+    :signature: value.switch([args])
+    :receiverArg value: value to be used evaluating conditions
+    :argType value: any type
+    :arg [args]: conditions to be checked for the first true
+    :argType [args]: chain of mappings
+    :returnType: any (appropriate value type)
+
+    .. code::
+
+        yaql> 15.switch($ < 3 => "a", $ < 7 => "b", $ => "c")
+        "c"
+    """
     context = context.create_child_context()
     context[''] = value
     for cond in conditions:
@@ -102,6 +205,24 @@ def op_dot_context(receiver, expr):
 @specs.method
 @specs.no_kwargs
 def as_(context, receiver, *mappings):
+    """:yaql:as
+
+    Returns context object with mapping functions applied on receiver and
+    passed under corresponding keys.
+
+    :signature: receiver.as([args])
+    :receiverArg receiver: value to be used for mappings lambdas evaluating
+    :argType receiver: any type
+    :arg [args]: tuples with lambdas and appropriate keys to be passed to
+        context
+    :argType [args]: chain of tuples
+    :returnType: context object
+
+    .. code::
+
+        yaql> [1, 2].as(len($) => a, sum($) => b) -> $a + $b
+        5
+    """
     for t in mappings:
         tt = t(receiver)
         if isinstance(tt, tuple):
@@ -120,6 +241,22 @@ def as_(context, receiver, *mappings):
 @specs.parameter('key', yaqltypes.Keyword())
 @specs.name('#operator_.')
 def dict_keyword_access(d, key):
+    """:yaql:operator .
+
+    Returns dict's key value.
+
+    :signature: left.right
+    :arg left: input dictionary
+    :argType left: mapping
+    :arg right: key
+    :argType right: keyword
+    :returnType: any (appropriate value type)
+
+    .. code::
+
+        yaql> {a => 2, b => 2}.a
+        2
+    """
     return d.get(key)
 
 
