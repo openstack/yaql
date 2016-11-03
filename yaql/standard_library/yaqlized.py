@@ -17,21 +17,25 @@ access attributes/properties and index of yaqlized objects.
 
 The first way to yaqlize object is using function call:
 
-class A(object):
-    foo = 256
-    def bar(self):
-        print('yaqlization works with methods too')
+.. code-block:: python
 
-sample_object = A()
-yaqlization.yaqlize(sample_object)
+    class A(object):
+        foo = 256
+        def bar(self):
+            print('yaqlization works with methods too')
+
+    sample_object = A()
+    yaqlization.yaqlize(sample_object)
 
 The second way is using decorator:
 
-@yaqlization.yaqlize
-class A(object):
-    foo = 256
-    def bar(self):
-        print('yaqlization works with methods too')
+.. code-block:: python
+
+    @yaqlization.yaqlize
+    class A(object):
+        foo = 256
+        def bar(self):
+            print('yaqlization works with methods too')
 
 Any mentioned operation on yaqlized objects can be disabled with additional
 parameters for yaqlization. Also it is possible to specify whitelist/blacklist

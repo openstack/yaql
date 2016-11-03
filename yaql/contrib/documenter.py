@@ -123,8 +123,9 @@ def _add_markup(obj):
 
 
 def _write_to_doc(output, header, stub):
-    output.write("{0}\n{1}\n\n".format(header,
-                                       '=' * len(header)))
+    if header:
+        output.write("{0}\n{1}\n\n".format(header,
+                                           '=' * len(header)))
     sorted_stub = sorted(stub, key=operator.itemgetter('module_name'))
     for elem in sorted_stub:
         if elem:
@@ -154,7 +155,7 @@ def generate_doc_for_module(module, output):
     _write_to_doc(output, doc_header, doc_stub)
 
 
-def generate_doc_for_package(package, output):
+def generate_doc_for_package(package, output, no_header):
     """Generate and write rst document for package.
 
     Generate and write rst document for the modules in the given package. By
@@ -175,9 +176,24 @@ def generate_doc_for_package(package, output):
         doc_dict = {'module_name': _get_name(current_module),
                     'documentation': docs_for_module}
         doc_stub.append(doc_dict)
-    doc_name = package.__name__.rsplit('.', 1)[-1]
-    doc_header = doc_name.replace("_", " ").capitalize()
+    if no_header:
+        doc_header = None
+    else:
+        doc_name = package.__name__.rsplit('.', 1)[-1]
+        doc_header = doc_name.replace("_", " ").capitalize()
     _write_to_doc(output, doc_header, doc_stub)
+
+
+def main(args):
+    try:
+        package = importlib.import_module(args.package)
+    except ImportError:
+        raise ValueError("No such package {0}".format(args.package))
+    try:
+        getattr(package, '__path__')
+        generate_doc_for_package(package, args.output, args.no_header)
+    except AttributeError:
+        generate_doc_for_module(package, args.output)
 
 
 if __name__ == "__main__":
@@ -185,14 +201,7 @@ if __name__ == "__main__":
     parser.add_argument('package', help="A package/module to be documented")
     parser.add_argument('--output', help="A file to output",
                         type=argparse.FileType('w'), default=sys.stdout)
+    parser.add_argument('--no-header', help="Do not generate package header",
+                        action='store_true')
     args = parser.parse_args()
-
-    try:
-        package = importlib.import_module(args.package)
-    except ImportError:
-        raise ValueError("No such package {0}".format(args.package))
-    try:
-        getattr(package, '__path__')
-        generate_doc_for_package(package, args.output)
-    except AttributeError:
-        generate_doc_for_module(package, args.output)
+    main(args)
