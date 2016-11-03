@@ -24,6 +24,8 @@ NO_DEFAULT = utils.create_marker('<NoValue>')
 
 
 class ParameterDefinition(object):
+    __slots__ = ('value_type', 'name', 'position', 'default', 'alias')
+
     def __init__(self, name, value_type=None, position=None, alias=None,
                  default=None):
         self.value_type = value_type
@@ -42,6 +44,9 @@ class ParameterDefinition(object):
 
 
 class FunctionDefinition(object):
+    __slots__ = ('is_method', 'is_function', 'name', 'parameters', 'payload',
+                 'doc', 'no_kwargs', 'meta')
+
     def __init__(self, name, payload, parameters=None, doc='', meta=None,
                  is_function=True, is_method=False, no_kwargs=False):
         self.is_method = is_method
