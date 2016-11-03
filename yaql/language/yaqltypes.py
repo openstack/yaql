@@ -39,6 +39,8 @@ class LazyParameterType(object):
 
 @six.add_metaclass(abc.ABCMeta)
 class SmartType(object):
+    __slots__ = ('nullable',)
+
     def __init__(self, nullable):
         self.nullable = nullable
 
@@ -59,6 +61,8 @@ class SmartType(object):
 
 
 class GenericType(SmartType):
+    __slots__ = ('checker', 'converter')
+
     def __init__(self, nullable, checker=None, converter=None):
         super(GenericType, self).__init__(nullable)
         self.checker = checker
@@ -90,6 +94,8 @@ class GenericType(SmartType):
 
 
 class PythonType(GenericType):
+    __slots__ = ('python_type', 'validators')
+
     def __init__(self, python_type, nullable=True, validators=None):
         self.python_type = python_type
         if not validators:
@@ -120,6 +126,8 @@ class PythonType(GenericType):
 
 
 class MappingRule(LazyParameterType, SmartType):
+    __slots__ = tuple()
+
     def __init__(self):
         super(MappingRule, self).__init__(False)
 
@@ -136,6 +144,8 @@ class MappingRule(LazyParameterType, SmartType):
 
 
 class String(PythonType):
+    __slots__ = tuple()
+
     def __init__(self, nullable=False):
         super(String, self).__init__(six.string_types, nullable=nullable)
 
@@ -147,6 +157,8 @@ class String(PythonType):
 
 
 class Integer(PythonType):
+    __slots__ = tuple()
+
     def __init__(self, nullable=False):
         super(Integer, self).__init__(
             six.integer_types, nullable=nullable,
@@ -154,6 +166,8 @@ class Integer(PythonType):
 
 
 class DateTime(PythonType):
+    __slots__ = tuple()
+
     utctz = tz.tzutc()
 
     def __init__(self, nullable=False):
@@ -169,6 +183,8 @@ class DateTime(PythonType):
 
 
 class Iterable(PythonType):
+    __slots__ = tuple()
+
     def __init__(self, validators=None, nullable=False):
         super(Iterable, self).__init__(
             collections.Iterable, nullable, [
@@ -190,6 +206,8 @@ class Iterable(PythonType):
 
 
 class Iterator(Iterable):
+    __slots__ = tuple()
+
     def __init__(self, validators=None, nullable=False):
         super(Iterator, self).__init__(
             validators=[utils.is_iterator] + (validators or []),
@@ -197,6 +215,8 @@ class Iterator(Iterable):
 
 
 class Sequence(PythonType):
+    __slots__ = tuple()
+
     def __init__(self, validators=None, nullable=False):
         super(Sequence, self).__init__(
             collections.Sequence, nullable, [
@@ -205,6 +225,8 @@ class Sequence(PythonType):
 
 
 class Number(PythonType):
+    __slots__ = tuple()
+
     def __init__(self, nullable=False):
         super(Number, self).__init__(
             six.integer_types + (float,), nullable,
@@ -212,6 +234,8 @@ class Number(PythonType):
 
 
 class Lambda(LazyParameterType, SmartType):
+    __slots__ = tuple()
+
     def __init__(self, with_context=False, method=False):
         super(Lambda, self).__init__(True)
         self.with_context = with_context
@@ -273,6 +297,8 @@ class Lambda(LazyParameterType, SmartType):
 
 
 class Super(HiddenParameterType, SmartType):
+    __slots__ = ('with_context', 'method', 'with_name')
+
     def __init__(self, with_context=False, method=None, with_name=False):
         self.with_context = with_context
         self.method = method
@@ -326,6 +352,8 @@ class Super(HiddenParameterType, SmartType):
 
 
 class Context(HiddenParameterType, SmartType):
+    __slots__ = tuple()
+
     def __init__(self):
         super(Context, self).__init__(False)
 
@@ -335,6 +363,8 @@ class Context(HiddenParameterType, SmartType):
 
 
 class Delegate(HiddenParameterType, SmartType):
+    __slots__ = ('name', 'with_context', 'method', 'use_convention')
+
     def __init__(self, name=None, with_context=False, method=False,
                  use_convention=True):
         super(Delegate, self).__init__(False)
@@ -372,6 +402,8 @@ class Delegate(HiddenParameterType, SmartType):
 
 
 class Receiver(HiddenParameterType, SmartType):
+    __slots__ = tuple()
+
     def __init__(self):
         super(Receiver, self).__init__(False)
 
@@ -381,6 +413,8 @@ class Receiver(HiddenParameterType, SmartType):
 
 
 class Engine(HiddenParameterType, SmartType):
+    __slots__ = tuple()
+
     def __init__(self):
         super(Engine, self).__init__(False)
 
@@ -390,6 +424,8 @@ class Engine(HiddenParameterType, SmartType):
 
 
 class FunctionDefinition(HiddenParameterType, SmartType):
+    __slots__ = tuple()
+
     def __init__(self):
         super(FunctionDefinition, self).__init__(False)
 
@@ -399,6 +435,8 @@ class FunctionDefinition(HiddenParameterType, SmartType):
 
 
 class Constant(SmartType):
+    __slots__ = ('expand',)
+
     def __init__(self, nullable, expand=True):
         self.expand = expand
         super(Constant, self).__init__(nullable)
@@ -416,6 +454,8 @@ class Constant(SmartType):
 
 
 class YaqlExpression(LazyParameterType, SmartType):
+    __slots__ = ('_expression_type',)
+
     def __init__(self, expression_type=None):
         super(YaqlExpression, self).__init__(False)
         if expression_type and not utils.is_sequence(expression_type):
@@ -435,6 +475,8 @@ class YaqlExpression(LazyParameterType, SmartType):
 
 
 class StringConstant(Constant):
+    __slots__ = tuple()
+
     def __init__(self, nullable=False):
         super(StringConstant, self).__init__(nullable)
 
@@ -445,6 +487,8 @@ class StringConstant(Constant):
 
 
 class Keyword(Constant):
+    __slots__ = tuple()
+
     def __init__(self, expand=True):
         super(Keyword, self).__init__(False, expand)
 
@@ -453,6 +497,8 @@ class Keyword(Constant):
 
 
 class BooleanConstant(Constant):
+    __slots__ = tuple()
+
     def __init__(self, nullable=False, expand=True):
         super(BooleanConstant, self).__init__(nullable, expand)
 
@@ -463,6 +509,8 @@ class BooleanConstant(Constant):
 
 
 class NumericConstant(Constant):
+    __slots__ = tuple()
+
     def __init__(self, nullable=False, expand=True):
         super(NumericConstant, self).__init__(nullable, expand)
 
@@ -476,6 +524,8 @@ class NumericConstant(Constant):
 
 @six.add_metaclass(abc.ABCMeta)
 class SmartTypeAggregation(SmartType):
+    __slots__ = ('types',)
+
     def __init__(self, *args, **kwargs):
         self.nullable = kwargs.pop('nullable', False)
         super(SmartTypeAggregation, self).__init__(self.nullable)
@@ -490,6 +540,8 @@ class SmartTypeAggregation(SmartType):
 
 
 class AnyOf(SmartTypeAggregation):
+    __slots__ = tuple()
+
     def _check_match(self, value, context, engine, *args, **kwargs):
         for type_to_check in self.types:
             check_result = type_to_check.check(
@@ -529,6 +581,8 @@ class AnyOf(SmartTypeAggregation):
 
 
 class Chain(SmartTypeAggregation):
+    __slots__ = tuple()
+
     def _check_match(self, value, context, engine, *args, **kwargs):
         for type_to_check in self.types:
             check_result = type_to_check.check(
@@ -568,6 +622,8 @@ class Chain(SmartTypeAggregation):
 
 
 class NotOfType(SmartType):
+    __slots__ = ('smart_type',)
+
     def __init__(self, smart_type, nullable=True):
         if isinstance(smart_type, (type, tuple)):
             smart_type = PythonType(smart_type, nullable=nullable)
@@ -587,6 +643,8 @@ class NotOfType(SmartType):
 
 
 class YaqlInterface(HiddenParameterType, SmartType):
+    __slots__ = tuple()
+
     def __init__(self):
         super(YaqlInterface, self).__init__(False)
 
