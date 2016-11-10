@@ -1,10 +1,15 @@
 Standard YAQL Library
 =====================
 
-Conditions and boolean logic functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. yaqldoc:: yaql.standard_library.boolean
+Comparison operators
+~~~~~~~~~~~~~~~~~~~~
 .. yaqldoc:: yaql.standard_library.common
+
+
+Boolean logic functions
+~~~~~~~~~~~~~~~~~~~~~~~
+.. yaqldoc:: yaql.standard_library.boolean
+
 
 Working with collections
 ~~~~~~~~~~~~~~~~~~~~~~~~

@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 """
-Main functions for collection module.
+Functions that produce or consume finite collections - lists, dicts and sets.
 """
 
 import itertools

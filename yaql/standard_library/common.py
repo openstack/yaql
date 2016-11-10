@@ -21,7 +21,7 @@ from yaql.language import specs
 
 @specs.name('*equal')
 def eq(left, right):
-    """:yaql:equal
+    """:yaql:operator =
 
     Returns true if left and right are equal, false otherwise.
 
@@ -33,7 +33,7 @@ def eq(left, right):
 
 @specs.name('*not_equal')
 def neq(left, right):
-    """:yaql:notEqual
+    """:yaql:operator !=
 
     Returns true if left and right are not equal, false otherwise.
 
