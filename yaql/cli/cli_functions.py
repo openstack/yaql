@@ -20,6 +20,8 @@ import re
 import readline
 import sys
 
+import six
+
 from yaql.language.exceptions import YaqlParsingException
 
 from yaql import __version__ as version
@@ -47,8 +49,8 @@ def main(context, show_tokens, parser):
     comm = True
     while comm != 'exit':
         try:
-            comm = raw_input(PROMPT).decode(sys.stdin.encoding or
-                                            locale.getpreferredencoding(True))
+            comm = six.moves.input(PROMPT).decode(
+                sys.stdin.encoding or locale.getpreferredencoding(True))
         except EOFError:
             return
         if not comm:
