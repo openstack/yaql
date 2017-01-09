@@ -13,8 +13,19 @@ Welcome to yaql documentation!
    what_is_yaql
    getting_started
    usage
+
+.. toctree::
+   :maxdepth: 3
+
    language_reference
+   extending_yaql
+
+.. toctree::
+
    standard_library
+
+.. toctree::
+
    contributing
 
 
