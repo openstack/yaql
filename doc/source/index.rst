@@ -6,37 +6,15 @@
 Welcome to yaql documentation!
 ==============================
 
-Introduction
-~~~~~~~~~~~~
-
 .. toctree::
    :maxdepth: 2
 
    readme
    what_is_yaql
    getting_started
-
-Usage
-~~~~~
-
-.. toctree::
-   :maxdepth: 1
-
    usage
-   language_description
+   language_reference
    standard_library
-
-Contributing
-~~~~~~~~~~~~
-
-.. toctree::
-   :maxdepth: 1
-
    contributing
 
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
