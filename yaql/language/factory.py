@@ -237,7 +237,8 @@ class YaqlFactory(object):
         names = self._name_generator()
         operators = self._build_operator_table(names)
         lexer_rules = self._create_lexer(operators)
-        ply_lexer = lex.lex(object=lexer_rules, reflags=re.UNICODE)
+        ply_lexer = lex.lex(object=lexer_rules,
+                            reflags=re.UNICODE | re.VERBOSE)
         ply_parser = yacc.yacc(
             module=self._create_parser(lexer_rules, operators),
             debug=False if not options else options.get('yaql.debug', False),
