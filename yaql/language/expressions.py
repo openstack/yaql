@@ -161,7 +161,10 @@ class Statement(Function):
         if context is None or context is utils.NO_VALUE:
             context = yaql.create_context()
         if data is not utils.NO_VALUE:
-            context['$'] = utils.convert_input_data(data)
+            if self.engine.options.get('yaql.convertInputData', True):
+                context['$'] = utils.convert_input_data(data)
+            else:
+                context['$'] = data
         return self(utils.NO_VALUE, context, self.engine)
 
     def __str__(self):

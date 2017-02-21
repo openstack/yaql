@@ -67,7 +67,9 @@ def _setup_context(data, context, finalizer, convention):
         @specs.inject('engine', yaqltypes.Engine())
         @specs.name('#finalize')
         def finalize(obj, limiter, engine):
-            return utils.convert_output_data(obj, limiter, engine)
+            if engine.options.get('yaql.convertOutputData', True):
+                return utils.convert_output_data(obj, limiter, engine)
+            return obj
 
         context.register_function(limit)
         context.register_function(finalize)
