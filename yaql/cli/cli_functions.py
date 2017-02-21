@@ -12,11 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import itertools
+from __future__ import print_function
+
 import json
 import locale
 import os
-import re
 import readline
 import sys
 
@@ -29,7 +29,6 @@ from yaql.language import utils
 
 
 PROMPT = "yaql> "
-LIMIT = 100
 
 
 def main(context, show_tokens, parser):
@@ -37,7 +36,7 @@ def main(context, show_tokens, parser):
     print("Version {0}".format(version))
     if context.get_data('legacy', False):
         print("Running in a legacy (0.2.x compatible) mode")
-    print("Copyright (c) 2013-2015 Mirantis, Inc")
+    print("Copyright (c) 2013-2017 Mirantis, Inc")
     print("")
     if not context['']:
         print("No data loaded into context ")
@@ -49,8 +48,10 @@ def main(context, show_tokens, parser):
     comm = True
     while comm != 'exit':
         try:
-            comm = six.moves.input(PROMPT).decode(
-                sys.stdin.encoding or locale.getpreferredencoding(True))
+            comm = six.moves.input(PROMPT)
+            if six.PY2:
+                comm = comm.decode(
+                    sys.stdin.encoding or locale.getpreferredencoding(True))
         except EOFError:
             return
         if not comm:
@@ -84,11 +85,9 @@ def main(context, show_tokens, parser):
             continue
         try:
             res = expr.evaluate(context=context)
-            if utils.is_iterator(res):
-                res = list(itertools.islice(res, LIMIT))
-            print(json.dumps(res, indent=4, ensure_ascii=False))
+            print_output(res, context)
         except Exception as ex:
-            print(u'Execution exception: {0}'.format(ex))
+            print(u'Execution exception: {0}'.format(ex), file=sys.stderr)
 
 
 def load_data(data_file, context):
@@ -107,19 +106,10 @@ def load_data(data_file, context):
     print('Data from file {0} loaded into context'.format(data_file))
 
 
-def regexp(self, pattern):
-    match = re.match(pattern, self)
-    if match:
-        return match.groups()
-    else:
-        return None
-
-
 def register_in_context(context, parser):
     context.register_function(
         lambda context, show_tokens: main(context, show_tokens, parser),
         name='__main')
-    context.register_function(regexp)
 
 
 def parse_service_command(comm):
@@ -129,6 +119,22 @@ def parse_service_command(comm):
     func_name = comm[:space_index]
     args = comm[len(func_name) + 1:]
     return func_name, args
+
+
+def evaluate(expr, parser, data, context):
+    try:
+        res = parser(expr).evaluate(data, context)
+        print_output(res, context)
+    except Exception as ex:
+        print(u'Execution exception: {0}'.format(ex), file=sys.stderr)
+        exit(1)
+
+
+def print_output(v, context):
+    if context['#nativeOutput']:
+        print(v)
+    else:
+        print(json.dumps(v, indent=4, ensure_ascii=False))
 
 
 SERVICE_FUNCTIONS = {
