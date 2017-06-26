@@ -49,8 +49,31 @@ def main():
                  help="read input line by line")
     p.add_option('--tokens', '-t', action='store_true', dest='tokens',
                  help="print lexical tokens info")
-    p.add_option('--legacy', action='store_true', dest='legacy',
+    p.add_option('--legacy', '-l', action='store_true', dest='legacy',
                  help="enable legacy v0.2 compatibility mode")
+    p.add_option('--limit', '--limit-iterators', '-L', type=int,
+                 dest='limit_iterators',
+                 default=1000, help="limit iterators by the given number of "
+                                    "elements (-1 means infinity)")
+    p.add_option('--sets-to-lists', '-S', action="store_true",
+                 dest='sets_to_lists', default=True,
+                 help="convert all sets in results to lists")
+    p.add_option('--tuples-to-lists', '-T', action="store_true",
+                 dest='tuples_to_lists', default=False,
+                 help="convert all tuples in results to lists")
+    p.add_option('--iterable-dicts', '-D', action="store_true",
+                 dest='iterable_dicts', default=False,
+                 help="consider dictionaries to be iterable over their keys")
+    p.add_option('--memory-quota', '--mem', '-m', type=int, dest='memory',
+                 default=100000, help="change memory usage quota (in bytes) "
+                                      "for all data produced by expressions "
+                                      "(-1 means infinity)")
+    p.add_option('--keyword-operator', '-k', type=str, dest='keyword_operator',
+                 default="=>", help="configure keyword/mapping symbol "
+                                    "(empty string means disabled)")
+    p.add_option('--allow-delegates', '-A', action="store_true",
+                 dest='allow_delegates', default=False,
+                 help="enable delegate expression parsing")
 
     options, arguments = p.parse_args()
     if options.data:
@@ -67,17 +90,24 @@ def main():
         data = None
 
     engine_options = {
-        'yaql.limitIterators': 1000,
-        'yaql.convertSetsToLists': True,
-        'yaql.memoryQuota': 100000
+        'yaql.limitIterators': options.limit_iterators,
+        'yaql.convertSetsToLists': options.sets_to_lists,
+        'yaql.convertTuplesToLists': options.tuples_to_lists,
+        'yaql.iterableDicts': options.iterable_dicts,
+        'yaql.memoryQuota': options.memory
     }
 
     if options.legacy:
-        factory = yaql.legacy.YaqlFactory()
+        factory = yaql.legacy.YaqlFactory(
+            allow_delegates=options.allow_delegates
+        )
         context = yaql.legacy.create_context()
         context['legacy'] = True
     else:
-        factory = yaql.YaqlFactory()
+        factory = yaql.YaqlFactory(
+            allow_delegates=options.allow_delegates,
+            keyword_operator=options.keyword_operator
+        )
         context = yaql.create_context()
 
     if options.native:
