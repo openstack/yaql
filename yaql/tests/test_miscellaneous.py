@@ -12,7 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import tempfile
 
+from yaql.cli.cli_functions import load_data
 from yaql.language import exceptions
 from yaql.language import specs
 from yaql.language import yaqltypes
@@ -90,3 +92,21 @@ class TestMiscellaneous(yaql.tests.TestCase):
             self.eval, 'baz1(null)')
         self.assertFalse(self.eval('baz2($)', data=iter([1, 2])))
         self.assertTrue(self.eval('baz2(null)'))
+
+    def test_load_data(self):
+        context = {}
+        self.assertIsNone(load_data('/temporarydir/some_random_filename',
+                                    context))
+        self.assertEqual(context, {})
+
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(b'This is not JSON')
+            f.flush()
+            self.assertIsNone(load_data(f.name, context))
+            self.assertEqual(context, {})
+
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(b'{"foo": "bar"}')
+            f.flush()
+            self.assertIsNone(load_data(f.name, context))
+            self.assertEqual(context['$'], {"foo": "bar"})
