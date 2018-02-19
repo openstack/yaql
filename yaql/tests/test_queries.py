@@ -226,6 +226,30 @@ class TestQueries(yaql.tests.TestCase):
                       'groupBy($[1], aggregator => $.sum())',
                       data=data))
 
+    def test_group_by_old_syntax(self):
+        # Test the syntax used in 1.1.1 and earlier, where the aggregator
+        # function was passed the key as well as the value list, and returned
+        # the key along with the aggregated value. This ensures backward
+        # compatibility with existing expressions.
+        data = {'a': 1, 'b': 2, 'c': 1, 'd': 3, 'e': 2}
+
+        self.assertItemsEqual(
+            [[1, 'ac'], [2, 'be'], [3, 'd']],
+            self.eval('$.items().orderBy($[0]).'
+                      'groupBy($[1], $[0], [$[0], $[1].sum()])', data=data))
+
+        self.assertItemsEqual(
+            [[1, ['a', 1, 'c', 1]], [2, ['b', 2, 'e', 2]], [3, ['d', 3]]],
+            self.eval('$.items().orderBy($[0]).'
+                      'groupBy($[1],,  [$[0], $[1].sum()])',
+                      data=data))
+
+        self.assertItemsEqual(
+            [[1, ['a', 1, 'c', 1]], [2, ['b', 2, 'e', 2]], [3, ['d', 3]]],
+            self.eval('$.items().orderBy($[0]).'
+                      'groupBy($[1], aggregator => [$[0], $[1].sum()])',
+                      data=data))
+
     def test_join(self):
         self.assertEqual(
             [[2, 1], [3, 1], [3, 2], [4, 1], [4, 2], [4, 3]],

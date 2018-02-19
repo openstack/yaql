@@ -86,7 +86,8 @@ def create_context(data=utils.NO_VALUE, context=None, system=True,
                    math=True, collections=True, queries=True,
                    regex=True, branching=True,
                    no_sets=False, finalizer=None, delegates=False,
-                   convention=None, datetime=True, yaqlized=True):
+                   convention=None, datetime=True, yaqlized=True,
+                   group_by_agg_fallback=True):
 
     context = _setup_context(data, context, finalizer, convention)
     if system:
@@ -104,7 +105,7 @@ def create_context(data=utils.NO_VALUE, context=None, system=True,
     if collections:
         std_collections.register(context, no_sets)
     if queries:
-        std_queries.register(context)
+        std_queries.register(context, group_by_agg_fallback)
     if regex:
         std_regex.register(context)
     if branching:
