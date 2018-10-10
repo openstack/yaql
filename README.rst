@@ -11,36 +11,21 @@ Quickstart
 ----------
 Install the latest version of yaql:
 
-.. code-block:: console
-
     pip install yaql>=1.0.0
-..
 
 Run yaql REPL:
 
-.. code-block:: console
-
     yaql
-..
 
 Load a json file:
 
-.. code-block:: console
-
     yaql> @load my_file.json
-..
 
 Check it loaded to current context, i.e. `$`:
 
-.. code-block:: console
-
     yaql> $
 
-..
-
 Run some queries:
-
-.. code-block:: console
 
     yaql> $.customers
     ...
@@ -51,7 +36,6 @@ Run some queries:
     yaql> $.customers.groupBy($.sex)
     ...
     yaql> $.customers.where($.orders.len() >= 1 or name = "John")
-..
 
 Project Resources
 -----------------
