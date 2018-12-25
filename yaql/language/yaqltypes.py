@@ -27,6 +27,8 @@ from yaql import yaql_interface
 
 @six.add_metaclass(abc.ABCMeta)
 class HiddenParameterType(object):
+    __slots__ = tuple()
+
     # noinspection PyMethodMayBeStatic,PyUnusedLocal
     def check(self, value, context, engine, *args, **kwargs):
         return True
@@ -34,7 +36,7 @@ class HiddenParameterType(object):
 
 @six.add_metaclass(abc.ABCMeta)
 class LazyParameterType(object):
-    pass
+    __slots__ = tuple()
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -234,7 +236,7 @@ class Number(PythonType):
 
 
 class Lambda(LazyParameterType, SmartType):
-    __slots__ = tuple()
+    __slots__ = ('with_context', 'method')
 
     def __init__(self, with_context=False, method=False):
         super(Lambda, self).__init__(True)
@@ -454,7 +456,7 @@ class Constant(SmartType):
 
 
 class YaqlExpression(LazyParameterType, SmartType):
-    __slots__ = ('_expression_type',)
+    __slots__ = ('_expression_types',)
 
     def __init__(self, expression_type=None):
         super(YaqlExpression, self).__init__(False)
