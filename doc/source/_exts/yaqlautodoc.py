@@ -208,7 +208,6 @@ def render(app, doctree, fromdocname):
 
 
 def setup(app):
-    app.info('Loading the yaql documenter extension')
     app.add_node(YaqlDocNode)
     app.add_directive('yaqldoc', YaqlDocDirective)
     app.connect('doctree-resolved', render)

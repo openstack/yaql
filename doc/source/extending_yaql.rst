@@ -44,7 +44,7 @@ available operator symbols cannot be changed for the parser once it has been
 built.
 
 Each operator in the table is represented by the tuple
-`(op_symbols, op_type, op_alias):
+`(op_symbols, op_type, op_alias)`:
 
 * op_symbols are the operator symbols. There are no limitations on how the
   operators can be called as long as they do not contain whitespaces. It can
@@ -160,7 +160,7 @@ There are three ways to create a context instance:
 #. Call `create_child_context` method on any existing context object to get a
    child context
 #. Use `yaql.create_context` function to creates the root context that is
-prepopulated with YAQL standard library functions
+   prepopulated with YAQL standard library functions
 
 `yaql.create_context` allows one to selectively disable standard library
 modules.
@@ -176,12 +176,12 @@ parameter name.
 
 yaql has two implementations included:
 
-* `yaql.language.conventions.CamelCaseConvention' that translates Python
+* `yaql.language.conventions.CamelCaseConvention` that translates Python
   conventions into camel case. For example, it will convert
   `my_func(arg_name)` into `myFunc(argName)`. This convention is used by
   default.
 
-* `yaql.language.conventions.PythonConvention' that leaves function and
+* `yaql.language.conventions.PythonConvention` that leaves function and
   parameter names intact.
 
 Each context, either directly or indirectly through its parent context, is
