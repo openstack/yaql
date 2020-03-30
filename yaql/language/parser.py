@@ -33,9 +33,9 @@ class Parser(object):
         for up, bp, op_name, op_alias in yaql_operators.operators.values():
             self._aliases[op_name] = op_alias
             if up:
-                l = precedence_dict.setdefault(
+                la = precedence_dict.setdefault(
                     (abs(up), 'l' if up > 0 else 'r'), [])
-                l.append('UNARY_' + op_name if bp else op_name)
+                la.append('UNARY_' + op_name if bp else op_name)
                 unary_doc += ('value : ' if not unary_doc else '\n| ')
                 spec_prefix = '{0} value' if up > 0 else 'value {0}'
                 if bp:
@@ -44,14 +44,14 @@ class Parser(object):
                 else:
                     unary_doc += spec_prefix.format(op_name)
             if bp:
-                l = precedence_dict.setdefault(
+                la = precedence_dict.setdefault(
                     (abs(bp), 'l' if bp > 0 else 'r'), [])
                 if op_name == 'INDEXER':
-                    l.extend(('LIST', 'INDEXER'))
+                    la.extend(('LIST', 'INDEXER'))
                 elif op_name == 'MAP':
-                    l.append('MAP')
+                    la.append('MAP')
                 else:
-                    l.append(op_name)
+                    la.append(op_name)
                     binary_doc += ((
                         'value : ' if not binary_doc else '\n| ') +
                         'value {0} value'.format(op_name))
@@ -81,7 +81,7 @@ class Parser(object):
                 value = precedence_dict.get((i, oa))
                 if value:
                     precedence.append(
-                        (('left',) if oa is 'l' else ('right',)) +
+                        (('left',) if oa == 'l' else ('right',)) +
                         tuple(value)
                     )
         precedence.insert(0, ('left', ','))

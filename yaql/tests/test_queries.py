@@ -115,7 +115,7 @@ class TestQueries(yaql.tests.TestCase):
         self.assertEqual(100, self.eval('[].sum(100)'))
 
     def test_memorize(self):
-        generator_func = lambda: (i for i in range(3))
+        generator_func = lambda: (i for i in range(3))  # noqa: E731
         self.assertRaises(
             TypeError,
             self.eval, '$.len() + $.sum()', data=generator_func())

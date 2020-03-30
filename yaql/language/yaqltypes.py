@@ -140,7 +140,7 @@ class MappingRule(LazyParameterType, SmartType):
                 *args, **kwargs):
         super(MappingRule, self).convert(
             value, receiver, context, function_spec, engine, *args, **kwargs)
-        wrap = lambda func: lambda: func(receiver, context, engine)
+        wrap = lambda func: lambda: func(receiver, context, engine)  # noqa
 
         return utils.MappingRule(wrap(value.source), wrap(value.destination))
 

@@ -70,7 +70,7 @@ class TestSystem(yaql.tests.TestCase):
             self.eval('[2].select($ + 1).assert(len($) = 1).first()'))
 
     def test_lambda_passing(self):
-        delegate = lambda x: x ** 2
+        delegate = lambda x: x ** 2  # noqa: E731
         self.assertEqual(
             9,
             self.eval('$(3)', data=delegate))
@@ -91,7 +91,7 @@ class TestSystem(yaql.tests.TestCase):
             self.eval('$func(5, z => 2, y => 1)', data=func))
 
     def test_lambda_expression(self):
-        delegate = lambda x: x ** 2
+        delegate = lambda x: x ** 2  # noqa: E731
         self.assertEqual(
             9,
             self.eval('$.x[0](3)', data={'x': [delegate]}))
@@ -101,19 +101,19 @@ class TestSystem(yaql.tests.TestCase):
             self.eval('($.x[0])(3)', data={'x': [delegate]}))
 
     def test_2nd_order_lambda(self):
-        delegate = lambda y: lambda x: x ** y
+        delegate = lambda y: lambda x: x ** y  # noqa: E731
         self.assertEqual(
             16,
             self.eval('$(2)(4)', data=delegate))
 
     def test_2nd_order_lambda_expression(self):
-        delegate = lambda y: {'key': lambda x: x ** y}
+        delegate = lambda y: {'key': lambda x: x ** y}  # noqa: E731
         self.assertEqual(
             16,
             self.eval('$(2)[key](4)', data=delegate))
 
     def test_2nd_order_lambda_collection_expression(self):
-        delegate = lambda y: lambda x: y ** x
+        delegate = lambda y: lambda x: y ** x  # noqa: E731
         self.assertEqual(
             [1, 8, 27],
             self.eval(

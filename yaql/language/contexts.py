@@ -78,7 +78,7 @@ class ContextBase(object):
         while p is not None:
             context_predicate = None
             if predicate:
-                context_predicate = lambda fd: predicate(fd, p)
+                context_predicate = lambda fd: predicate(fd, p)  # noqa: E731
             layer_overloads, is_exclusive = p.get_functions(
                 name, context_predicate, use_convention)
             p = None if is_exclusive else p.parent
@@ -137,7 +137,7 @@ class Context(ContextBase):
         if use_convention and self._convention is not None:
             name = self._convention.convert_function_name(name)
         if predicate is None:
-            predicate = lambda x: True
+            predicate = lambda x: True  # noqa: E731
         return (
             set(six.moves.filter(predicate, self._functions.get(name, set()))),
             name in self._exclusive_funcs

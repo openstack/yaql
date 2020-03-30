@@ -49,6 +49,7 @@ def detect_version():
     except pkg_resources.DistributionNotFound:
         return 'Undefined (package was not installed with setuptools)'
 
+
 __version__ = detect_version()
 
 
@@ -116,6 +117,7 @@ def create_context(data=utils.NO_VALUE, context=None, system=True,
         context = std_yaqlized.register(context)
 
     return context
+
 
 YaqlFactory = factory.YaqlFactory
 
