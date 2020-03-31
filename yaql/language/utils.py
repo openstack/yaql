@@ -28,6 +28,7 @@ def create_marker(msg):
             return msg
     return MarkerClass()
 
+
 KEYWORD_REGEX = re.compile(lexer.Lexer.t_KEYWORD_STRING.__doc__.strip())
 NO_VALUE = create_marker('<NoValue>')
 
@@ -50,6 +51,7 @@ def is_mutable(obj):
     return isinstance(obj, (collections.MutableSequence,
                             collections.MutableSet,
                             collections.MutableMapping))
+
 
 SequenceType = collections.Sequence
 MutableSequenceType = collections.MutableSequence

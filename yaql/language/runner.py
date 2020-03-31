@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+# flake8: noqa: E731
+
 import sys
 
 import six
@@ -107,7 +109,7 @@ def choose_overload(name, candidates, engine, receiver, context, args, kwargs):
     if len(candidates2) == 0:
         raise_not_found()
 
-    arg_evaluator = lambda i, arg: (
+    arg_evaluator = lambda i, arg: (  # noqa: E731
         arg(utils.NO_VALUE, context, engine)
         if (i not in lazy_params and isinstance(arg, expressions.Expression)
             and not isinstance(arg, expressions.Constant))

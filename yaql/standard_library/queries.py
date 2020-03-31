@@ -359,7 +359,7 @@ def all_(collection, predicate=None):
         true
     """
     if predicate is None:
-        predicate = lambda x: bool(x)
+        predicate = lambda x: bool(x)  # noqa: E731
 
     for t in collection:
         if not predicate(t):
@@ -1529,10 +1529,10 @@ def merge_with(engine, to_list, d, another, list_merger=None,
         {"a": 1, "c": [2, 3], "b": 3, "d": 5}
     """
     if list_merger is None:
-        list_merger = lambda lst1, lst2: to_list(
+        list_merger = lambda lst1, lst2: to_list(  # noqa: E731
             distinct(engine, lst1 + lst2))
     if item_merger is None:
-        item_merger = lambda x, y: y
+        item_merger = lambda x, y: y  # noqa: E731
     return _merge_dicts(d, another, list_merger, item_merger, max_levels)
 
 
