@@ -17,9 +17,11 @@ import testtools
 import yaql
 from yaql.language import factory
 from yaql import legacy
-
+import six
 
 class TestCase(testtools.TestCase):
+    if six.PY2:
+        assertCountEqual = testtools.TestCase.assertItemsEqual
     _default_engine = None
     _default_legacy_engine = None
 

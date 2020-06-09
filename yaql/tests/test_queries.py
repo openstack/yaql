@@ -63,9 +63,9 @@ class TestQueries(yaql.tests.TestCase):
 
     def test_distinct_with_selector(self):
         data = [['a', 1], ['b', 2], ['c', 1], ['d', 3], ['e', 2]]
-        self.assertItemsEqual([['a', 1], ['b', 2], ['d', 3]],
+        self.assertCountEqual([['a', 1], ['b', 2], ['d', 3]],
                               self.eval('$.distinct($[1])', data=data))
-        self.assertItemsEqual([['a', 1], ['b', 2], ['d', 3]],
+        self.assertCountEqual([['a', 1], ['b', 2], ['d', 3]],
                               self.eval('distinct($, $[1])', data=data))
 
     def test_any(self):
@@ -196,7 +196,7 @@ class TestQueries(yaql.tests.TestCase):
 
     def test_group_by(self):
         data = {'a': 1, 'b': 2, 'c': 1, 'd': 3, 'e': 2}
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [
                 [1, [['a', 1], ['c', 1]]],
                 [2, [['b', 2], ['e', 2]]],
@@ -204,23 +204,23 @@ class TestQueries(yaql.tests.TestCase):
             ],
             self.eval('$.items().orderBy($[0]).groupBy($[1])', data=data))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [[1, ['a', 'c']], [2, ['b', 'e']], [3, ['d']]],
             self.eval('$.items().orderBy($[0]).groupBy($[1], $[0])',
                       data=data))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [[1, 'ac'], [2, 'be'], [3, 'd']],
             self.eval('$.items().orderBy($[0]).'
                       'groupBy($[1], $[0], $.sum())', data=data))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [[1, ['a', 1, 'c', 1]], [2, ['b', 2, 'e', 2]], [3, ['d', 3]]],
             self.eval('$.items().orderBy($[0]).'
                       'groupBy($[1],,  $.sum())',
                       data=data))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [[1, ['a', 1, 'c', 1]], [2, ['b', 2, 'e', 2]], [3, ['d', 3]]],
             self.eval('$.items().orderBy($[0]).'
                       'groupBy($[1], aggregator => $.sum())',
