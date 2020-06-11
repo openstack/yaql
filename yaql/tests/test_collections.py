@@ -178,15 +178,15 @@ class TestCollections(yaql.tests.TestCase):
 
     def test_dict_keys(self):
         data = {'a': 12, 'b': 44}
-        self.assertItemsEqual(['a', 'b'], self.eval('$.keys()', data=data))
+        self.assertCountEqual(['a', 'b'], self.eval('$.keys()', data=data))
 
     def test_dict_values(self):
         data = {'a': 12, 'b': 44}
-        self.assertItemsEqual([12, 44], self.eval('$.values()', data=data))
+        self.assertCountEqual([12, 44], self.eval('$.values()', data=data))
 
     def test_dict_items(self):
         data = {'a': 12, 'b': 44}
-        self.assertItemsEqual([['a', 12], ['b', 44]],
+        self.assertCountEqual([['a', 12], ['b', 44]],
                               self.eval('$.items()', data=data))
         self.assertEqual(data, self.eval('dict($.items())', data=data))
 
@@ -232,11 +232,11 @@ class TestCollections(yaql.tests.TestCase):
             self.eval('dict(a => 1) + dict(b => 2)'))
 
     def test_list_multiplication(self):
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [1, 2, 1, 2, 1, 2],
             self.eval('3 * [1, 2]'))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [1, 2, 1, 2, 1, 2],
             self.eval('[1, 2] * 3'))
 
@@ -393,7 +393,7 @@ class TestCollections(yaql.tests.TestCase):
             self.eval('$.deleteAll([b, c])', data=data))
 
     def test_set(self):
-        self.assertItemsEqual([2, 1, 3], self.eval('set(1, 2, 3, 2, 1)'))
+        self.assertCountEqual([2, 1, 3], self.eval('set(1, 2, 3, 2, 1)'))
         self.assertEqual([[1, 2, 3, 2, 1]], self.eval('set([1, 2, 3, 2, 1])'))
         self.assertEqual([], self.eval('set()'))
         self.assertEqual(
@@ -401,13 +401,13 @@ class TestCollections(yaql.tests.TestCase):
             self.eval('set({a => {b => c}})'))
 
     def test_set_from_iterator(self):
-        self.assertItemsEqual([2, 1, 3], self.eval('set([1, 2, 3].select($))'))
+        self.assertCountEqual([2, 1, 3], self.eval('set([1, 2, 3].select($))'))
 
     def test_to_set(self):
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [2, 1, 3], self.eval('[1, 2, 3].select($).toSet()'))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [2, 1, 3], self.eval('[1, 2, 3].toSet()'))
 
     def test_set_len(self):
@@ -415,7 +415,7 @@ class TestCollections(yaql.tests.TestCase):
         self.assertEqual(3, self.eval('len(set(1, 2, 3))'))
 
     def test_set_addition(self):
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [4, 3, 2, 1],
             self.eval('set(1, 2, 3) + set(4, 2, 3)'))
 
@@ -423,7 +423,7 @@ class TestCollections(yaql.tests.TestCase):
             self.eval('isSet(set(1, 2, 3) + set(4, 2, 3))'))
 
     def test_set_union(self):
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [4, 3, 2, 1],
             self.eval('set(1, 2, 3).union(set(4, 2, 3))'))
 
@@ -452,12 +452,12 @@ class TestCollections(yaql.tests.TestCase):
         self.assertTrue(self.eval('set(1, 2, 3) <= set(1, 2, 3)'))
 
     def test_set_difference(self):
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [4, 1],
             self.eval('set(1, 2, 3, 4).difference(set(2, 3))'))
 
     def test_set_subtraction(self):
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [4, 1],
             self.eval('set(1, 2, 3, 4) - set(2, 3)'))
 
@@ -465,24 +465,24 @@ class TestCollections(yaql.tests.TestCase):
             self.eval('isSet(set(1, 2, 3, 4) - set(2, 3))'))
 
     def test_set_symmetric_difference(self):
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [4, 1, 5],
             self.eval('set(1, 2, 3, 4).symmetricDifference(set(2, 3, 5))'))
 
     def test_set_add(self):
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [4, 1, 2, 3],
             self.eval('set(1, 2, 3).add(4)'))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [4, 1, 2, 3, 5],
             self.eval('set(1, 2, 3).add(4, 5)'))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [1, 3, 2, [1, 2]],
             self.eval('set(1, 2, 3).add([1, 2])'))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [4, 1, None, 2, 3, 5],
             self.eval('set(1, 2, 3).add(4, 5, null)'))
 
@@ -490,19 +490,19 @@ class TestCollections(yaql.tests.TestCase):
             self.eval('isSet(set(1, 2, 3).add(4, 5, null))'))
 
     def test_set_remove(self):
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [1, 3],
             self.eval('set(1, 2, 3).remove(2)'))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [3, None],
             self.eval('set(1, 2, null, 3).remove(1, 2, 5)'))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [3],
             self.eval('set(1, 2, null, 3).remove(1, 2, 5, null)'))
 
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [1, 3, 2],
             self.eval('set(1, 2, 3, [1, 2]).remove([1, 2])'))
 

@@ -223,9 +223,9 @@ class TestContexts(testtools.TestCase):
 
     def test_multi_context_keys(self):
         mc = self.create_multi_context()
-        self.assertItemsEqual(['$key4', '$key'], mc.keys())
-        self.assertItemsEqual(['$key2'], mc.parent.keys())
-        self.assertItemsEqual(['$key3'], mc.parent.parent.keys())
+        self.assertCountEqual(['$key4', '$key'], mc.keys())
+        self.assertCountEqual(['$key2'], mc.parent.keys())
+        self.assertCountEqual(['$key3'], mc.parent.parent.keys())
 
     def test_multi_context_get_functions(self):
         def f():
