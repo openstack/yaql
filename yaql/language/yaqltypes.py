@@ -189,7 +189,7 @@ class Iterable(PythonType):
 
     def __init__(self, validators=None, nullable=False):
         super(Iterable, self).__init__(
-            collections.Iterable, nullable, [
+            collections.abc.Iterable, nullable, [
                 lambda t: not isinstance(t, six.string_types + (
                     utils.MappingType,))] + (validators or []))
 
@@ -221,7 +221,7 @@ class Sequence(PythonType):
 
     def __init__(self, validators=None, nullable=False):
         super(Sequence, self).__init__(
-            collections.Sequence, nullable, [
+            collections.abc.Sequence, nullable, [
                 lambda t: not isinstance(t, six.string_types + (dict,))] + (
                     validators or []))
 
