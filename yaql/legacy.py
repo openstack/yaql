@@ -19,6 +19,13 @@ from yaql.standard_library import legacy as std_legacy
 
 class YaqlFactory(factory.YaqlFactory):
     def __init__(self, allow_delegates=False):
+        """
+        Create a new operator
+
+        Args:
+            self: (todo): write your description
+            allow_delegates: (bool): write your description
+        """
         # noinspection PyTypeChecker
         super(YaqlFactory, self).__init__(
             keyword_operator=None, allow_delegates=allow_delegates)
@@ -27,6 +34,13 @@ class YaqlFactory(factory.YaqlFactory):
             factory.OperatorType.BINARY_LEFT_ASSOCIATIVE, True)
 
     def create(self, options=None):
+        """
+        Method to create object options.
+
+        Args:
+            self: (int): write your description
+            options: (todo): write your description
+        """
         options = dict(options or {})
         options['yaql.convertTuplesToLists'] = False
         options['yaql.iterableDicts'] = True
@@ -34,6 +48,11 @@ class YaqlFactory(factory.YaqlFactory):
 
 
 def create_context(*args, **kwargs):
+    """
+    Creates a context object.
+
+    Args:
+    """
     tuples = kwargs.pop('tuples', True)
 
     context = yaql.create_context(*args, **kwargs)

@@ -32,7 +32,19 @@ ESCAPE_SEQUENCE_RE = re.compile(r'''
 
 
 def decode_escapes(s):
+    """
+    Decode a unicode.
+
+    Args:
+        s: (todo): write your description
+    """
     def decode_match(match):
+        """
+        Decode a match.
+
+        Args:
+            match: (todo): write your description
+        """
         return codecs.decode(match.group(0), 'unicode-escape')
     return ESCAPE_SEQUENCE_RE.sub(decode_match, s)
 
@@ -55,6 +67,13 @@ class Lexer(object):
     }
 
     def __init__(self, yaql_operators):
+        """
+        Initialize the operation table.
+
+        Args:
+            self: (todo): write your description
+            yaql_operators: (todo): write your description
+        """
         self._operators_table = yaql_operators.operators
         self.tokens = [
             'KEYWORD_STRING',
@@ -145,4 +164,10 @@ class Lexer(object):
 
     @staticmethod
     def t_error(t):
+        """
+        R
+
+        Args:
+            t: (todo): write your description
+        """
         raise exceptions.YaqlLexicalException(t.value[0], t.lexpos)

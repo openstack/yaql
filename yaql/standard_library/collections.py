@@ -43,6 +43,12 @@ def list_(delegate, *args):
         [1, "", 0, 1]
     """
     def rec(seq):
+        """
+        Recursively iterate through a sequence.
+
+        Args:
+            seq: (todo): write your description
+        """
         for t in seq:
             if utils.is_iterator(t):
                 for t2 in rec(t):
@@ -1074,6 +1080,12 @@ def set_(delegate, *args):
         [0, "", [1, 2]]
     """
     def rec(seq):
+        """
+        Recursively iterate through a sequence.
+
+        Args:
+            seq: (todo): write your description
+        """
         for t in seq:
             if utils.is_iterator(t):
                 for t2 in rec(t):
@@ -1336,6 +1348,13 @@ def set_remove(s, *values):
 
 
 def register(context, no_sets=False):
+    """
+    Register the given context.
+
+    Args:
+        context: (todo): write your description
+        no_sets: (todo): write your description
+    """
     context.register_function(list_)
     context.register_function(build_list)
     context.register_function(to_list)

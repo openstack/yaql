@@ -22,8 +22,20 @@ import yaql.tests
 
 class TestTypeAggregation(yaql.tests.TestCase):
     def test_not_of_type(self):
+        """
+        The test type of test
+
+        Args:
+            self: (todo): write your description
+        """
         @specs.parameter('arg', yaqltypes.NotOfType(int))
         def foo(arg):
+            """
+            Returns true if arg is a valid python function.
+
+            Args:
+                arg: (int): write your description
+            """
             return True
 
         self.context.register_function(foo)
@@ -37,9 +49,21 @@ class TestTypeAggregation(yaql.tests.TestCase):
             self.eval, 'foo($)', data=True)
 
     def test_chain(self):
+        """
+        Evaluate the chain.
+
+        Args:
+            self: (todo): write your description
+        """
         @specs.parameter(
             'arg', yaqltypes.Chain(yaqltypes.NotOfType(bool), int))
         def foo(arg):
+            """
+            Returns true if arg is a valid python function.
+
+            Args:
+                arg: (int): write your description
+            """
             return True
 
         self.context.register_function(foo)
@@ -52,9 +76,21 @@ class TestTypeAggregation(yaql.tests.TestCase):
             self.eval, 'foo($)', data='abc')
 
     def test_any_of(self):
+        """
+        Test if any of any test is true.
+
+        Args:
+            self: (todo): write your description
+        """
         @specs.parameter(
             'arg', yaqltypes.AnyOf(six.string_types, yaqltypes.Integer()))
         def foo(arg):
+            """
+            Return true if arg is a string.
+
+            Args:
+                arg: (int): write your description
+            """
             if isinstance(arg, six.string_types):
                 return 1
             if isinstance(arg, int):

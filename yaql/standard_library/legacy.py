@@ -120,6 +120,13 @@ def tuple_(*args):
 @specs.parameter('collection', yaqltypes.Iterable())
 @specs.parameter('index_expression', yaqltypes.Lambda())
 def indexer(collection, index_expression):
+    """
+    Return a boolean indicating if the given collection of the given collection.
+
+    Args:
+        collection: (str): write your description
+        index_expression: (str): write your description
+    """
     if isinstance(collection, utils.SequenceType):
         index = index_expression()
         if isinstance(index, int) and not isinstance(index, bool):
@@ -198,6 +205,13 @@ def switch(value, context, *conditions):
 @specs.parameter('expr', yaqltypes.Lambda(with_context=True, method=True))
 @specs.name('#operator_.')
 def op_dot_context(receiver, expr):
+    """
+    Return the dot context of the given expression.
+
+    Args:
+        receiver: (str): write your description
+        expr: (todo): write your description
+    """
     return expr(receiver['$0'], receiver)
 
 
@@ -261,6 +275,13 @@ def dict_keyword_access(d, key):
 
 
 def register(context, tuples):
+    """
+    Register context manager methods.
+
+    Args:
+        context: (todo): write your description
+        tuples: (str): write your description
+    """
     if tuples:
         context.register_function(build_tuple)
         context.register_function(to_list)

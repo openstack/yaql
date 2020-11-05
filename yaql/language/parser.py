@@ -21,11 +21,28 @@ from yaql.language import utils
 
 class Parser(object):
     def __init__(self, lexer, yaql_operators, engine):
+        """
+        Initialize the operation.
+
+        Args:
+            self: (todo): write your description
+            lexer: (todo): write your description
+            yaql_operators: (todo): write your description
+            engine: (todo): write your description
+        """
         self.tokens = lexer.tokens
         self._aliases = {}
         self._generate_operator_funcs(yaql_operators, engine)
 
     def _generate_operator_funcs(self, yaql_operators, engine):
+        """
+        Generate operator operators.
+
+        Args:
+            self: (todo): write your description
+            yaql_operators: (todo): write your description
+            engine: (todo): write your description
+        """
         binary_doc = ''
         unary_doc = ''
         precedence_dict = {}
@@ -58,11 +75,25 @@ class Parser(object):
 
         # noinspection PyProtectedMember
         def p_binary(this, p):
+            """
+            Binary : alias
+
+            Args:
+                this: (todo): write your description
+                p: (int): write your description
+            """
             alias = this._aliases.get(p.slice[2].type)
             p[0] = expressions.BinaryOperator(p[2], p[1], p[3], alias)
 
         # noinspection PyProtectedMember
         def p_unary(this, p):
+            """
+            Unary : unary
+
+            Args:
+                this: (todo): write your description
+                p: (todo): write your description
+            """
             if p[1] in yaql_operators.operators:
                 alias = this._aliases.get(p.slice[1].type)
                 p[0] = expressions.UnaryOperator(p[1], p[2], alias)
@@ -228,6 +259,12 @@ class Parser(object):
 
     @staticmethod
     def p_error(p):
+        """
+        Eram error
+
+        Args:
+            p: (todo): write your description
+        """
         if p:
             raise exceptions.YaqlGrammarException(
                 p.lexer.lexdata, p.value, p.lexpos)

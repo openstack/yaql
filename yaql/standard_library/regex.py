@@ -212,6 +212,13 @@ def not_matches_operator_string(string, pattern):
 
 
 def _publish_match(context, match):
+    """
+    Publish a match.
+
+    Args:
+        context: (todo): write your description
+        match: (todo): write your description
+    """
     rec = {
         'value': match.group(),
         'start': match.start(0),
@@ -492,6 +499,12 @@ def replace_by(context, regexp, string, repl, count=0):
         "xxyy"
     """
     def repl_func(match):
+        """
+        Replacement of the first matching regex.
+
+        Args:
+            match: (todo): write your description
+        """
         new_context = context.create_child_context()
         _publish_match(context, match)
         return repl(new_context)
@@ -573,6 +586,12 @@ def is_regex(value):
 
 
 def register(context):
+    """
+    Register function to register.
+
+    Args:
+        context: (todo): write your description
+    """
     context.register_function(regex)
     context.register_function(matches)
     context.register_function(matches_)

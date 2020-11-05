@@ -36,6 +36,12 @@ class TestCase(testtools.TestCase):
     }
 
     def create_engine(self):
+        """
+        Creates an engine
+
+        Args:
+            self: (todo): write your description
+        """
         func = TestCase._default_engine
         if func is None:
             engine_factory = factory.YaqlFactory(allow_delegates=True)
@@ -44,6 +50,12 @@ class TestCase(testtools.TestCase):
         return func
 
     def create_legacy_engine(self):
+        """
+        Creates an engine.
+
+        Args:
+            self: (todo): write your description
+        """
         func = TestCase._default_legacy_engine
         if func is None:
             engine_factory = legacy.YaqlFactory()
@@ -53,33 +65,70 @@ class TestCase(testtools.TestCase):
 
     @property
     def context(self):
+        """
+        Creates a context.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._context is None:
             self._context = yaql.create_context(delegates=True)
         return self._context
 
     @property
     def legacy_context(self):
+        """
+        Create a legacy legacy context.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._legacy_context is None:
             self._legacy_context = legacy.create_context()
         return self._legacy_context
 
     @context.setter
     def context(self, value):
+        """
+        Set the context.
+
+        Args:
+            self: (todo): write your description
+            value: (str): write your description
+        """
         self._context = value
 
     @property
     def engine(self):
+        """
+        Creates the engine.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._engine is None:
             self._engine = self.create_engine()
         return self._engine
 
     @property
     def legacy_engine(self):
+        """
+        Creates the engine.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._legacy_engine is None:
             self._legacy_engine = self.create_legacy_engine()
         return self._legacy_engine
 
     def setUp(self):
+        """
+        Sets the engine.
+
+        Args:
+            self: (todo): write your description
+        """
         self._context = None
         self._engine = None
         self._legacy_context = None
@@ -87,15 +136,42 @@ class TestCase(testtools.TestCase):
         super(TestCase, self).setUp()
 
     def eval(self, expression, data=None, context=None):
+        """
+        Evaluate the expression
+
+        Args:
+            self: (todo): write your description
+            expression: (bool): write your description
+            data: (array): write your description
+            context: (dict): write your description
+        """
         expr = self.engine(expression)
         context = context or self.context
         context['data'] = data
         return expr.evaluate(data=data, context=context)
 
     def legacy_eval(self, expression, data=None, context=None):
+        """
+        Evaluate the given expression.
+
+        Args:
+            self: (todo): write your description
+            expression: (bool): write your description
+            data: (array): write your description
+            context: (dict): write your description
+        """
         expr = self.legacy_engine(expression)
         return expr.evaluate(data=data, context=context or self.legacy_context)
 
     def legacy_eval_new_engine(self, expression, data=None, context=None):
+        """
+        Evaluate a new expression.
+
+        Args:
+            self: (todo): write your description
+            expression: (todo): write your description
+            data: (array): write your description
+            context: (todo): write your description
+        """
         expr = self.engine(expression)
         return expr.evaluate(data=data, context=context or self.legacy_context)

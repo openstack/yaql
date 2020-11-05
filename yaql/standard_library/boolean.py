@@ -146,6 +146,12 @@ def is_boolean(value):
 
 
 def register(context):
+    """
+    Registers a new context.
+
+    Args:
+        context: (todo): write your description
+    """
     context.register_function(and_)
     context.register_function(or_)
     context.register_function(not_)

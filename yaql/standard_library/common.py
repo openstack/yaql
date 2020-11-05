@@ -328,6 +328,12 @@ def null_gte_null(left, right):
 
 
 def register(context):
+    """
+    Register the given a function.
+
+    Args:
+        context: (todo): write your description
+    """
     context.register_function(eq)
     context.register_function(neq)
     context.register_function(left_lt_null)

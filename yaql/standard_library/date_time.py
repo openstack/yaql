@@ -32,6 +32,12 @@ UTCTZ = yaqltypes.DateTime.utctz
 
 
 def _get_tz(offset):
+    """
+    Return a utc datetime.
+
+    Args:
+        offset: (int): write your description
+    """
     if offset is None:
         return None
     if offset == ZERO_TIMESPAN:
@@ -1171,6 +1177,12 @@ def is_timespan(value):
 
 
 def register(context):
+    """
+    Register a timespan.
+
+    Args:
+        context: (todo): write your description
+    """
     functions = (
         build_datetime, build_timespan, datetime_from_timestamp,
         datetime_from_string, now, localtz, utctz, utc,

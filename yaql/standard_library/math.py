@@ -679,6 +679,12 @@ def is_number(value):
 
 
 def register(context):
+    """
+    Register a new context.
+
+    Args:
+        context: (todo): write your description
+    """
     context.register_function(binary_plus)
     context.register_function(binary_minus)
     context.register_function(multiplication)

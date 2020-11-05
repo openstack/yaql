@@ -26,6 +26,12 @@ TS = datetime.timedelta
 
 class TestDatetime(yaql.tests.TestCase):
     def test_build_datetime_components(self):
+        """
+        Builds a datetime object
+
+        Args:
+            self: (todo): write your description
+        """
         dt = DT(2015, 8, 29, tzinfo=tz.tzutc())
         self.assertEqual(
             dt, self.eval('datetime(2015, 8, 29)'))
@@ -35,6 +41,12 @@ class TestDatetime(yaql.tests.TestCase):
                           'microsecond => 0)'))
 
     def test_build_datetime_iso(self):
+        """
+        Test for iso 8601 iso 8601.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(
             DT(2015, 8, 29, tzinfo=tz.tzutc()),
             self.eval('datetime("2015-8-29")')
@@ -59,6 +71,12 @@ class TestDatetime(yaql.tests.TestCase):
         self.assertEqual(TS(hours=3), dt.utcoffset())
 
     def test_build_datetime_string(self):
+        """
+        Builds a date string.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(
             DT(2006, 11, 21, 16, 30, tzinfo=tz.tzutc()),
             self.eval('datetime("Tuesday, 21. November 2006 04:30PM", '
@@ -66,6 +84,12 @@ class TestDatetime(yaql.tests.TestCase):
         )
 
     def test_datetime_fields(self):
+        """
+        Evaluate fields.
+
+        Args:
+            self: (todo): write your description
+        """
         dt = DT(2006, 11, 21, 16, 30, tzinfo=tz.tzutc())
         self.assertEqual(2006, self.eval('$.year', dt))
         self.assertEqual(11, self.eval('$.month', dt))
@@ -82,6 +106,12 @@ class TestDatetime(yaql.tests.TestCase):
         self.assertEqual(dt, self.eval('$.utc', dt))
 
     def test_build_timespan(self):
+        """
+        Test for timespan.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(TS(0), self.eval('timespan()'))
         self.assertEqual(
             TS(1, 7384, 5006),
@@ -96,16 +126,34 @@ class TestDatetime(yaql.tests.TestCase):
             TS(microseconds=-1000), self.eval('timespan(milliseconds => -1)'))
 
     def test_datetime_from_timestamp(self):
+        """
+        Test if the timestamp.
+
+        Args:
+            self: (todo): write your description
+        """
         dt = DT(2006, 11, 21, 16, 30, tzinfo=tz.tzutc())
         self.assertEqual(dt, self.eval('datetime(1164126600)'))
 
     def test_replace(self):
+        """
+        Test if the test for the same as a string.
+
+        Args:
+            self: (todo): write your description
+        """
         dt = DT(2006, 11, 21, 16, 30, tzinfo=tz.tzutc())
         self.assertEqual(
             DT(2009, 11, 21, 16, 40, tzinfo=tz.tzutc()),
             self.eval('$.replace(year => 2009, minute => 40)', dt))
 
     def test_timespan_fields(self):
+        """
+        Create a new fields.
+
+        Args:
+            self: (todo): write your description
+        """
         ts = TS(1, 51945, 5000)
         self.assertAlmostEqual(1.6, self.eval('$.days', ts), places=2)
         self.assertAlmostEqual(38.43, self.eval('$.hours', ts), places=2)
@@ -115,6 +163,12 @@ class TestDatetime(yaql.tests.TestCase):
         self.assertEqual(138345005000, self.eval('$.microseconds', ts))
 
     def test_now(self):
+        """
+        Evaluate the test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertIsInstance(self.eval('now()'), DT)
         self.assertIsInstance(self.eval('now(utctz())'), DT)
         self.assertIsInstance(self.eval('now(localtz())'), DT)
@@ -125,6 +179,12 @@ class TestDatetime(yaql.tests.TestCase):
         self.assertTrue(self.eval('now(localtz()).offset = localtz()'))
 
     def test_datetime_math(self):
+        """
+        Evaluate the datetime.
+
+        Args:
+            self: (todo): write your description
+        """
         self.context['dt1'] = self.eval('now()')
         time.sleep(0.1)
         self.context['dt2'] = self.eval('now()')
@@ -161,11 +221,23 @@ class TestDatetime(yaql.tests.TestCase):
         self.assertTrue(self.eval('($dt2 - $dt1) + $ > $', delta2))
 
     def test_is_datetime(self):
+        """
+        Check if the test is a datetime
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(self.eval('isDatetime(datetime("2015-8-29"))'))
         self.assertFalse(self.eval('isDatetime(123)'))
         self.assertFalse(self.eval('isDatetime(abc)'))
 
     def test_is_timespan(self):
+        """
+        Check if the timespan is possible.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(self.eval('isTimespan(timespan(milliseconds => -1))'))
         self.assertFalse(self.eval('isTimespan(123)'))
         self.assertFalse(self.eval('isTimespan(abc)'))

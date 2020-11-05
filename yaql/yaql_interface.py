@@ -19,27 +19,75 @@ from yaql.language import utils
 
 class YaqlInterface(object):
     def __init__(self, context, engine, receiver=utils.NO_VALUE):
+        """
+        Initialize a new engine.
+
+        Args:
+            self: (todo): write your description
+            context: (str): write your description
+            engine: (todo): write your description
+            receiver: (callable): write your description
+            utils: (todo): write your description
+            NO_VALUE: (todo): write your description
+        """
         self.__sender = receiver
         self.__engine = engine
         self.__context = context
 
     @property
     def context(self):
+        """
+        Returns the current context.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.__context
 
     @property
     def engine(self):
+        """
+        Returns the engine engine.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.__engine
 
     @property
     def sender(self):
+        """
+        Returns the sender sender.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.__sender
 
     def on(self, receiver):
+        """
+        Called bytest : class is received.
+
+        Args:
+            self: (todo): write your description
+            receiver: (str): write your description
+        """
         return YaqlInterface(self.context, self.engine, receiver)
 
     def __getattr__(self, item):
+        """
+        Convenio. engine.
+
+        Args:
+            self: (todo): write your description
+            item: (str): write your description
+        """
         def stub(*args, **kwargs):
+            """
+            Stub
+
+            Args:
+            """
             context = self.context
             args = utils.convert_input_data(args)
             kwargs = utils.convert_input_data(kwargs)
@@ -50,6 +98,13 @@ class YaqlInterface(object):
         return stub
 
     def __call__(self, __expression, *args, **kwargs):
+        """
+        Calls the given expression with the given arguments.
+
+        Args:
+            self: (todo): write your description
+            __expression: (bool): write your description
+        """
         context = self.context.create_child_context()
         args = utils.convert_input_data(args)
         for i, arg_value in enumerate(args):
@@ -65,7 +120,22 @@ class YaqlInterface(object):
         return utils.convert_output_data(res, limit_func, self.engine)
 
     def __getitem__(self, item):
+        """
+        Returns the item from the context.
+
+        Args:
+            self: (todo): write your description
+            item: (str): write your description
+        """
         return self.context[item]
 
     def __setitem__(self, key, value):
+        """
+        Set a key / value pair.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+            value: (str): write your description
+        """
         self.context[key] = value

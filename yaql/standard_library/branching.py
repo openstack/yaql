@@ -182,6 +182,12 @@ def coalesce(*args):
 
 
 def register(context):
+    """
+    Register a new selector.
+
+    Args:
+        context: (todo): write your description
+    """
     context.register_function(switch)
     context.register_function(select_case)
     context.register_function(switch_case)

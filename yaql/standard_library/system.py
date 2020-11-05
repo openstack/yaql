@@ -201,6 +201,11 @@ def def_(name, func, context):
     """
     @specs.name(name)
     def wrapper(*args, **kwargs):
+        """
+        Decorator for a function callable.
+
+        Args:
+        """
         return func(*args, **kwargs)
 
     context.register_function(wrapper)
@@ -364,6 +369,13 @@ def call_func(context, engine, name, args, kwargs, receiver=utils.NO_VALUE):
 
 
 def register(context, delegates=False):
+    """
+    Register a function documentation.
+
+    Args:
+        context: (todo): write your description
+        delegates: (todo): write your description
+    """
     context.register_function(get_context_data)
     context.register_function(op_dot)
     context.register_function(unpack)
@@ -380,4 +392,10 @@ def register(context, delegates=False):
 
 
 def register_fallbacks(context):
+    """
+    Register a callable fallbacks.
+
+    Args:
+        context: (todo): write your description
+    """
     context.register_function(get_property)

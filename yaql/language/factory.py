@@ -41,12 +41,30 @@ OperatorType = collections.namedtuple('OperatorType', [
 
 class YaqlOperators(object):
     def __init__(self, operators, name_value_op=None):
+        """
+        Initialize the operand instruction.
+
+        Args:
+            self: (todo): write your description
+            operators: (todo): write your description
+            name_value_op: (str): write your description
+        """
         self.operators = operators
         self.name_value_op = name_value_op
 
 
 class YaqlEngine(object):
     def __init__(self, ply_lexer, ply_parser, options, factory):
+        """
+        Initialize the parser.
+
+        Args:
+            self: (todo): write your description
+            ply_lexer: (todo): write your description
+            ply_parser: (todo): write your description
+            options: (dict): write your description
+            factory: (float): write your description
+        """
         self._lexer = ply_lexer
         self._parser = ply_parser
         self._options = utils.FrozenDict(options or {})
@@ -54,21 +72,53 @@ class YaqlEngine(object):
 
     @property
     def lexer(self):
+        """
+        Return the lexer.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._lexer
 
     @property
     def parser(self):
+        """
+        Returns a parser.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._parser
 
     @property
     def options(self):
+        """
+        Returns the options.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._options
 
     @property
     def factory(self):
+        """
+        Return a new instance of the given factory.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._factory
 
     def __call__(self, expression, options=None):
+        """
+        Call the given expression.
+
+        Args:
+            self: (array): write your description
+            expression: (bool): write your description
+            options: (dict): write your description
+        """
         if options:
             return self.copy(options)(expression)
 
@@ -76,6 +126,13 @@ class YaqlEngine(object):
             self.parser.parse(expression, lexer=self.lexer), self)
 
     def copy(self, options):
+        """
+        Returns a copy of this option.
+
+        Args:
+            self: (todo): write your description
+            options: (dict): write your description
+        """
         opt = dict(self._options)
         opt.update(options)
         return YaqlEngine(self._lexer, self._parser, opt, self._factory)
@@ -83,6 +140,14 @@ class YaqlEngine(object):
 
 class YaqlFactory(object):
     def __init__(self, keyword_operator='=>', allow_delegates=False):
+        """
+        Initialize the operator
+
+        Args:
+            self: (todo): write your description
+            keyword_operator: (str): write your description
+            allow_delegates: (bool): write your description
+        """
         self._keyword_operator = keyword_operator
         self._allow_delegates = allow_delegates
         self.operators = self._standard_operators()
@@ -92,14 +157,32 @@ class YaqlFactory(object):
 
     @property
     def keyword_operator(self):
+        """
+        Get the operator.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._keyword_operator
 
     @property
     def allow_delegates(self):
+        """
+        Returns the number of items that have been removed.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._allow_delegates
 
     # noinspection PyMethodMayBeStatic
     def _standard_operators(self):
+        """
+        Returns a list
+
+        Args:
+            self: (todo): write your description
+        """
         return [
             ('.', OperatorType.BINARY_LEFT_ASSOCIATIVE),
             ('?.', OperatorType.BINARY_LEFT_ASSOCIATIVE),
@@ -140,6 +223,18 @@ class YaqlFactory(object):
     def insert_operator(self, existing_operator, existing_operator_binary,
                         new_operator, new_operator_type, create_group,
                         new_operator_alias=None):
+        """
+        Inserts a new operator.
+
+        Args:
+            self: (todo): write your description
+            existing_operator: (todo): write your description
+            existing_operator_binary: (todo): write your description
+            new_operator: (todo): write your description
+            new_operator_type: (todo): write your description
+            create_group: (bool): write your description
+            new_operator_alias: (todo): write your description
+        """
         binary_types = (OperatorType.BINARY_RIGHT_ASSOCIATIVE,
                         OperatorType.BINARY_LEFT_ASSOCIATIVE)
         unary_types = (OperatorType.PREFIX_UNARY, OperatorType.SUFFIX_UNARY)
@@ -175,6 +270,11 @@ class YaqlFactory(object):
 
     @staticmethod
     def _name_generator():
+        """
+        Generate name generator.
+
+        Args:
+        """
         value = 1
         while True:
             t = value
@@ -186,6 +286,13 @@ class YaqlFactory(object):
             value += 1
 
     def _build_operator_table(self, name_generator):
+        """
+        Build the operator operator table.
+
+        Args:
+            self: (todo): write your description
+            name_generator: (str): write your description
+        """
         operators = {}
         name_value_op = None
         precedence = 1
@@ -227,13 +334,35 @@ class YaqlFactory(object):
 
     # noinspection PyMethodMayBeStatic
     def _create_lexer(self, operators):
+        """
+        Create a : class : class : class : ~lexeris.
+
+        Args:
+            self: (str): write your description
+            operators: (str): write your description
+        """
         return lexer.Lexer(operators)
 
     # noinspection PyMethodMayBeStatic
     def _create_parser(self, lexer_rules, operators):
+        """
+        Creates the parser.
+
+        Args:
+            self: (todo): write your description
+            lexer_rules: (str): write your description
+            operators: (todo): write your description
+        """
         return parser.Parser(lexer_rules, operators, self)
 
     def create(self, options=None):
+        """
+        Creates a table.
+
+        Args:
+            self: (todo): write your description
+            options: (dict): write your description
+        """
         names = self._name_generator()
         operators = self._build_operator_table(names)
         lexer_rules = self._create_lexer(operators)

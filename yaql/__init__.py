@@ -39,6 +39,11 @@ _default_context = None
 
 
 def detect_version():
+    """
+    Detect the installed version of - packages.
+
+    Args:
+    """
     try:
         dist = pkg_resources.get_distribution('yaql')
         location = os.path.normcase(dist.location)
@@ -54,6 +59,15 @@ __version__ = detect_version()
 
 
 def _setup_context(data, context, finalizer, convention):
+    """
+    Creates the context.
+
+    Args:
+        data: (dict): write your description
+        context: (todo): write your description
+        finalizer: (bool): write your description
+        convention: (todo): write your description
+    """
     if context is None:
         context = contexts.Context(
             convention=convention or conventions.CamelCaseConvention())
@@ -62,12 +76,26 @@ def _setup_context(data, context, finalizer, convention):
         @specs.parameter('iterator', yaqltypes.Iterable())
         @specs.name('#iter')
         def limit(iterator):
+            """
+            Returns a list of the number of the items.
+
+            Args:
+                iterator: (todo): write your description
+            """
             return iterator
 
         @specs.inject('limiter', yaqltypes.Delegate('#iter'))
         @specs.inject('engine', yaqltypes.Engine())
         @specs.name('#finalize')
         def finalize(obj, limiter, engine):
+            """
+            Finalize the given object.
+
+            Args:
+                obj: (todo): write your description
+                limiter: (int): write your description
+                engine: (todo): write your description
+            """
             if engine.options.get('yaql.convertOutputData', True):
                 return utils.convert_output_data(obj, limiter, engine)
             return obj
@@ -89,6 +117,31 @@ def create_context(data=utils.NO_VALUE, context=None, system=True,
                    no_sets=False, finalizer=None, delegates=False,
                    convention=None, datetime=True, yaqlized=True,
                    group_by_agg_fallback=True):
+    """
+    Creates a new context.
+
+    Args:
+        data: (dict): write your description
+        utils: (str): write your description
+        NO_VALUE: (str): write your description
+        context: (todo): write your description
+        system: (todo): write your description
+        common: (str): write your description
+        boolean: (str): write your description
+        strings: (str): write your description
+        math: (str): write your description
+        collections: (str): write your description
+        queries: (list): write your description
+        regex: (str): write your description
+        branching: (str): write your description
+        no_sets: (str): write your description
+        finalizer: (bool): write your description
+        delegates: (todo): write your description
+        convention: (str): write your description
+        datetime: (todo): write your description
+        yaqlized: (int): write your description
+        group_by_agg_fallback: (str): write your description
+    """
 
     context = _setup_context(data, context, finalizer, convention)
     if system:
@@ -123,6 +176,13 @@ YaqlFactory = factory.YaqlFactory
 
 
 def eval(expression, data=None):
+    """
+    Evaluate an expression.
+
+    Args:
+        expression: (bool): write your description
+        data: (array): write your description
+    """
     global _cached_engine, _cached_expressions, _default_context
 
     if _cached_engine is None:

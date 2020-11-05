@@ -165,6 +165,12 @@ def write_package_doc(package, output):
 
 
 def generate_doc(source):
+    """
+    Generate documentation for a package.
+
+    Args:
+        source: (str): write your description
+    """
     try:
         package = importlib.import_module(source)
     except ImportError:
@@ -187,6 +193,13 @@ class YaqlDocNode(nodes.General, nodes.Element):
     source = None
 
     def __init__(self, source):
+        """
+        Initialize the source
+
+        Args:
+            self: (todo): write your description
+            source: (str): write your description
+        """
         self.source = source
         super(YaqlDocNode, self).__init__()
 
@@ -196,10 +209,24 @@ class YaqlDocDirective(rst.Directive):
     required_arguments = 1
 
     def run(self):
+        """
+        Parse command line.
+
+        Args:
+            self: (todo): write your description
+        """
         return [YaqlDocNode(self.arguments[0])]
 
 
 def render(app, doctree, fromdocname):
+    """
+    Renders the docstrings to the docstrings.
+
+    Args:
+        app: (todo): write your description
+        doctree: (todo): write your description
+        fromdocname: (str): write your description
+    """
     for node in doctree.traverse(YaqlDocNode):
         new_doc = utils.new_document('YAQL', doctree.settings)
         content = generate_doc(node.source)
@@ -208,6 +235,12 @@ def render(app, doctree, fromdocname):
 
 
 def setup(app):
+    """
+    Required sphinx extension setup function
+
+    Args:
+        app: (todo): write your description
+    """
     app.add_node(YaqlDocNode)
     app.add_directive('yaqldoc', YaqlDocDirective)
     app.connect('doctree-resolved', render)

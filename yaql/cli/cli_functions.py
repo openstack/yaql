@@ -30,6 +30,14 @@ PROMPT = "yaql> "
 
 
 def main(context, show_tokens, parser):
+    """
+    Main function.
+
+    Args:
+        context: (todo): write your description
+        show_tokens: (bool): write your description
+        parser: (todo): write your description
+    """
     print("Yet Another Query Language - command-line query tool")
     print("Version {0}".format(version))
     if context.get_data('legacy', False):
@@ -89,6 +97,13 @@ def main(context, show_tokens, parser):
 
 
 def load_data(data_file, context):
+    """
+    Loads data from json file
+
+    Args:
+        data_file: (str): write your description
+        context: (list): write your description
+    """
     try:
         json_str = open(os.path.expanduser(data_file)).read()
     except IOError as e:
@@ -105,12 +120,25 @@ def load_data(data_file, context):
 
 
 def register_in_context(context, parser):
+    """
+    Register a context as a context.
+
+    Args:
+        context: (todo): write your description
+        parser: (todo): write your description
+    """
     context.register_function(
         lambda context, show_tokens: main(context, show_tokens, parser),
         name='__main')
 
 
 def parse_service_command(comm):
+    """
+    Parse command line arguments.
+
+    Args:
+        comm: (str): write your description
+    """
     space_index = comm.find(' ')
     if space_index == -1:
         return comm, None
@@ -120,6 +148,15 @@ def parse_service_command(comm):
 
 
 def evaluate(expr, parser, data, context):
+    """
+    Evaluate the expression
+
+    Args:
+        expr: (todo): write your description
+        parser: (todo): write your description
+        data: (array): write your description
+        context: (todo): write your description
+    """
     try:
         res = parser(expr).evaluate(data, context)
         print_output(res, context)
@@ -129,6 +166,13 @@ def evaluate(expr, parser, data, context):
 
 
 def print_output(v, context):
+    """
+    Print ( context v )
+
+    Args:
+        v: (str): write your description
+        context: (dict): write your description
+    """
     if context['#nativeOutput']:
         print(v)
     else:

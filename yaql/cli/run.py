@@ -24,6 +24,13 @@ import yaql.legacy
 
 
 def read_data(f, options):
+    """
+    Read data from file f.
+
+    Args:
+        f: (todo): write your description
+        options: (todo): write your description
+    """
     if options.string:
         if options.array:
             return [line.rstrip('\n') for line in f]
@@ -37,6 +44,11 @@ def read_data(f, options):
 
 
 def main():
+    """
+    Main function.
+
+    Args:
+    """
     p = optparse.OptionParser()
     p.add_option('--data', '-d', help="input file")
     p.add_option('--string', '-s', action='store_true',

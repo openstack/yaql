@@ -63,7 +63,23 @@ REGEX_TYPE = type(re.compile('.'))
 class Yaqlized(yaqltypes.GenericType):
     def __init__(self, can_access_attributes=False, can_call_methods=False,
                  can_index=False):
+        """
+        Initializes the context manager.
+
+        Args:
+            self: (todo): write your description
+            can_access_attributes: (bool): write your description
+            can_call_methods: (todo): write your description
+            can_index: (int): write your description
+        """
         def check_value(value, context, *args, **kwargs):
+            """
+            Checks if the value is valid.
+
+            Args:
+                value: (todo): write your description
+                context: (dict): write your description
+            """
             settings = yaqlization.get_yaqlization_settings(value)
             if settings is None:
                 return False
@@ -79,6 +95,13 @@ class Yaqlized(yaqltypes.GenericType):
 
 
 def _match_name_to_entry(name, entry):
+    """
+    Return true if entry name of the name.
+
+    Args:
+        name: (str): write your description
+        entry: (todo): write your description
+    """
     if name == entry:
         return True
     elif isinstance(entry, REGEX_TYPE):
@@ -89,6 +112,15 @@ def _match_name_to_entry(name, entry):
 
 
 def _validate_name(name, settings, exception_cls=AttributeError):
+    """
+    Validate the settings name.
+
+    Args:
+        name: (str): write your description
+        settings: (dict): write your description
+        exception_cls: (int): write your description
+        AttributeError: (todo): write your description
+    """
     if name.startswith('_'):
         raise exception_cls('Cannot access ' + name)
     whitelist = settings['whitelist']
@@ -105,10 +137,24 @@ def _validate_name(name, settings, exception_cls=AttributeError):
 
 
 def _remap_name(name, settings):
+    """
+    Remap name from settings.
+
+    Args:
+        name: (str): write your description
+        settings: (dict): write your description
+    """
     return settings['attributeRemapping'].get(name, name)
 
 
 def _auto_yaqlize(value, settings):
+    """
+    Auto auto_yaqlize auto - auto - auto - auto - auto - auto - auto - auto - auto - auto - auto - auto -
+
+    Args:
+        value: (todo): write your description
+        settings: (dict): write your description
+    """
     if not settings['autoYaqlizeResult']:
         return
     if isinstance(value, type):
@@ -211,6 +257,12 @@ def indexation(obj, key):
 
 
 def register(context):
+    """
+    Registers a new context.
+
+    Args:
+        context: (todo): write your description
+    """
     context = context.create_child_context()
     context.register_function(op_dot)
     context.register_function(attribution)

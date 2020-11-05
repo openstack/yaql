@@ -17,6 +17,12 @@ import yaql.tests
 
 class TestBoolean(yaql.tests.TestCase):
     def test_and(self):
+        """
+        Evaluate the test
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(self.eval('true and true'))
         self.assertFalse(self.eval('true and false'))
         self.assertFalse(self.eval('false and false'))
@@ -25,6 +31,12 @@ class TestBoolean(yaql.tests.TestCase):
         self.assertFalse(self.eval('null and null'))
 
     def test_or(self):
+        """
+        Evaluate the test
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(self.eval('true or true'))
         self.assertTrue(self.eval('true or false'))
         self.assertFalse(self.eval('false or false'))
@@ -33,6 +45,12 @@ class TestBoolean(yaql.tests.TestCase):
         self.assertFalse(self.eval('null or null'))
 
     def test_not(self):
+        """
+        Evaluate the test
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertFalse(self.eval('not true'))
         self.assertTrue(self.eval('not false'))
         self.assertTrue(self.eval('not 0'))
@@ -42,10 +60,22 @@ class TestBoolean(yaql.tests.TestCase):
         self.assertTrue(self.eval('not null'))
 
     def test_lazy(self):
+        """
+        Run the test test test is true.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(1, self.eval('$ or 10/($-1)', data=1))
         self.assertEqual(0, self.eval('$ and 10/$', data=0))
 
     def test_boolean_equality(self):
+        """
+        Evaluates the evaluation.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(self.eval('false = false'))
         self.assertTrue(self.eval('false != true'))
         self.assertTrue(self.eval('true != false'))
@@ -56,6 +86,12 @@ class TestBoolean(yaql.tests.TestCase):
         self.assertFalse(self.eval('true != true'))
 
     def test_is_boolean(self):
+        """
+        Check if the test is true.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(self.eval('isBoolean(true)'))
         self.assertTrue(self.eval('isBoolean(false)'))
         self.assertFalse(self.eval('isBoolean(123)'))

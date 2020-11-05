@@ -1028,6 +1028,12 @@ def hex_(num):
 
 
 def register(context):
+    """
+    Registers a decorator.
+
+    Args:
+        context: (todo): write your description
+    """
     context.register_function(gt)
     context.register_function(lt)
     context.register_function(gte)
