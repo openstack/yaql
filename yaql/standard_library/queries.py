@@ -883,7 +883,7 @@ class GroupAggregator(object):
             else:
                 if not (
                     len(value_list) == 2 and
-                    isinstance(result, collections.Sequence) and
+                    isinstance(result, collections.abc.Sequence) and
                     not isinstance(result, str) and
                     len(result) == 2 and
                     result[0] == value_list[0]

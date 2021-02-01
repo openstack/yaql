@@ -32,35 +32,35 @@ NO_VALUE = create_marker('<NoValue>')
 
 
 def is_iterator(obj):
-    return isinstance(obj, collections.Iterator)
+    return isinstance(obj, collections.abc.Iterator)
 
 
 def is_iterable(obj):
     return (
-        isinstance(obj, collections.Iterable) and
+        isinstance(obj, collections.abc.Iterable) and
         not isinstance(obj, (str, MappingType))
     )
 
 
 def is_sequence(obj):
-    return isinstance(obj, collections.Sequence) and not isinstance(
+    return isinstance(obj, collections.abc.Sequence) and not isinstance(
         obj, str)
 
 
 def is_mutable(obj):
-    return isinstance(obj, (collections.MutableSequence,
-                            collections.MutableSet,
-                            collections.MutableMapping))
+    return isinstance(obj, (collections.abc.MutableSequence,
+                            collections.abc.MutableSet,
+                            collections.abc.MutableMapping))
 
 
-SequenceType = collections.Sequence
-MutableSequenceType = collections.MutableSequence
-SetType = collections.Set
-MutableSetType = collections.MutableSet
-MappingType = collections.Mapping
-MutableMappingType = collections.MutableMapping
-IterableType = collections.Iterable
-IteratorType = collections.Iterator
+SequenceType = collections.abc.Sequence
+MutableSequenceType = collections.abc.MutableSequence
+SetType = collections.abc.Set
+MutableSetType = collections.abc.MutableSet
+MappingType = collections.abc.Mapping
+MutableMappingType = collections.abc.MutableMapping
+IterableType = collections.abc.Iterable
+IteratorType = collections.abc.Iterator
 QueueType = collections.deque
 
 
@@ -85,7 +85,7 @@ def convert_input_data(obj, rec=None):
 def convert_output_data(obj, limit_func, engine, rec=None):
     if rec is None:
         rec = convert_output_data
-    if isinstance(obj, collections.Mapping):
+    if isinstance(obj, collections.abc.Mapping):
         result = {}
         for key, value in limit_func(obj.items()):
             result[rec(key, limit_func, engine, rec)] = rec(
@@ -119,7 +119,7 @@ class MappingRule(object):
         self.destination = destination
 
 
-class FrozenDict(collections.Mapping):
+class FrozenDict(collections.abc.Mapping):
     def __init__(self, *args, **kwargs):
         self._d = dict(*args, **kwargs)
         self._hash = None
