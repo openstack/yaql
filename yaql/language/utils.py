@@ -16,8 +16,6 @@ import collections
 import re
 import sys
 
-import six
-
 from yaql.language import exceptions
 from yaql.language import lexer
 
@@ -38,13 +36,15 @@ def is_iterator(obj):
 
 
 def is_iterable(obj):
-    return isinstance(obj, collections.Iterable) and not isinstance(
-        obj, six.string_types + (MappingType,))
+    return (
+        isinstance(obj, collections.Iterable) and
+        not isinstance(obj, (str, MappingType))
+    )
 
 
 def is_sequence(obj):
     return isinstance(obj, collections.Sequence) and not isinstance(
-        obj, six.string_types)
+        obj, str)
 
 
 def is_mutable(obj):
@@ -67,17 +67,17 @@ QueueType = collections.deque
 def convert_input_data(obj, rec=None):
     if rec is None:
         rec = convert_input_data
-    if isinstance(obj, six.string_types):
-        return obj if isinstance(obj, six.text_type) else six.text_type(obj)
+    if isinstance(obj, str):
+        return obj if isinstance(obj, str) else str(obj)
     elif isinstance(obj, SequenceType):
         return tuple(rec(t, rec) for t in obj)
     elif isinstance(obj, MappingType):
         return FrozenDict((rec(key, rec), rec(value, rec))
-                          for key, value in six.iteritems(obj))
+                          for key, value in obj.items())
     elif isinstance(obj, MutableSetType):
         return frozenset(rec(t, rec) for t in obj)
     elif isinstance(obj, IterableType):
-        return six.moves.map(lambda v: rec(v, rec), obj)
+        return map(lambda v: rec(v, rec), obj)
     else:
         return obj
 
@@ -87,7 +87,7 @@ def convert_output_data(obj, limit_func, engine, rec=None):
         rec = convert_output_data
     if isinstance(obj, collections.Mapping):
         result = {}
-        for key, value in limit_func(six.iteritems(obj)):
+        for key, value in limit_func(obj.items()):
             result[rec(key, limit_func, engine, rec)] = rec(
                 value, limit_func, engine, rec)
         return result
@@ -139,7 +139,7 @@ class FrozenDict(collections.Mapping):
     def __hash__(self):
         if self._hash is None:
             self._hash = 0
-            for pair in six.iteritems(self):
+            for pair in self.items():
                 self._hash ^= hash(pair)
         return self._hash
 
@@ -153,7 +153,7 @@ def memorize(collection, engine):
 
     yielded = []
 
-    class RememberingIterator(six.Iterator):
+    class RememberingIterator:
         def __init__(self):
             self.seq = iter(collection)
             self.index = 0

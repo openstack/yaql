@@ -17,8 +17,6 @@ The module contains functions for regular expressions.
 
 import re
 
-import six
-
 from yaql.language import specs
 from yaql.language import yaqltypes
 
@@ -226,7 +224,7 @@ def _publish_match(context, match):
         }
         context['$' + str(i + 1)] = rec
 
-    for key, value, in six.itervalues(match.groupdict()):
+    for key, value, in match.groupdict().values():
         rec = {
             'value': value,
             'start': match.start(value),

@@ -16,8 +16,6 @@
 
 import sys
 
-import six
-
 from yaql.language import exceptions
 from yaql.language import expressions
 from yaql.language import utils
@@ -54,9 +52,7 @@ def call(name, context, args, kwargs, engine, receiver=utils.NO_VALUE,
             utils.limit_memory_usage(engine, (1, result))
             return result
         except StopIteration as e:
-            six.reraise(
-                exceptions.WrappedException,
-                exceptions.WrappedException(e),
+            raise exceptions.WrappedException(e).with_traceback(
                 sys.exc_info()[2])
 
 
@@ -95,7 +91,7 @@ def choose_overload(name, candidates, engine, receiver, context, args, kwargs):
             for i, pos_arg in enumerate(pos):
                 if isinstance(pos_arg.value_type, yaqltypes.LazyParameterType):
                     lazy.add(i)
-            for key, value in six.iteritems(kwd):
+            for key, value in kwd.items():
                 if isinstance(value.value_type, yaqltypes.LazyParameterType):
                     lazy.add(key)
             if lazy_params is None:
@@ -117,7 +113,7 @@ def choose_overload(name, candidates, engine, receiver, context, args, kwargs):
     )
 
     args = tuple(arg_evaluator(i, arg) for i, arg in enumerate(args))
-    for key, value in six.iteritems(kwargs):
+    for key, value in kwargs.items():
         kwargs[key] = arg_evaluator(key, value)
 
     delegate = None
@@ -147,7 +143,7 @@ def choose_overload(name, candidates, engine, receiver, context, args, kwargs):
 def translate_args(without_kwargs, args, kwargs):
     if without_kwargs:
         if len(kwargs) > 0:
-            raise exceptions.ArgumentException(six.next(iter(kwargs)))
+            raise exceptions.ArgumentException(next(iter(kwargs)))
         return args, {}
     pos_args = []
     kw_args = {}
@@ -161,7 +157,7 @@ def translate_args(without_kwargs, args, kwargs):
             kw_args[param_name] = t.destination
         else:
             pos_args.append(t)
-    for key, value in six.iteritems(kwargs):
+    for key, value in kwargs.items():
         if key in kw_args:
             raise exceptions.MappingTranslationException()
         else:
@@ -174,13 +170,13 @@ def _is_specialization_of(mapping1, mapping2):
     args_mapping2, kwargs_mapping2 = mapping2
     res = False
 
-    for a1, a2 in six.moves.zip(args_mapping1, args_mapping2):
+    for a1, a2 in zip(args_mapping1, args_mapping2):
         if a2.value_type.is_specialization_of(a1.value_type):
             return False
         elif a1.value_type.is_specialization_of(a2.value_type):
             res = True
 
-    for key, a1 in six.iteritems(kwargs_mapping1):
+    for key, a1 in kwargs_mapping1.items():
         a2 = kwargs_mapping2[key]
         if a2.value_type.is_specialization_of(a1.value_type):
             return False

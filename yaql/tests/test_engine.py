@@ -12,9 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import io
 import sys
-
-import six
 
 import yaql
 from yaql.language import exceptions
@@ -28,7 +27,7 @@ class TestEngine(tests.TestCase):
     def test_parser_grammar(self):
         # replace stderr with cString to write to
         copy = sys.stderr
-        sys.stderr = six.StringIO()
+        sys.stderr = io.StringIO()
         try:
             debug_opts = dict(self.engine_options)
             debug_opts['yaql.debug'] = True

@@ -14,8 +14,6 @@
 
 import inspect
 
-import six
-
 from yaql.language import exceptions
 from yaql.language import utils
 from yaql.language import yaqltypes
@@ -66,9 +64,7 @@ class FunctionDefinition(object):
         return func
 
     def clone(self):
-        parameters = dict(
-            (key, p.clone())
-            for key, p in six.iteritems(self.parameters))
+        parameters = {key: p.clone() for key, p in self.parameters.items()}
 
         res = FunctionDefinition(
             self.name, self.payload, parameters, self.doc,
@@ -79,12 +75,12 @@ class FunctionDefinition(object):
         fd = self.clone()
         keys_to_remove = set()
 
-        for k, v in six.iteritems(fd.parameters):
+        for k, v in fd.parameters.items():
             if not isinstance(v.value_type, yaqltypes.HiddenParameterType):
                 continue
             keys_to_remove.add(k)
             if v.position is not None:
-                for v2 in six.itervalues(fd.parameters):
+                for v2 in fd.parameters.values():
                     if v2.position is not None and v2.position > v.position:
                         v2.position -= 1
         for key in keys_to_remove:
@@ -101,67 +97,38 @@ class FunctionDefinition(object):
             self.parameters[name.name] = name
             return name
 
-        if six.PY2:
-            spec = inspect.getargspec(self.payload)
-            if isinstance(name, int):
-                if 0 <= name < len(spec.args):
-                    name = spec.args[name]
-                elif name == len(spec.args) and spec.varargs is not None:
-                    name = spec.varargs
-                else:
-                    raise IndexError('argument position is out of range')
-
-            arg_name = name
-            if name == spec.keywords:
-                position = None
-                arg_name = '**'
-            elif name == spec.varargs:
-                position = len(spec.args)
-                arg_name = '*'
-            elif name not in spec.args:
-                raise exceptions.NoParameterFoundException(
-                    function_name=self.name or self.payload.__name__,
-                    param_name=name)
+        spec = inspect.getfullargspec(self.payload)
+        if isinstance(name, int):
+            if 0 <= name < len(spec.args):
+                name = spec.args[name]
+            elif name == len(spec.args) and spec.varargs is not None:
+                name = spec.varargs
             else:
-                position = spec.args.index(name)
-            default = NO_DEFAULT
-            if spec.defaults is not None and name in spec.args:
-                index = spec.args.index(name) - len(spec.args)
-                if index >= -len(spec.defaults):
-                    default = spec.defaults[index]
+                raise IndexError('argument position is out of range')
+
+        arg_name = name
+        if name == spec.varkw:
+            position = None
+            arg_name = '**'
+        elif name == spec.varargs:
+            position = len(spec.args)
+            arg_name = '*'
+        elif name in spec.kwonlyargs:
+            position = None
+        elif name not in spec.args:
+            raise exceptions.NoParameterFoundException(
+                function_name=self.name or self.payload.__name__,
+                param_name=name)
         else:
-            spec = inspect.getfullargspec(self.payload)
-            if isinstance(name, int):
-                if 0 <= name < len(spec.args):
-                    name = spec.args[name]
-                elif name == len(spec.args) and spec.varargs is not None:
-                    name = spec.varargs
-                else:
-                    raise IndexError('argument position is out of range')
+            position = spec.args.index(name)
 
-            arg_name = name
-            if name == spec.varkw:
-                position = None
-                arg_name = '**'
-            elif name == spec.varargs:
-                position = len(spec.args)
-                arg_name = '*'
-            elif name in spec.kwonlyargs:
-                position = None
-            elif name not in spec.args:
-                raise exceptions.NoParameterFoundException(
-                    function_name=self.name or self.payload.__name__,
-                    param_name=name)
-            else:
-                position = spec.args.index(name)
-
-            default = NO_DEFAULT
-            if spec.defaults is not None and name in spec.args:
-                index = spec.args.index(name) - len(spec.args)
-                if index >= -len(spec.defaults):
-                    default = spec.defaults[index]
-            elif spec.kwonlydefaults is not None:
-                default = spec.kwonlydefaults.get(name, NO_DEFAULT)
+        default = NO_DEFAULT
+        if spec.defaults is not None and name in spec.args:
+            index = spec.args.index(name) - len(spec.args)
+            if index >= -len(spec.defaults):
+                default = spec.defaults[index]
+        elif spec.kwonlydefaults is not None:
+            default = spec.kwonlydefaults.get(name, NO_DEFAULT)
 
         if arg_name in self.parameters and not overwrite:
             raise exceptions.DuplicateParameterDecoratorException(
@@ -191,7 +158,7 @@ class FunctionDefinition(object):
     def insert_parameter(self, name, value_type=None, nullable=None,
                          alias=None, overwrite=False):
         pd = self.set_parameter(name, value_type, nullable, alias, overwrite)
-        for p in six.itervalues(self.parameters):
+        for p in self.parameters.values():
             if p is pd:
                 continue
             if p.position is not None and p.position >= pd.position:
@@ -205,13 +172,13 @@ class FunctionDefinition(object):
         positional_fix_table = max_dst_positional_args * [0]
         keyword_args = {}
 
-        for p in six.itervalues(self.parameters):
+        for p in self.parameters.values():
             if p.position is not None and isinstance(
                     p.value_type, yaqltypes.HiddenParameterType):
                 for index in range(p.position + 1, len(positional_fix_table)):
                     positional_fix_table[index] += 1
 
-        for key, p in six.iteritems(self.parameters):
+        for key, p in self.parameters.items():
             arg_name = p.alias or p.name
             if p.position is not None and key != '*':
                 arg_position = p.position - positional_fix_table[p.position]
@@ -242,7 +209,7 @@ class FunctionDefinition(object):
         if len(kwargs) > 0:
             if '**' in self.parameters:
                 argdef = self.parameters['**']
-                for key in six.iterkeys(kwargs):
+                for key in kwargs:
                     keyword_args[key] = argdef
             else:
                 return None
@@ -255,7 +222,7 @@ class FunctionDefinition(object):
                 value = positional_args[i].default
             if not positional_args[i].value_type.check(value, context, engine):
                 return None
-        for kwd in six.iterkeys(kwargs):
+        for kwd in kwargs:
             if not keyword_args[kwd].value_type.check(
                     kwargs[kwd], context, engine):
                 return None
@@ -278,7 +245,7 @@ class FunctionDefinition(object):
         kwargs = kwargs.copy()
         kwargs = dict(kwargs)
         positional = 0
-        for arg_name, p in six.iteritems(self.parameters):
+        for arg_name, p in self.parameters.items():
             if p.position is not None and arg_name != '*':
                 positional += 1
 
@@ -286,13 +253,13 @@ class FunctionDefinition(object):
         positional_fix_table = positional * [0]
         keyword_args = {}
 
-        for p in six.itervalues(self.parameters):
+        for p in self.parameters.values():
             if p.position is not None and isinstance(
                     p.value_type, yaqltypes.HiddenParameterType):
                 for index in range(p.position + 1, positional):
                     positional_fix_table[index] += 1
 
-        for key, p in six.iteritems(self.parameters):
+        for key, p in self.parameters.items():
             arg_name = p.alias or p.name
             if p.position is not None and key != '*':
                 if isinstance(p.value_type, yaqltypes.HiddenParameterType):
@@ -332,7 +299,7 @@ class FunctionDefinition(object):
         if len(kwargs) > 0:
             if '**' in self.parameters:
                 argdef = self.parameters['**']
-                for key, value in six.iteritems(kwargs):
+                for key, value in kwargs.items():
                     keyword_args[key] = checked(value, argdef)
             else:
                 raise exceptions.ArgumentException('**')
@@ -343,7 +310,7 @@ class FunctionDefinition(object):
                 *tuple(map(lambda t: t(new_context),
                            positional_args)),
                 **dict(map(lambda t: (t[0], t[1](new_context)),
-                           six.iteritems(keyword_args)))
+                           keyword_args.items()))
             )
             return result
 
@@ -352,7 +319,7 @@ class FunctionDefinition(object):
     def is_valid_method(self):
         min_position = len(self.parameters)
         min_arg = None
-        for p in six.itervalues(self.parameters):
+        for p in self.parameters.values():
             if p.position is not None and p.position < min_position and \
                     not isinstance(p.value_type,
                                    yaqltypes.HiddenParameterType):
@@ -407,24 +374,14 @@ def get_function_definition(func, name=None, function=None, method=None,
     if parameter_type_func is None:
         parameter_type_func = _infer_parameter_type
     fd = _get_function_definition(func).clone()
-    if six.PY2:
-        spec = inspect.getargspec(func)
-        for arg in spec.args:
-            if arg not in fd.parameters:
-                fd.set_parameter(arg, parameter_type_func(arg))
-        if spec.varargs and '*' not in fd.parameters:
-            fd.set_parameter(spec.varargs, parameter_type_func(spec.varargs))
-        if spec.keywords and '**' not in fd.parameters:
-            fd.set_parameter(spec.keywords, parameter_type_func(spec.keywords))
-    else:
-        spec = inspect.getfullargspec(func)
-        for arg in spec.args + spec.kwonlyargs:
-            if arg not in fd.parameters:
-                fd.set_parameter(arg, parameter_type_func(arg))
-        if spec.varargs and '*' not in fd.parameters:
-            fd.set_parameter(spec.varargs, parameter_type_func(spec.varargs))
-        if spec.varkw and '**' not in fd.parameters:
-            fd.set_parameter(spec.varkw, parameter_type_func(spec.varkw))
+    spec = inspect.getfullargspec(func)
+    for arg in spec.args + spec.kwonlyargs:
+        if arg not in fd.parameters:
+            fd.set_parameter(arg, parameter_type_func(arg))
+    if spec.varargs and '*' not in fd.parameters:
+        fd.set_parameter(spec.varargs, parameter_type_func(spec.varargs))
+    if spec.varkw and '**' not in fd.parameters:
+        fd.set_parameter(spec.varkw, parameter_type_func(spec.varkw))
 
     if name is not None:
         fd.name = name
@@ -438,7 +395,7 @@ def get_function_definition(func, name=None, function=None, method=None,
     if method is not None:
         fd.is_method = method
     if convention:
-        for p in six.itervalues(fd.parameters):
+        for p in fd.parameters.values():
             if p.alias is None:
                 p.alias = convert_parameter_name(p.name, convention)
     return fd

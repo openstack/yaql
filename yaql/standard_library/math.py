@@ -16,8 +16,6 @@ The Math module describes implemented math operations on numbers.
 """
 import random
 
-import six
-
 from yaql.language import specs
 from yaql.language import yaqltypes
 
@@ -113,8 +111,7 @@ def division(left, right):
         yaql> 3.0 / 2
         1.5
     """
-    if isinstance(left, six.integer_types) and isinstance(
-            right, six.integer_types):
+    if isinstance(left, int) and isinstance(right, int):
         return left // right
     return left / right
 
@@ -654,7 +651,7 @@ def is_integer(value):
         yaql> isInteger(12)
         true
     """
-    return isinstance(value, six.integer_types) and not isinstance(value, bool)
+    return isinstance(value, int) and not isinstance(value, bool)
 
 
 def is_number(value):
@@ -674,8 +671,7 @@ def is_number(value):
         yaql> isNumber(12)
         true
     """
-    return (isinstance(value, six.integer_types + (float,))
-            and not isinstance(value, bool))
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
 def register(context):

@@ -12,9 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
-
 YAQLIZATION_ATTR = '__yaqlization__'
 
 
@@ -56,8 +53,8 @@ def build_yaqlization_settings(
     blacklist = set(blacklist or [])
     attribute_remapping = attribute_remapping or {}
     if blacklist_remapped_attributes:
-        for value in six.itervalues(attribute_remapping):
-            if not isinstance(value, six.string_types):
+        for value in attribute_remapping.values():
+            if not isinstance(value, str):
                 name = value[0]
             else:
                 name = value

@@ -17,8 +17,6 @@ The module describes which operations can be done with strings in YAQL.
 
 import string as string_module
 
-import six
-
 from yaql.language import specs
 from yaql.language import utils
 from yaql.language import yaqltypes
@@ -299,7 +297,7 @@ def join(sequence, separator, str_delegate):
         yaql> ["abc", "de", "f"].join("|")
         "abc|de|f"
     """
-    return separator.join(six.moves.map(str_delegate, sequence))
+    return separator.join(map(str_delegate, sequence))
 
 
 @specs.parameter('sequence', yaqltypes.Iterable())
@@ -351,7 +349,7 @@ def str_(value):
     elif value is False:
         return 'false'
     else:
-        return six.text_type(value)
+        return str(value)
 
 
 @specs.parameter('string', yaqltypes.String())
@@ -561,7 +559,7 @@ def replace_with_dict(string, str_func, replacements, count=-1):
         yaql> "abc ab abc".replace({ab => yy, abc => xx}, 1)
         "yyc ab xx"
     """
-    for key, value in six.iteritems(replacements):
+    for key, value in replacements.items():
         string = string.replace(str_func(key), str_func(value), count)
     return string
 
@@ -955,7 +953,7 @@ def is_string(arg):
         yaql> isString(1)
         false
     """
-    return isinstance(arg, six.string_types)
+    return isinstance(arg, str)
 
 
 @specs.parameter('string', yaqltypes.String())

@@ -17,8 +17,6 @@ The module describes main system functions for working with objects.
 
 import itertools
 
-import six
-
 from yaql.language import contexts
 from yaql.language import specs
 from yaql.language import utils
@@ -175,7 +173,7 @@ def let(__context__, *args, **kwargs):
     for i, value in enumerate(args, 1):
         __context__[str(i)] = value
 
-    for key, value in six.iteritems(kwargs):
+    for key, value in kwargs.items():
         __context__[key] = value
     return __context__
 
@@ -267,7 +265,7 @@ def assert__(engine, obj, condition, message=u'Assertion failed'):
 
 @specs.name('#call')
 @specs.parameter('callable_', yaqltypes.PythonType(
-    object, False, validators=(six.callable,)))
+    object, False, validators=(callable,)))
 def call(callable_, *args, **kwargs):
     """:yaql:call
 

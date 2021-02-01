@@ -17,7 +17,6 @@ import collections
 import datetime
 
 from dateutil import tz
-import six
 
 from yaql.language import exceptions
 from yaql.language import expressions
@@ -25,8 +24,7 @@ from yaql.language import utils
 from yaql import yaql_interface
 
 
-@six.add_metaclass(abc.ABCMeta)
-class HiddenParameterType(object):
+class HiddenParameterType(metaclass=abc.ABCMeta):
     __slots__ = tuple()
 
     # noinspection PyMethodMayBeStatic,PyUnusedLocal
@@ -34,13 +32,11 @@ class HiddenParameterType(object):
         return True
 
 
-@six.add_metaclass(abc.ABCMeta)
-class LazyParameterType(object):
+class LazyParameterType(metaclass=abc.ABCMeta):
     __slots__ = tuple()
 
 
-@six.add_metaclass(abc.ABCMeta)
-class SmartType(object):
+class SmartType(metaclass=abc.ABCMeta):
     __slots__ = ('nullable',)
 
     def __init__(self, nullable):
@@ -149,13 +145,13 @@ class String(PythonType):
     __slots__ = tuple()
 
     def __init__(self, nullable=False):
-        super(String, self).__init__(six.string_types, nullable=nullable)
+        super(String, self).__init__(str, nullable=nullable)
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
         value = super(String, self).convert(
             value, receiver, context, function_spec, engine, *args, **kwargs)
-        return None if value is None else six.text_type(value)
+        return None if value is None else str(value)
 
 
 class Integer(PythonType):
@@ -163,7 +159,7 @@ class Integer(PythonType):
 
     def __init__(self, nullable=False):
         super(Integer, self).__init__(
-            six.integer_types, nullable=nullable,
+            int, nullable=nullable,
             validators=[lambda t: not isinstance(t, bool)])
 
 
@@ -189,9 +185,9 @@ class Iterable(PythonType):
 
     def __init__(self, validators=None, nullable=False):
         super(Iterable, self).__init__(
-            collections.Iterable, nullable, [
-                lambda t: not isinstance(t, six.string_types + (
-                    utils.MappingType,))] + (validators or []))
+            collections.Iterable, nullable,
+            [lambda t: not isinstance(t, (str, utils.MappingType))] + (
+                validators or []))
 
     def check(self, value, context, engine, *args, **kwargs):
         if isinstance(value, utils.MappingType) and engine.options.get(
@@ -222,7 +218,7 @@ class Sequence(PythonType):
     def __init__(self, validators=None, nullable=False):
         super(Sequence, self).__init__(
             collections.Sequence, nullable, [
-                lambda t: not isinstance(t, six.string_types + (dict,))] + (
+                lambda t: not isinstance(t, (str, dict))] + (
                     validators or []))
 
 
@@ -231,7 +227,7 @@ class Number(PythonType):
 
     def __init__(self, nullable=False):
         super(Number, self).__init__(
-            six.integer_types + (float,), nullable,
+            (int, float), nullable,
             validators=[lambda t: not isinstance(t, bool)])
 
 
@@ -260,7 +256,7 @@ class Lambda(LazyParameterType, SmartType):
         self._publish_params(context, args, kwargs)
         if isinstance(value, expressions.Expression):
             result = value(receiver, context, engine)
-        elif six.callable(value):
+        elif callable(value):
             result = value(*args, **kwargs)
         else:
             result = value
@@ -273,7 +269,7 @@ class Lambda(LazyParameterType, SmartType):
             *convert_args, **convert_kwargs)
         if value is None:
             return None
-        elif six.callable(value) and hasattr(value, '__unwrapped__'):
+        elif callable(value) and hasattr(value, '__unwrapped__'):
             value = value.__unwrapped__
 
         def func(*args, **kwargs):
@@ -318,7 +314,7 @@ class Super(HiddenParameterType, SmartType):
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *convert_args, **convert_kwargs):
-        if six.callable(value) and hasattr(value, '__unwrapped__'):
+        if callable(value) and hasattr(value, '__unwrapped__'):
             value = value.__unwrapped__
 
         def func(*args, **kwargs):
@@ -377,7 +373,7 @@ class Delegate(HiddenParameterType, SmartType):
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *convert_args, **convert_kwargs):
-        if six.callable(value) and hasattr(value, '__unwrapped__'):
+        if callable(value) and hasattr(value, '__unwrapped__'):
             value = value.__unwrapped__
 
         def func(*args, **kwargs):
@@ -485,7 +481,7 @@ class StringConstant(Constant):
     def check(self, value, context, *args, **kwargs):
         return super(StringConstant, self).check(
             value, context, *args, **kwargs) and (
-            value is None or isinstance(value.value, six.string_types))
+            value is None or isinstance(value.value, str))
 
 
 class Keyword(Constant):
@@ -519,13 +515,12 @@ class NumericConstant(Constant):
     def check(self, value, context, *args, **kwargs):
         return super(NumericConstant, self).check(
             value, context, *args, **kwargs) and (
-            value is None or isinstance(
-                value.value, six.integer_types + (float,)) and
+            value is None or
+            isinstance(value.value, (int, float)) and
             type(value.value) is not bool)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class SmartTypeAggregation(SmartType):
+class SmartTypeAggregation(SmartType, metaclass=abc.ABCMeta):
     __slots__ = ('types',)
 
     def __init__(self, *args, **kwargs):

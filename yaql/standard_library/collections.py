@@ -17,8 +17,6 @@ Functions that produce or consume finite collections - lists, dicts and sets.
 
 import itertools
 
-import six
-
 from yaql.language import specs
 from yaql.language import utils
 from yaql.language import yaqltypes
@@ -328,7 +326,7 @@ def dict_set(engine, d, key, value):
         {"a": 1, "b": 3}
     """
     utils.limit_memory_usage(engine, (1, d), (1, key), (1, value))
-    return utils.FrozenDict(itertools.chain(six.iteritems(d), ((key, value),)))
+    return utils.FrozenDict(itertools.chain(d.items(), ((key, value),)))
 
 
 @specs.parameter('d', utils.MappingType, alias='dict')
@@ -354,8 +352,7 @@ def dict_set_many(engine, d, replacements):
         {"a": 1, "c": 4, "b": 3}
     """
     utils.limit_memory_usage(engine, (1, d), (1, replacements))
-    return utils.FrozenDict(itertools.chain(
-        six.iteritems(d), six.iteritems(replacements)))
+    return utils.FrozenDict(itertools.chain(d.items(), replacements.items()))
 
 
 @specs.no_kwargs
@@ -382,7 +379,7 @@ def dict_set_many_inline(engine, d, *args):
     """
     utils.limit_memory_usage(engine, (1, d), *((1, arg) for arg in args))
     return utils.FrozenDict(itertools.chain(
-        six.iteritems(d), ((t.source, t.destination) for t in args)))
+        d.items(), ((t.source, t.destination) for t in args)))
 
 
 @specs.parameter('d', utils.MappingType, alias='dict')
@@ -403,7 +400,7 @@ def dict_keys(d):
         yaql> {"a" => 1, "b" => 2}.keys()
         ["a", "b"]
     """
-    return six.iterkeys(d)
+    return d.keys()
 
 
 @specs.parameter('d', utils.MappingType, alias='dict')
@@ -424,7 +421,7 @@ def dict_values(d):
         yaql> {"a" => 1, "b" => 2}.values()
         [1, 2]
     """
-    return six.itervalues(d)
+    return d.values()
 
 
 @specs.parameter('d', utils.MappingType, alias='dict')
@@ -445,7 +442,7 @@ def dict_items(d):
         yaql> {"a" => 1, "b" => 2}.items()
         [["a", 1], ["b", 2]]
     """
-    return six.iteritems(d)
+    return d.items()
 
 
 @specs.parameter('lst', yaqltypes.Sequence(), alias='list')
@@ -563,7 +560,7 @@ def contains_value(d, value):
         yaql> {"a" => 1, "b" => 2}.containsValue(2)
         true
     """
-    return value in six.itervalues(d)
+    return value in d.values()
 
 
 @specs.parameter('left', yaqltypes.Iterable())

@@ -15,8 +15,6 @@
 import codecs
 import re
 
-import six
-
 from yaql.language import exceptions
 
 
@@ -66,7 +64,7 @@ class Lexer(object):
             'MAPPING',
             'MAP'
         ] + list(self.keywords.values())
-        for op_symbol, op_record in six.iteritems(self._operators_table):
+        for op_symbol, op_record in self._operators_table.items():
             if op_symbol in ('[]', '{}'):
                 continue
             lexem_name = op_record[2]

@@ -14,8 +14,6 @@
 
 import sys
 
-import six
-
 import yaql
 from yaql.language import exceptions
 from yaql.language import utils
@@ -26,7 +24,6 @@ class Expression(object):
         pass
 
 
-@six.python_2_unicode_compatible
 class Function(Expression):
     def __init__(self, name, *args):
         self.name = name
@@ -37,8 +34,7 @@ class Function(Expression):
         return context(self.name, engine, receiver, context)(*self.args)
 
     def __str__(self):
-        return u'{0}({1})'.format(self.name, ', '.join(
-            map(six.text_type, self.args)))
+        return '{0}({1})'.format(self.name, ', '.join(map(str, self.args)))
 
 
 class BinaryOperator(Function):
@@ -81,7 +77,6 @@ class MapExpression(Function):
         self.uses_receiver = False
 
 
-@six.python_2_unicode_compatible
 class GetContextValue(Function):
     def __init__(self, path):
         super(GetContextValue, self).__init__('#get_context_data', path)
@@ -92,16 +87,15 @@ class GetContextValue(Function):
         return self.path.value
 
 
-@six.python_2_unicode_compatible
 class Constant(Expression):
     def __init__(self, value):
         self.value = value
         self.uses_receiver = False
 
     def __str__(self):
-        if isinstance(self.value, six.text_type):
-            return u"'{0}'".format(self.value)
-        return six.text_type(self.value)
+        if isinstance(self.value, str):
+            return "'{0}'".format(self.value)
+        return str(self.value)
 
     def __call__(self, receiver, context, engine):
         return self.value
@@ -111,7 +105,6 @@ class KeywordConstant(Constant):
     pass
 
 
-@six.python_2_unicode_compatible
 class Wrap(Expression):
     def __init__(self, expression):
         self.expr = expression
@@ -124,7 +117,6 @@ class Wrap(Expression):
         return self.expr(receiver, context, engine)
 
 
-@six.python_2_unicode_compatible
 class MappingRuleExpression(Expression):
     def __init__(self, source, destination):
         self.source = source
@@ -140,7 +132,6 @@ class MappingRuleExpression(Expression):
             self.destination(receiver, context, engine))
 
 
-@six.python_2_unicode_compatible
 class Statement(Function):
     def __init__(self, expression, engine):
         self.expression = expression
@@ -155,7 +146,7 @@ class Statement(Function):
         try:
             return super(Statement, self).__call__(receiver, context, engine)
         except exceptions.WrappedException as e:
-            six.reraise(type(e.wrapped), e.wrapped, sys.exc_info()[2])
+            raise e.wrapped.with_traceback(sys.exc_info()[2])
 
     def evaluate(self, data=utils.NO_VALUE, context=None):
         if context is None or context is utils.NO_VALUE:

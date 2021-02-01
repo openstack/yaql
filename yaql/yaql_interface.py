@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from yaql.language import utils
 
 
@@ -56,7 +54,7 @@ class YaqlInterface(object):
             context['$' + str(i + 1)] = arg_value
 
         kwargs = utils.convert_input_data(kwargs)
-        for arg_name, arg_value in six.iteritems(kwargs):
+        for arg_name, arg_value in kwargs.items():
             context['$' + arg_name] = arg_value
 
         parsed = self.engine(__expression)

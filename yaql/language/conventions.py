@@ -15,11 +15,8 @@
 import abc
 import re
 
-import six
 
-
-@six.add_metaclass(abc.ABCMeta)
-class Convention(object):
+class Convention(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def convert_function_name(self, name):
         pass

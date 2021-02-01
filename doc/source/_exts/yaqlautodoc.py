@@ -13,12 +13,12 @@
 #    under the License.
 
 import importlib
+import io
 import operator
 import pkgutil
 import traceback
 import types
 
-import six
 from docutils import nodes
 from docutils.parsers import rst
 from docutils import utils
@@ -123,7 +123,7 @@ def write_module_doc(module, output):
         method = getattr(module, name)
         it = write_method_doc(method, output)
         try:
-            name = six.next(it)
+            name = next(it)
             seq.append((name, it))
         except StopIteration:
             pass
@@ -169,7 +169,7 @@ def generate_doc(source):
         package = importlib.import_module(source)
     except ImportError:
         return 'Error: No such module {0}'.format(source)
-    out = six.StringIO()
+    out = io.StringIO()
     try:
         if hasattr(package, '__path__'):
             write_package_doc(package, out)

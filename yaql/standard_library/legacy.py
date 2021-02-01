@@ -19,8 +19,6 @@ Examples are provided with CLI started with legacy mode.
 
 import itertools
 
-import six
-
 from yaql.language import contexts
 from yaql.language import expressions
 from yaql.language import specs
@@ -124,7 +122,7 @@ def indexer(collection, index_expression):
         index = index_expression()
         if isinstance(index, int) and not isinstance(index, bool):
             return collection[index]
-    return six.moves.filter(index_expression, collection)
+    return filter(index_expression, collection)
 
 
 @specs.parameter('start', int)
@@ -153,7 +151,7 @@ def range_(start, stop=None):
     if stop is None:
         return itertools.count(start)
     else:
-        return six.moves.range(start, stop)
+        return range(start, stop)
 
 
 @specs.parameter('conditions', yaqltypes.Lambda(with_context=True))

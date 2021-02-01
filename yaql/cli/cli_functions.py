@@ -13,16 +13,12 @@
 #    under the License.
 
 import json
-import locale
 import os
 import readline
 import sys
 
-import six
-
-from yaql.language.exceptions import YaqlParsingException
-
 from yaql import __version__ as version
+from yaql.language.exceptions import YaqlParsingException
 from yaql.language import utils
 
 
@@ -46,10 +42,7 @@ def main(context, show_tokens, parser):
     comm = True
     while comm != 'exit':
         try:
-            comm = six.moves.input(PROMPT)
-            if six.PY2:
-                comm = comm.decode(
-                    sys.stdin.encoding or locale.getpreferredencoding(True))
+            comm = input(PROMPT)
         except EOFError:
             return
         if not comm:

@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
+import types
 
 from yaql.language import exceptions
 from yaql.language import expressions
@@ -71,9 +71,9 @@ class Parser(object):
                 p[0] = expressions.UnaryOperator(p[2], p[1], alias)
 
         p_binary.__doc__ = binary_doc
-        self.p_binary = six.create_bound_method(p_binary, self)
+        self.p_binary = types.MethodType(p_binary, self)
         p_unary.__doc__ = unary_doc
-        self.p_unary = six.create_bound_method(p_unary, self)
+        self.p_unary = types.MethodType(p_unary, self)
 
         precedence = []
         for i in range(1, len(precedence_dict) + 1):
@@ -98,7 +98,7 @@ class Parser(object):
             p[0] = expressions.Function('#call', p[1], *arg)
 
         if engine.allow_delegates:
-            self.p_value_call = six.create_bound_method(p_value_call, self)
+            self.p_value_call = types.MethodType(p_value_call, self)
 
     @staticmethod
     def p_value_to_const(p):

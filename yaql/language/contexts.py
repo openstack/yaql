@@ -14,16 +14,13 @@
 
 import abc
 
-import six
-
 from yaql.language import exceptions
 from yaql.language import runner
 from yaql.language import specs
 from yaql.language import utils
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ContextBase(object):
+class ContextBase(metaclass=abc.ABCMeta):
     def __init__(self, parent_context=None, convention=None):
         self._parent_context = parent_context
         self._convention = convention
@@ -95,7 +92,7 @@ class ContextBase(object):
 
     @abc.abstractmethod
     def keys(self):
-        return six.iterkeys({})
+        return {}.keys()
 
 
 class Context(ContextBase):
@@ -115,8 +112,7 @@ class Context(ContextBase):
     def register_function(self, spec, *args, **kwargs):
         exclusive = kwargs.pop('exclusive', False)
 
-        if not isinstance(spec, specs.FunctionDefinition) \
-                and six.callable(spec):
+        if not isinstance(spec, specs.FunctionDefinition) and callable(spec):
             spec = specs.get_function_definition(
                 spec, *args, convention=self._convention, **kwargs)
 
@@ -139,7 +135,7 @@ class Context(ContextBase):
         if predicate is None:
             predicate = lambda x: True  # noqa: E731
         return (
-            set(six.moves.filter(predicate, self._functions.get(name, set()))),
+            set(filter(predicate, self._functions.get(name, set()))),
             name in self._exclusive_funcs
         )
 
@@ -173,12 +169,12 @@ class Context(ContextBase):
     def __contains__(self, item):
         if isinstance(item, specs.FunctionDefinition):
             return item in self._functions.get(item.name, [])
-        if isinstance(item, six.string_types):
+        if isinstance(item, str):
             return self._normalize_name(item) in self._data
         return False
 
     def keys(self):
-        return six.iterkeys(self._data)
+        return self._data.keys()
 
 
 class MultiContext(ContextBase):
@@ -186,9 +182,9 @@ class MultiContext(ContextBase):
         self._context_list = context_list
         if convention is None:
             convention = context_list[0].convention
-        parents = tuple(six.moves.filter(
-            lambda t: t,
-            six.moves.map(lambda t: t.parent, context_list)))
+        parents = tuple(
+            filter(lambda t: t, map(lambda t: t.parent, context_list))
+        )
         if not parents:
             super(MultiContext, self).__init__(None, convention)
         elif len(parents) == 1:

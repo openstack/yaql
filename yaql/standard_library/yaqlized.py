@@ -47,8 +47,6 @@ This module provides implemented operators on Yaqlized objects.
 
 import re
 
-import six
-
 from yaql.language import expressions
 from yaql.language import runner
 from yaql.language import specs
@@ -83,7 +81,7 @@ def _match_name_to_entry(name, entry):
         return True
     elif isinstance(entry, REGEX_TYPE):
         return entry.search(name) is not None
-    elif six.callable(entry):
+    elif callable(entry):
         return entry(name)
     return False
 
@@ -143,7 +141,7 @@ def op_dot(receiver, expr, context, engine):
     mappings = _remap_name(expr.name, settings)
 
     _validate_name(expr.name, settings)
-    if not isinstance(mappings, six.string_types):
+    if not isinstance(mappings, str):
         name = mappings[0]
         if len(mappings) > 0:
             arg_mappings = mappings[1]
@@ -156,7 +154,7 @@ def op_dot(receiver, expr, context, engine):
     func = getattr(receiver, name)
     args, kwargs = runner.translate_args(False, expr.args, {})
     args = tuple(arg(utils.NO_VALUE, context, engine) for arg in args)
-    for key, value in six.iteritems(kwargs):
+    for key, value in kwargs.items():
         kwargs[arg_mappings.get(key, key)] = value(
             utils.NO_VALUE, context, engine)
     res = func(*args, **kwargs)

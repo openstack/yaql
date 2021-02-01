@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from yaql.language import exceptions
 from yaql.language import specs
 from yaql.language import yaqltypes
@@ -53,9 +51,9 @@ class TestTypeAggregation(yaql.tests.TestCase):
 
     def test_any_of(self):
         @specs.parameter(
-            'arg', yaqltypes.AnyOf(six.string_types, yaqltypes.Integer()))
+            'arg', yaqltypes.AnyOf(str, yaqltypes.Integer()))
         def foo(arg):
-            if isinstance(arg, six.string_types):
+            if isinstance(arg, str):
                 return 1
             if isinstance(arg, int):
                 return 2

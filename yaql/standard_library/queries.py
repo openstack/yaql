@@ -19,10 +19,8 @@ Queries module.
 # yaql.standard_library.collections
 
 import collections
+import functools
 import itertools
-import sys
-
-import six
 
 from yaql.language import exceptions
 from yaql.language import specs
@@ -110,7 +108,7 @@ def where(collection, predicate):
         yaql> [1, 2, 3, 4, 5].where($ > 3)
         [4, 5]
     """
-    return six.moves.filter(predicate, collection)
+    return filter(predicate, collection)
 
 
 @specs.parameter('collection', yaqltypes.Iterable())
@@ -136,7 +134,7 @@ def select(collection, selector):
         yaql> [{'a'=> 2}, {'a'=> 4}].select($.a)
         [2, 4]
     """
-    return six.moves.map(selector, collection)
+    return map(selector, collection)
 
 
 @specs.parameter('collection', yaqltypes.Iterable())
@@ -161,8 +159,7 @@ def collection_attribution(collection, attribute, operator):
         yaql> [{"a" => 1}, {"a" => 2, "b" => 3}].a
         [1, 2]
     """
-    return six.moves.map(
-        lambda t: operator(t, attribute), collection)
+    return map(lambda t: operator(t, attribute), collection)
 
 
 @specs.parameter('collection', yaqltypes.Iterable())
@@ -554,7 +551,7 @@ def first(collection, default=utils.NO_VALUE):
         3
     """
     try:
-        return six.next(iter(collection))
+        return next(iter(collection))
     except StopIteration:
         if default is utils.NO_VALUE:
             raise
@@ -582,9 +579,9 @@ def single(collection):
         Execution exception: Collection contains more than one item
     """
     it = iter(collection)
-    result = six.next(it)
+    result = next(it)
     try:
-        six.next(it)
+        next(it)
     except StopIteration:
         return result
     raise StopIteration('Collection contains more than one item')
@@ -679,7 +676,7 @@ def range_(stop):
         yaql> range(3)
         [0, 1, 2]
     """
-    return iter(six.moves.range(stop))
+    return iter(range(stop))
 
 
 @specs.parameter('start', int)
@@ -708,7 +705,7 @@ def range__(start, stop, step=1):
         yaql> range(4, 1, -1)
         [4, 3, 2]
     """
-    return iter(six.moves.range(start, stop, step))
+    return iter(range(start, stop, step))
 
 
 @specs.parameter('start', int)
@@ -877,16 +874,20 @@ class GroupAggregator(object):
             key, value_list = group_item
             try:
                 result = self.aggregator(value_list)
-            except (exceptions.NoMatchingMethodException,
-                    exceptions.NoMatchingFunctionException,
-                    IndexError):
-                self._failure_info = sys.exc_info()
+            except (
+                exceptions.NoMatchingMethodException,
+                exceptions.NoMatchingFunctionException,
+                IndexError,
+            ) as exc:
+                self._failure_info = exc
             else:
-                if not (len(value_list) == 2 and
-                        isinstance(result, collections.Sequence) and
-                        not isinstance(result, six.string_types) and
-                        len(result) == 2 and
-                        result[0] == value_list[0]):
+                if not (
+                    len(value_list) == 2 and
+                    isinstance(result, collections.Sequence) and
+                    not isinstance(result, str) and
+                    len(result) == 2 and
+                    result[0] == value_list[0]
+                ):
                     # We are not dealing with (correct) version 1.1.1 syntax,
                     # so don't bother trying to fall back if there's an error
                     # with a later group.
@@ -905,7 +906,7 @@ class GroupAggregator(object):
 
         # If we are unable to successfully fall back, re-raise the first
         # exception encountered to help the user debug in the new style.
-        six.reraise(*self._failure_info)
+        raise self._failure_info
 
 
 def group_by_function(allow_aggregator_fallback):
@@ -952,7 +953,7 @@ def group_by_function(allow_aggregator_fallback):
             value = t if value_selector is None else value_selector(t)
             groups.setdefault(key_selector(t), []).append(value)
             utils.limit_memory_usage(engine, (1, groups))
-        return select(six.iteritems(groups), new_aggregator)
+        return select(groups.items(), new_aggregator)
 
     return group_by
 
@@ -978,7 +979,7 @@ def zip_(*collections):
         yaql> [1, 2, 3].zip([4, 5], [6, 7])
         [[1, 4, 6], [2, 5, 7]]
     """
-    return six.moves.zip(*collections)
+    return zip(*collections)
 
 
 @specs.method
@@ -1008,7 +1009,7 @@ def zip_longest(*collections, **kwargs):
         yaql> [1, 2, 3].zipLongest([4, 5], default => 100)
         [[1, 4], [2, 5], [3, 100]]
     """
-    return six.moves.zip_longest(
+    return itertools.zip_longest(
         *collections, fillvalue=kwargs.pop('default', None))
 
 
@@ -1424,9 +1425,9 @@ def aggregate(collection, selector, seed=utils.NO_VALUE):
         1
     """
     if seed is utils.NO_VALUE:
-        return six.moves.reduce(selector, collection)
+        return functools.reduce(selector, collection)
     else:
-        return six.moves.reduce(selector, collection, seed)
+        return functools.reduce(selector, collection, seed)
 
 
 @specs.method
@@ -1452,7 +1453,7 @@ def reverse(collection, to_list):
 
 def _merge_dicts(dict1, dict2, list_merge_func, item_merger, max_levels=0):
     result = {}
-    for key, value1 in six.iteritems(dict1):
+    for key, value1 in dict1.items():
         result[key] = value1
         if key in dict2:
             value2 = dict2[key]
@@ -1473,7 +1474,7 @@ def _merge_dicts(dict1, dict2, list_merge_func, item_merger, max_levels=0):
             else:
                 result[key] = item_merger(value1, value2)
 
-    for key2, value2 in six.iteritems(dict2):
+    for key2, value2 in dict2.items():
         if key2 not in result:
             result[key2] = value2
     return result
