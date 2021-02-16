@@ -174,7 +174,7 @@ class TestStrings(yaql.tests.TestCase):
         self.assertEqual(['a', 'b', 'c'], self.eval('abc.toCharArray()'))
 
     def test_characters(self):
-        self.assertItemsEqual(
+        self.assertCountEqual(
             ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
             self.eval('characters(octdigits => true, digits => true)'))
 
