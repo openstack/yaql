@@ -24,8 +24,12 @@ Welcome to yaql documentation!
 
    standard_library
 
-.. toctree::
+For Contributors
+================
 
-   contributing
+* If you are a new contributor to Yaql please refer: :doc:`contributor/contributing`
 
+  .. toctree::
+     :hidden:
 
+     contributor/contributing
