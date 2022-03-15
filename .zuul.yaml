@@ -1,4 +1,4 @@
 - project:
     templates:
       - build-openstack-docs-pti
-      - openstack-python3-ussuri-jobs
+      - openstack-python3-jobs
