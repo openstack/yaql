@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+#
 #    Copyright (c) 2013-2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -121,7 +120,3 @@ def main():
         parser('__main(true)').evaluate(data, context)
     else:
         parser('__main(false)').evaluate(data, context)
-
-
-if __name__ == "__main__":
-    main()
