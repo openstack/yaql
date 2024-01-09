@@ -72,7 +72,7 @@ def main(context, show_tokens, parser):
             if ex.position:
                 pointer_string = (" " * (ex.position + len(PROMPT))) + '^'
                 print(pointer_string)
-            print(ex.message)
+            print(str(ex))
             continue
         try:
             res = expr.evaluate(context=context)
@@ -90,8 +90,8 @@ def load_data(data_file, context):
         return
     try:
         data = json.loads(json_str)
-    except Exception as e:
-        print('Unable to parse data: ' + e.message)
+    except ValueError as e:
+        print('Unable to parse data: ' + str(e))
         return
     context['$'] = utils.convert_input_data(data)
     print('Data from file {0} loaded into context'.format(data_file))
