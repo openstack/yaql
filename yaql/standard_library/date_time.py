@@ -322,7 +322,7 @@ def localtz():
         yaql> localtz().hours
         3.0
     """
-    if python_time.daylight:
+    if python_time.localtime().tm_isdst:
         return TIMESPAN_TYPE(seconds=-python_time.altzone)
     else:
         return TIMESPAN_TYPE(seconds=-python_time.timezone)
