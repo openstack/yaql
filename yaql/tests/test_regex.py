@@ -50,9 +50,10 @@ class TestRegex(yaql.tests.TestCase):
             '24.16 = 24(2-4) + 16(5-7)',
             self.eval(
                 r"regex(`(\d+)\.?(\d+)?`).search("r"'aa24.16bb', "
-                r"format('{0} = {1}({2}-{3}) + {4}({5}-{6})', "
-                r"$.value, $2.value, $2.start, $2.end, "
-                r"$3.value, $3.start, $3.end))"))
+                r"$.value + ' = ' + "
+                r"$2.value + '(' + str($2.start) + '-' + str($2.end) + ') + ' "
+                r"+ $3.value + '(' + str($3.start) + '-' + str($3.end) + ')')"
+            ))
 
     def test_search_all(self):
         self.assertEqual(

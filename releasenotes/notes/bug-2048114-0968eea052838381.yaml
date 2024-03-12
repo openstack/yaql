@@ -1,0 +1,12 @@
+---
+upgrade:
+  - |
+    The format YAQL function has been removed, because of its vulnability. See
+    the security section to find more details.
+
+security:
+  - |
+    `<https://bugs.launchpad.net/murano/+bug/2048114>`_: The format YAQL
+    function has been removed, because it allowed too arbitrary data access
+    which results in data leak. Users can replace the format function by
+    ``+`` operator and ``str`` YAQL function.

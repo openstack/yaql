@@ -118,10 +118,6 @@ class TestStrings(yaql.tests.TestCase):
     def test_concat_func(self):
         self.assertEqual('abc', self.eval("concat(a, b, c)"))
 
-    def test_format(self):
-        self.assertEqual('a->b', self.eval("'{0}->{x}'.format(a, x => b)"))
-        self.assertEqual('a->b', self.eval("format('{0}->{x}', a, x => b)"))
-
     def test_trim(self):
         self.assertEqual('x', self.eval("'  x  '.trim()"))
         self.assertEqual('x', self.eval("'abxba'.trim(ab)"))

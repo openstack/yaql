@@ -564,38 +564,6 @@ def replace_with_dict(string, str_func, replacements, count=-1):
     return string
 
 
-@specs.parameter('__format_string', yaqltypes.String())
-@specs.extension_method
-def format_(__format_string, *args, **kwargs):
-    """:yaql:format
-
-    Returns a string formatted with positional and keyword arguments.
-
-    :signature: string.format([args], {kwargs})
-    :receiverArg string: input string for formatting. Can be passed only as
-        first positional argument if used as a function. Can contain literal
-        text or replacement fields marked by braces {}. Every replacement field
-        should contain either the numeric index of a positional argument or the
-        name of a keyword argument
-    :argType string: string
-    :arg [args]: values for replacements for numeric markers
-    :argType [args]: chain of strings
-    :arg {kwargs}: values for keyword replacements
-    :argType {kwargs}: chain of key-value arguments, where values are strings
-    :returnValue: string
-
-    .. code::
-
-        yaql> "abc{0}ab{1}abc".format(" ", ",")
-        "abc ab,abc"
-        yaql> "abc{foo}ab{bar}abc".format(foo => " ", bar => ",")
-        "abc ab,abc"
-        yaql> format("abc{0}ab{foo}abc", ' ', foo => ",")
-        "abc ab,abc"
-    """
-    return __format_string.format(*args, **kwargs)
-
-
 @specs.parameter('left', yaqltypes.String())
 @specs.parameter('right', int)
 @specs.name('#operator_*')
@@ -1045,7 +1013,6 @@ def register(context):
     context.register_function(trim_right)
     context.register_function(replace)
     context.register_function(replace_with_dict)
-    context.register_function(format_)
     context.register_function(is_empty)
     context.register_function(string_by_int)
     context.register_function(int_by_string)
