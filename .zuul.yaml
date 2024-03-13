@@ -2,3 +2,4 @@
     templates:
       - build-openstack-docs-pti
       - openstack-python3-jobs
+      - release-notes-jobs-python3
