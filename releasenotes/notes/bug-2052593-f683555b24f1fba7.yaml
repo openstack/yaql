@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    The localtz YAQL function now returns daylight saving time when daylight
+    saving is actually enabled in the system. Previously it returned daylight
+    saving time if the system time zone has daylight saving time.
