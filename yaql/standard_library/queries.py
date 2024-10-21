@@ -45,7 +45,7 @@ class OrderingIterable(utils.IterableType):
         return iter(self.sorted)
 
     def do_sort(outer_self):
-        class Comparator(object):
+        class Comparator:
             @staticmethod
             def compare(left, right):
                 result = 0
@@ -229,10 +229,8 @@ def append(collection, *args):
         yaql> [1, 2, 3].append(4, 5)
         [1, 2, 3, 4, 5]
     """
-    for t in collection:
-        yield t
-    for t in args:
-        yield t
+    yield from collection
+    yield from args
 
 
 @specs.parameter('collection', yaqltypes.Iterable())
@@ -653,8 +651,7 @@ def select_many(collection, selector):
     for item in collection:
         inner = selector(item)
         if utils.is_iterable(inner):
-            for t in inner:
-                yield t
+            yield from inner
         else:
             yield inner
 
@@ -847,7 +844,7 @@ def then_by_descending(collection, selector, context):
     return collection
 
 
-class GroupAggregator(object):
+class GroupAggregator:
     """A function to aggregate the members of a group found by group_by().
 
     The user-specified function is provided at creation. It is assumed to
@@ -1460,7 +1457,7 @@ def _merge_dicts(dict1, dict2, list_merge_func, item_merger, max_levels=0):
             if max_levels != 1 and isinstance(value2, utils.MappingType):
                 if not isinstance(value1, utils.MappingType):
                     raise TypeError(
-                        'Cannot merge {0} with {1}'.format(
+                        'Cannot merge {} with {}'.format(
                             type(value1), type(value2)))
                 result[key] = _merge_dicts(
                     value1, value2, list_merge_func, item_merger,
@@ -1468,7 +1465,7 @@ def _merge_dicts(dict1, dict2, list_merge_func, item_merger, max_levels=0):
             elif max_levels != 1 and utils.is_sequence(value2):
                 if not utils.is_sequence(value1):
                     raise TypeError(
-                        'Cannot merge {0} with {1}'.format(
+                        'Cannot merge {} with {}'.format(
                             type(value1), type(value2)))
                 result[key] = list_merge_func(value1, value2)
             else:

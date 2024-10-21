@@ -120,7 +120,7 @@ def unpack(sequence, context, *args):
     """
     lst = tuple(itertools.islice(sequence, len(args) + 1))
     if 0 < len(args) != len(lst):
-        raise ValueError('Cannot unpack {0} elements into {1}'.format(
+        raise ValueError('Cannot unpack {} elements into {}'.format(
             len(lst), len(args)))
     if len(args) > 0:
         for i in range(len(lst)):
@@ -231,7 +231,7 @@ def send_context(left, right):
 @specs.method
 @specs.parameter('condition', yaqltypes.Lambda())
 @specs.parameter('message', yaqltypes.String())
-def assert__(engine, obj, condition, message=u'Assertion failed'):
+def assert__(engine, obj, condition, message='Assertion failed'):
     """:yaql:assert
 
     Evaluates condition against object. If it evaluates to true returns the
@@ -329,7 +329,7 @@ def get_property(func, obj, name):
         yaql> now().year
         2016
     """
-    func_name = '#property#{0}'.format(name)
+    func_name = '#property#{}'.format(name)
     return func(func_name, obj)
 
 

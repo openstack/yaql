@@ -43,8 +43,7 @@ def list_(delegate, *args):
     def rec(seq):
         for t in seq:
             if utils.is_iterator(t):
-                for t2 in rec(t):
-                    yield t2
+                yield from rec(t)
             else:
                 yield t
     return delegate(rec(args))
@@ -69,8 +68,7 @@ def flatten(collection):
     """
     for t in collection:
         if utils.is_iterable(t):
-            for t2 in flatten(t):
-                yield t2
+            yield from flatten(t)
         else:
             yield t
 
@@ -868,8 +866,7 @@ def replace_many(collection, position, values, count=1):
         if (count >= 0 and position <= i < position + count
                 or count < 0 and i >= position):
             if not yielded:
-                for v in values:
-                    yield v
+                yield from values
                 yielded = True
         else:
             yield t
@@ -1019,17 +1016,14 @@ def insert_many(collection, position, values):
     """
     i = -1
     if position < 0:
-        for j in values:
-            yield j
+        yield from values
     for i, t in enumerate(collection):
         if i == position:
-            for j in values:
-                yield j
+            yield from values
         yield t
 
     if position > i:
-        for j in values:
-            yield j
+        yield from values
 
 
 @specs.parameter('s', utils.SetType, alias='set')
@@ -1073,8 +1067,7 @@ def set_(delegate, *args):
     def rec(seq):
         for t in seq:
             if utils.is_iterator(t):
-                for t2 in rec(t):
-                    yield t2
+                yield from rec(t)
             else:
                 yield t
     return delegate(rec(args))

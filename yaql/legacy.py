@@ -20,7 +20,7 @@ from yaql.standard_library import legacy as std_legacy
 class YaqlFactory(factory.YaqlFactory):
     def __init__(self, allow_delegates=False):
         # noinspection PyTypeChecker
-        super(YaqlFactory, self).__init__(
+        super().__init__(
             keyword_operator=None, allow_delegates=allow_delegates)
         self.insert_operator(
             'or', True, '=>',
@@ -30,7 +30,7 @@ class YaqlFactory(factory.YaqlFactory):
         options = dict(options or {})
         options['yaql.convertTuplesToLists'] = False
         options['yaql.iterableDicts'] = True
-        return super(YaqlFactory, self).create(options)
+        return super().create(options)
 
 
 def create_context(*args, **kwargs):

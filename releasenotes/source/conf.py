@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -55,8 +54,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'YAQL Release Notes'
-copyright = u'2016, YAQL Developers'
+project = 'YAQL Release Notes'
+copyright = '2016, YAQL Developers'
 
 # Release do not need a version number in the title, they
 # cover multiple versions.
@@ -212,8 +211,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ('index', 'YaqlReleaseNotes.tex', u'Yaql Release Notes Documentation',
-     u'Yaql Developers', 'manual'),
+    ('index', 'YaqlReleaseNotes.tex', 'Yaql Release Notes Documentation',
+     'Yaql Developers', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -242,8 +241,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'yaqlreleasenotes', u'Yaql Release Notes Documentation',
-     [u'Yaql Developers'], 1)
+    ('index', 'yaqlreleasenotes', 'Yaql Release Notes Documentation',
+     ['Yaql Developers'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -256,8 +255,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'YaqlReleaseNotes', u'Yaql Release Notes Documentation',
-     u'Yaql Developers', 'YaqlReleaseNotes',
+    ('index', 'YaqlReleaseNotes', 'Yaql Release Notes Documentation',
+     'Yaql Developers', 'YaqlReleaseNotes',
      'One line description of project.',
      'Miscellaneous'),
 ]

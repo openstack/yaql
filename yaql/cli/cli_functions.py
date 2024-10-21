@@ -27,7 +27,7 @@ PROMPT = "yaql> "
 
 def main(context, show_tokens, parser):
     print("Yet Another Query Language - command-line query tool")
-    print("Version {0}".format(version))
+    print("Version {}".format(version))
     if context.get_data('legacy', False):
         print("Running in a legacy (0.2.x compatible) mode")
     print("Copyright (c) 2013-2017 Mirantis, Inc")
@@ -78,15 +78,15 @@ def main(context, show_tokens, parser):
             res = expr.evaluate(context=context)
             print_output(res, context)
         except Exception as ex:
-            print(u'Execution exception: {0}'.format(ex), file=sys.stderr)
+            print('Execution exception: {}'.format(ex), file=sys.stderr)
 
 
 def load_data(data_file, context):
     try:
         json_str = open(os.path.expanduser(data_file)).read()
-    except IOError as e:
-        print("Unable to read data file '{0}': {1}".format(data_file,
-                                                           e.strerror))
+    except OSError as e:
+        print("Unable to read data file '{}': {}".format(data_file,
+                                                         e.strerror))
         return
     try:
         data = json.loads(json_str)
@@ -94,7 +94,7 @@ def load_data(data_file, context):
         print('Unable to parse data: ' + str(e))
         return
     context['$'] = utils.convert_input_data(data)
-    print('Data from file {0} loaded into context'.format(data_file))
+    print('Data from file {} loaded into context'.format(data_file))
 
 
 def register_in_context(context, parser):
@@ -117,7 +117,7 @@ def evaluate(expr, parser, data, context):
         res = parser(expr).evaluate(data, context)
         print_output(res, context)
     except Exception as ex:
-        print(u'Execution exception: {0}'.format(ex), file=sys.stderr)
+        print('Execution exception: {}'.format(ex), file=sys.stderr)
         exit(1)
 
 

@@ -98,7 +98,7 @@ class ContextBase(metaclass=abc.ABCMeta):
 class Context(ContextBase):
     def __init__(self, parent_context=None, data=utils.NO_VALUE,
                  convention=None):
-        super(Context, self).__init__(parent_context, convention)
+        super().__init__(parent_context, convention)
         self._functions = {}
         self._data = {}
         self._exclusive_funcs = set()
@@ -186,12 +186,12 @@ class MultiContext(ContextBase):
             filter(lambda t: t, map(lambda t: t.parent, context_list))
         )
         if not parents:
-            super(MultiContext, self).__init__(None, convention)
+            super().__init__(None, convention)
         elif len(parents) == 1:
-            super(MultiContext, self).__init__(parents[0], convention)
+            super().__init__(parents[0], convention)
         else:
-            super(MultiContext, self).__init__(MultiContext(parents),
-                                               convention)
+            super().__init__(MultiContext(parents),
+                             convention)
 
     def register_function(self, spec, *args, **kwargs):
         self._context_list[0].register_function(spec, *args, **kwargs)
@@ -256,11 +256,11 @@ class LinkedContext(ContextBase):
     def __init__(self, parent_context, linked_context, convention=None):
         self.linked_context = linked_context
         if linked_context.parent:
-            super(LinkedContext, self).__init__(
+            super().__init__(
                 LinkedContext(parent_context, linked_context.parent,
                               convention), convention)
         else:
-            super(LinkedContext, self).__init__(parent_context, convention)
+            super().__init__(parent_context, convention)
 
     def register_function(self, spec, *args, **kwargs):
         return self.linked_context.register_function(spec, *args, **kwargs)

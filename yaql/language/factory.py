@@ -39,13 +39,13 @@ OperatorType = collections.namedtuple('OperatorType', [
 )
 
 
-class YaqlOperators(object):
+class YaqlOperators:
     def __init__(self, operators, name_value_op=None):
         self.operators = operators
         self.name_value_op = name_value_op
 
 
-class YaqlEngine(object):
+class YaqlEngine:
     def __init__(self, ply_lexer, ply_parser, options, factory):
         self._lexer = ply_lexer
         self._parser = ply_parser
@@ -81,7 +81,7 @@ class YaqlEngine(object):
         return YaqlEngine(self._lexer, self._parser, opt, self._factory)
 
 
-class YaqlFactory(object):
+class YaqlFactory:
     def __init__(self, keyword_operator='=>', allow_delegates=False):
         self._keyword_operator = keyword_operator
         self._allow_delegates = allow_delegates
@@ -156,7 +156,7 @@ class YaqlFactory(object):
                 position = i
                 break
             if position < 0:
-                raise ValueError('Operator {0} is not found'.format(
+                raise ValueError('Operator {} is not found'.format(
                     existing_operator))
             while position < len(self.operators) and len(
                     self.operators[position]) > 1:

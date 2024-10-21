@@ -21,7 +21,7 @@ from yaql.language import lexer
 
 
 def create_marker(msg):
-    class MarkerClass(object):
+    class MarkerClass:
         def __repr__(self):
             return msg
     return MarkerClass()
@@ -113,7 +113,7 @@ def convert_tuples_to_lists(engine):
     return engine.options.get('yaql.convertTuplesToLists', True)
 
 
-class MappingRule(object):
+class MappingRule:
     def __init__(self, source, destination):
         self.source = source
         self.destination = destination

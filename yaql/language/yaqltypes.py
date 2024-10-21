@@ -62,7 +62,7 @@ class GenericType(SmartType):
     __slots__ = ('checker', 'converter')
 
     def __init__(self, nullable, checker=None, converter=None):
-        super(GenericType, self).__init__(nullable)
+        super().__init__(nullable)
         self.checker = checker
         self.converter = converter
 
@@ -70,7 +70,7 @@ class GenericType(SmartType):
         if isinstance(value, expressions.Constant):
             value = value.value
 
-        if not super(GenericType, self).check(
+        if not super().check(
                 value, context, engine, *args, **kwargs):
             return False
         if value is None or isinstance(value, expressions.Expression):
@@ -83,7 +83,7 @@ class GenericType(SmartType):
                 *args, **kwargs):
         if isinstance(value, expressions.Constant):
             value = value.value
-        super(GenericType, self).convert(
+        super().convert(
             value, receiver, context, function_spec, engine, *args, **kwargs)
         if value is None or not self.converter:
             return value
@@ -102,7 +102,7 @@ class PythonType(GenericType):
             validators = [validators]
         self.validators = validators
 
-        super(PythonType, self).__init__(
+        super().__init__(
             nullable,
             lambda value, context, *args, **kwargs: isinstance(
                 value, self.python_type) and all(
@@ -127,14 +127,14 @@ class MappingRule(LazyParameterType, SmartType):
     __slots__ = tuple()
 
     def __init__(self):
-        super(MappingRule, self).__init__(False)
+        super().__init__(False)
 
     def check(self, value, context, *args, **kwargs):
         return isinstance(value, expressions.MappingRuleExpression)
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
-        super(MappingRule, self).convert(
+        super().convert(
             value, receiver, context, function_spec, engine, *args, **kwargs)
         wrap = lambda func: lambda: func(receiver, context, engine)  # noqa
 
@@ -145,11 +145,11 @@ class String(PythonType):
     __slots__ = tuple()
 
     def __init__(self, nullable=False):
-        super(String, self).__init__(str, nullable=nullable)
+        super().__init__(str, nullable=nullable)
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
-        value = super(String, self).convert(
+        value = super().convert(
             value, receiver, context, function_spec, engine, *args, **kwargs)
         return None if value is None else str(value)
 
@@ -158,7 +158,7 @@ class Integer(PythonType):
     __slots__ = tuple()
 
     def __init__(self, nullable=False):
-        super(Integer, self).__init__(
+        super().__init__(
             int, nullable=nullable,
             validators=[lambda t: not isinstance(t, bool)])
 
@@ -169,7 +169,7 @@ class DateTime(PythonType):
     utctz = tz.tzutc()
 
     def __init__(self, nullable=False):
-        super(DateTime, self).__init__(datetime.datetime, nullable=nullable)
+        super().__init__(datetime.datetime, nullable=nullable)
 
     def convert(self, value, *args, **kwargs):
         if isinstance(value, datetime.datetime):
@@ -177,14 +177,14 @@ class DateTime(PythonType):
                 return value.replace(tzinfo=self.utctz)
             else:
                 return value
-        return super(DateTime, self).convert(value, *args, **kwargs)
+        return super().convert(value, *args, **kwargs)
 
 
 class Iterable(PythonType):
     __slots__ = tuple()
 
     def __init__(self, validators=None, nullable=False):
-        super(Iterable, self).__init__(
+        super().__init__(
             collections.abc.Iterable, nullable,
             [lambda t: not isinstance(t, (str, utils.MappingType))] + (
                 validators or []))
@@ -193,12 +193,12 @@ class Iterable(PythonType):
         if isinstance(value, utils.MappingType) and engine.options.get(
                 'yaql.iterableDicts', False):
             return True
-        return super(Iterable, self).check(
+        return super().check(
             value, context, engine, *args, **kwargs)
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
-        res = super(Iterable, self).convert(
+        res = super().convert(
             value, receiver, context, function_spec, engine, *args, **kwargs)
         return None if res is None else utils.limit_iterable(res, engine)
 
@@ -207,7 +207,7 @@ class Iterator(Iterable):
     __slots__ = tuple()
 
     def __init__(self, validators=None, nullable=False):
-        super(Iterator, self).__init__(
+        super().__init__(
             validators=[utils.is_iterator] + (validators or []),
             nullable=nullable)
 
@@ -216,7 +216,7 @@ class Sequence(PythonType):
     __slots__ = tuple()
 
     def __init__(self, validators=None, nullable=False):
-        super(Sequence, self).__init__(
+        super().__init__(
             collections.abc.Sequence, nullable, [
                 lambda t: not isinstance(t, (str, dict))] + (
                     validators or []))
@@ -226,7 +226,7 @@ class Number(PythonType):
     __slots__ = tuple()
 
     def __init__(self, nullable=False):
-        super(Number, self).__init__(
+        super().__init__(
             (int, float), nullable,
             validators=[lambda t: not isinstance(t, bool)])
 
@@ -235,7 +235,7 @@ class Lambda(LazyParameterType, SmartType):
     __slots__ = ('with_context', 'method')
 
     def __init__(self, with_context=False, method=False):
-        super(Lambda, self).__init__(True)
+        super().__init__(True)
         self.with_context = with_context
         self.method = method
 
@@ -243,7 +243,7 @@ class Lambda(LazyParameterType, SmartType):
         if self.method and isinstance(
                 value, expressions.Expression) and not value.uses_receiver:
             return False
-        return super(Lambda, self).check(value, context, *args, **kwargs)
+        return super().check(value, context, *args, **kwargs)
 
     @staticmethod
     def _publish_params(context, args, kwargs):
@@ -264,7 +264,7 @@ class Lambda(LazyParameterType, SmartType):
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *convert_args, **convert_kwargs):
-        super(Lambda, self).convert(
+        super().convert(
             value, receiver, context, function_spec, engine,
             *convert_args, **convert_kwargs)
         if value is None:
@@ -301,7 +301,7 @@ class Super(HiddenParameterType, SmartType):
         self.with_context = with_context
         self.method = method
         self.with_name = with_name
-        super(Super, self).__init__(False)
+        super().__init__(False)
 
     @staticmethod
     def _find_function_context(spec, context):
@@ -353,7 +353,7 @@ class Context(HiddenParameterType, SmartType):
     __slots__ = tuple()
 
     def __init__(self):
-        super(Context, self).__init__(False)
+        super().__init__(False)
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
@@ -365,7 +365,7 @@ class Delegate(HiddenParameterType, SmartType):
 
     def __init__(self, name=None, with_context=False, method=False,
                  use_convention=True):
-        super(Delegate, self).__init__(False)
+        super().__init__(False)
         self.name = name
         self.with_context = with_context
         self.method = method
@@ -403,7 +403,7 @@ class Receiver(HiddenParameterType, SmartType):
     __slots__ = tuple()
 
     def __init__(self):
-        super(Receiver, self).__init__(False)
+        super().__init__(False)
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
@@ -414,7 +414,7 @@ class Engine(HiddenParameterType, SmartType):
     __slots__ = tuple()
 
     def __init__(self):
-        super(Engine, self).__init__(False)
+        super().__init__(False)
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
@@ -425,7 +425,7 @@ class FunctionDefinition(HiddenParameterType, SmartType):
     __slots__ = tuple()
 
     def __init__(self):
-        super(FunctionDefinition, self).__init__(False)
+        super().__init__(False)
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
@@ -437,16 +437,16 @@ class Constant(SmartType):
 
     def __init__(self, nullable, expand=True):
         self.expand = expand
-        super(Constant, self).__init__(nullable)
+        super().__init__(nullable)
 
     def check(self, value, context, *args, **kwargs):
-        return super(Constant, self).check(
+        return super().check(
             value, context, *args, **kwargs) and (
             value is None or isinstance(value, expressions.Constant))
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
-        super(Constant, self).convert(
+        super().convert(
             value, receiver, context, function_spec, engine, *args, **kwargs)
         return value.value if self.expand else value
 
@@ -455,7 +455,7 @@ class YaqlExpression(LazyParameterType, SmartType):
     __slots__ = ('_expression_types',)
 
     def __init__(self, expression_type=None):
-        super(YaqlExpression, self).__init__(False)
+        super().__init__(False)
         if expression_type and not utils.is_sequence(expression_type):
             expression_type = (expression_type,)
         self._expression_types = expression_type
@@ -467,7 +467,7 @@ class YaqlExpression(LazyParameterType, SmartType):
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):
-        super(YaqlExpression, self).convert(
+        super().convert(
             value, receiver, context, function_spec, engine, *args, **kwargs)
         return value
 
@@ -476,10 +476,10 @@ class StringConstant(Constant):
     __slots__ = tuple()
 
     def __init__(self, nullable=False):
-        super(StringConstant, self).__init__(nullable)
+        super().__init__(nullable)
 
     def check(self, value, context, *args, **kwargs):
-        return super(StringConstant, self).check(
+        return super().check(
             value, context, *args, **kwargs) and (
             value is None or isinstance(value.value, str))
 
@@ -488,7 +488,7 @@ class Keyword(Constant):
     __slots__ = tuple()
 
     def __init__(self, expand=True):
-        super(Keyword, self).__init__(False, expand)
+        super().__init__(False, expand)
 
     def check(self, value, context, *args, **kwargs):
         return isinstance(value, expressions.KeywordConstant)
@@ -498,10 +498,10 @@ class BooleanConstant(Constant):
     __slots__ = tuple()
 
     def __init__(self, nullable=False, expand=True):
-        super(BooleanConstant, self).__init__(nullable, expand)
+        super().__init__(nullable, expand)
 
     def check(self, value, context, *args, **kwargs):
-        return super(BooleanConstant, self).check(
+        return super().check(
             value, context, *args, **kwargs) and (
             value is None or type(value.value) is bool)
 
@@ -510,10 +510,10 @@ class NumericConstant(Constant):
     __slots__ = tuple()
 
     def __init__(self, nullable=False, expand=True):
-        super(NumericConstant, self).__init__(nullable, expand)
+        super().__init__(nullable, expand)
 
     def check(self, value, context, *args, **kwargs):
-        return super(NumericConstant, self).check(
+        return super().check(
             value, context, *args, **kwargs) and (
             value is None or
             isinstance(value.value, (int, float)) and
@@ -525,7 +525,7 @@ class SmartTypeAggregation(SmartType, metaclass=abc.ABCMeta):
 
     def __init__(self, *args, **kwargs):
         self.nullable = kwargs.pop('nullable', False)
-        super(SmartTypeAggregation, self).__init__(self.nullable)
+        super().__init__(self.nullable)
 
         self.types = []
         for item in args:
@@ -625,12 +625,12 @@ class NotOfType(SmartType):
         if isinstance(smart_type, (type, tuple)):
             smart_type = PythonType(smart_type, nullable=nullable)
         self.smart_type = smart_type
-        super(NotOfType, self).__init__(nullable)
+        super().__init__(nullable)
 
     def check(self, value, context, engine, *args, **kwargs):
         if isinstance(value, expressions.Constant):
             value = value.value
-        if not super(NotOfType, self).check(
+        if not super().check(
                 value, context, engine, *args, **kwargs):
             return False
         if value is None or isinstance(value, expressions.Expression):
@@ -643,7 +643,7 @@ class YaqlInterface(HiddenParameterType, SmartType):
     __slots__ = tuple()
 
     def __init__(self):
-        super(YaqlInterface, self).__init__(False)
+        super().__init__(False)
 
     def convert(self, value, receiver, context, function_spec, engine,
                 *args, **kwargs):

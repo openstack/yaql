@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #    Copyright (c) 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -35,11 +33,11 @@ class TestStrings(yaql.tests.TestCase):
 
     def test_to_upper(self):
         self.assertEqual('QQ', self.eval('qq.toUpper()'))
-        self.assertEqual(u'ПРИВЕТ', self.eval(u'Привет.toUpper()'))
+        self.assertEqual('ПРИВЕТ', self.eval('Привет.toUpper()'))
 
     def test_to_lower(self):
         self.assertEqual('qq', self.eval('QQ.toLower()'))
-        self.assertEqual(u'привет', self.eval(u'Привет.toLower()'))
+        self.assertEqual('привет', self.eval('Привет.toLower()'))
 
     def test_eq(self):
         self.assertTrue(self.eval('a = a'))

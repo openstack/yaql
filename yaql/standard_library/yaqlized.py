@@ -73,7 +73,7 @@ class Yaqlized(yaqltypes.GenericType):
                 return False
             return True
 
-        super(Yaqlized, self).__init__(checker=check_value, nullable=False)
+        super().__init__(checker=check_value, nullable=False)
 
 
 def _match_name_to_entry(name, entry):

@@ -84,7 +84,7 @@ class TestCase(testtools.TestCase):
         self._engine = None
         self._legacy_context = None
         self._legacy_engine = None
-        super(TestCase, self).setUp()
+        super().setUp()
 
     def eval(self, expression, data=None, context=None):
         expr = self.engine(expression)

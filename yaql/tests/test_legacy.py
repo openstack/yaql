@@ -18,7 +18,7 @@ import yaql.tests
 
 class TestLegacyNewEngine(yaql.tests.TestCase):
     def __init__(self, *args, **kwargs):
-        super(TestLegacyNewEngine, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.eval = self.legacy_eval_new_engine
 
     def test_dict(self):
@@ -123,7 +123,7 @@ class TestLegacyNewEngine(yaql.tests.TestCase):
 
 class TestLegacy(TestLegacyNewEngine):
     def __init__(self, *args, **kwargs):
-        super(TestLegacy, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.eval = self.legacy_eval
 
     def test_tuples_func(self):

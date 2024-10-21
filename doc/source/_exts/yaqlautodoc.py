@@ -33,7 +33,7 @@ def _get_modules_names(package):
     return sorted(
         map(operator.itemgetter(1),
             pkgutil.walk_packages(package.__path__,
-                                  '{0}.'.format(package.__name__))))
+                                  '{}.'.format(package.__name__))))
 
 
 def _get_functions_names(module):
@@ -89,7 +89,7 @@ def write_method_doc(method, output):
                 else:
                     call_as = 'function'
 
-                call_as_str = '    :callAs: {0}\n'.format(call_as)
+                call_as_str = '    :callAs: {}\n'.format(call_as)
                 text = doc[:position] + call_as_str + doc[position:]
             except ValueError:
                 text = doc
@@ -168,7 +168,7 @@ def generate_doc(source):
     try:
         package = importlib.import_module(source)
     except ImportError:
-        return 'Error: No such module {0}'.format(source)
+        return 'Error: No such module {}'.format(source)
     out = io.StringIO()
     try:
         if hasattr(package, '__path__'):
@@ -179,7 +179,7 @@ def generate_doc(source):
         return res
 
     except Exception as e:
-        return '.. code-block:: python\n\n    Error: {0}\n    {1}\n\n'.format(
+        return '.. code-block:: python\n\n    Error: {}\n    {}\n\n'.format(
             str(e), '\n    '.join([''] + traceback.format_exc().split('\n')))
 
 
@@ -188,7 +188,7 @@ class YaqlDocNode(nodes.General, nodes.Element):
 
     def __init__(self, source):
         self.source = source
-        super(YaqlDocNode, self).__init__()
+        super().__init__()
 
 
 class YaqlDocDirective(rst.Directive):

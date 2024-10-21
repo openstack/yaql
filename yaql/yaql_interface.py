@@ -15,7 +15,7 @@
 from yaql.language import utils
 
 
-class YaqlInterface(object):
+class YaqlInterface:
     def __init__(self, context, engine, receiver=utils.NO_VALUE):
         self.__sender = receiver
         self.__engine = engine

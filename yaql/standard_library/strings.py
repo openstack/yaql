@@ -584,7 +584,7 @@ def string_by_int(left, right, engine):
         yaql> "ab" * 2
         "abab"
     """
-    utils.limit_memory_usage(engine, (-right + 1, u''), (right, left))
+    utils.limit_memory_usage(engine, (-right + 1, ''), (right, left))
     return left * right
 
 

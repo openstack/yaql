@@ -368,7 +368,7 @@ class TestQueries(yaql.tests.TestCase):
 
     def test_accumulate(self):
         self.assertEqual(
-            ['a', 'aa', u'aab', 'aaba', 'aabaa'],
+            ['a', 'aa', 'aab', 'aaba', 'aabaa'],
             self.eval('[a,a,b,a,a].accumulate($1 + $2)'))
 
         self.assertEqual(

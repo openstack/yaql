@@ -21,7 +21,7 @@ from yaql.language import yaqltypes
 NO_DEFAULT = utils.create_marker('<NoValue>')
 
 
-class ParameterDefinition(object):
+class ParameterDefinition:
     __slots__ = ('value_type', 'name', 'position', 'default', 'alias')
 
     def __init__(self, name, value_type=None, position=None, alias=None,
@@ -33,7 +33,7 @@ class ParameterDefinition(object):
         self.alias = alias
 
     def __repr__(self):
-        return '{0} => position={1} value_type={2} default={3}'.format(
+        return '{} => position={} value_type={} default={}'.format(
             self.name, self.position, self.value_type, self.default)
 
     def clone(self):
@@ -41,7 +41,7 @@ class ParameterDefinition(object):
                                    self.position, self.alias, self.default)
 
 
-class FunctionDefinition(object):
+class FunctionDefinition:
     __slots__ = ('is_method', 'is_function', 'name', 'parameters', 'payload',
                  'doc', 'no_kwargs', 'meta')
 
@@ -461,7 +461,7 @@ def meta(name, value):
 
 def yaql_property(source_type):
     def decorator(func):
-        @name('#property#{0}'.format(get_function_definition(func).name))
+        @name('#property#{}'.format(get_function_definition(func).name))
         @parameter('obj', source_type)
         def wrapper(obj):
             return func(obj)

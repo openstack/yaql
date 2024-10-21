@@ -19,7 +19,7 @@ from yaql.language import exceptions
 from yaql.language import utils
 
 
-class Expression(object):
+class Expression:
     def __call__(self, receiver, context, engine):
         pass
 
@@ -34,7 +34,7 @@ class Function(Expression):
         return context(self.name, engine, receiver, context)(*self.args)
 
     def __str__(self):
-        return '{0}({1})'.format(self.name, ', '.join(map(str, self.args)))
+        return '{}({})'.format(self.name, ', '.join(map(str, self.args)))
 
 
 class BinaryOperator(Function):
@@ -44,7 +44,7 @@ class BinaryOperator(Function):
         else:
             func_name = '*' + alias
         self.operator = op
-        super(BinaryOperator, self).__init__(func_name, obj1, obj2)
+        super().__init__(func_name, obj1, obj2)
         self.uses_receiver = False
 
 
@@ -55,31 +55,31 @@ class UnaryOperator(Function):
         else:
             func_name = '*' + alias
         self.operator = op
-        super(UnaryOperator, self).__init__(func_name, obj)
+        super().__init__(func_name, obj)
         self.uses_receiver = False
 
 
 class IndexExpression(Function):
     def __init__(self, value, *args):
-        super(IndexExpression, self).__init__('#indexer', value, *args)
+        super().__init__('#indexer', value, *args)
         self.uses_receiver = False
 
 
 class ListExpression(Function):
     def __init__(self, *args):
-        super(ListExpression, self).__init__('#list', *args)
+        super().__init__('#list', *args)
         self.uses_receiver = False
 
 
 class MapExpression(Function):
     def __init__(self, *args):
-        super(MapExpression, self).__init__('#map', *args)
+        super().__init__('#map', *args)
         self.uses_receiver = False
 
 
 class GetContextValue(Function):
     def __init__(self, path):
-        super(GetContextValue, self).__init__('#get_context_data', path)
+        super().__init__('#get_context_data', path)
         self.path = path
         self.uses_receiver = False
 
@@ -94,7 +94,7 @@ class Constant(Expression):
 
     def __str__(self):
         if isinstance(self.value, str):
-            return "'{0}'".format(self.value)
+            return "'{}'".format(self.value)
         return str(self.value)
 
     def __call__(self, receiver, context, engine):
@@ -124,7 +124,7 @@ class MappingRuleExpression(Expression):
         self.uses_receiver = False
 
     def __str__(self):
-        return u'{0} => {1}'.format(self.source, self.destination)
+        return '{} => {}'.format(self.source, self.destination)
 
     def __call__(self, receiver, context, engine):
         return utils.MappingRule(
@@ -137,14 +137,14 @@ class Statement(Function):
         self.expression = expression
         self.uses_receiver = False
         self.engine = engine
-        super(Statement, self).__init__('#finalize', expression)
+        super().__init__('#finalize', expression)
 
     def __call__(self, receiver, context, engine):
         if not context.collect_functions('#finalize'):
             context = context.create_child_context()
             context.register_function(lambda x: x, name='#finalize')
         try:
-            return super(Statement, self).__call__(receiver, context, engine)
+            return super().__call__(receiver, context, engine)
         except exceptions.WrappedException as e:
             raise e.wrapped.with_traceback(sys.exc_info()[2])
 

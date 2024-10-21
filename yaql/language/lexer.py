@@ -36,7 +36,7 @@ def decode_escapes(s):
 
 
 # noinspection PyPep8Naming
-class Lexer(object):
+class Lexer:
     t_ignore = ' \t\r\n'
 
     literals = '()],}'

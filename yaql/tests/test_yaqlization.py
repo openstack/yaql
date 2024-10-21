@@ -21,10 +21,10 @@ from yaql import yaqlization
 
 class TestYaqlization(tests.TestCase):
     def _get_sample_class(self):
-        class D(object):
+        class D:
             d_attr = 777
 
-        class C(object):
+        class C:
             def __init__(self):
                 self.attr = 123
 
@@ -176,14 +176,14 @@ class TestYaqlization(tests.TestCase):
 
     def test_yaqlify_decorator(self):
         @yaqlization.yaqlize
-        class C(object):
+        class C:
             attr = 555
 
         self.assertEqual(555, self.eval('$.attr', C()))
 
     def test_yaqlify_decorator_with_parameters(self):
         @yaqlization.yaqlize(yaqlize_attributes=True)
-        class C(object):
+        class C:
             attr = 555
 
         self.assertEqual(555, self.eval('$.attr', C()))

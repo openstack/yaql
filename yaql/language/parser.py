@@ -19,7 +19,7 @@ from yaql.language import expressions
 from yaql.language import utils
 
 
-class Parser(object):
+class Parser:
     def __init__(self, lexer, yaql_operators, engine):
         self.tokens = lexer.tokens
         self._aliases = {}
@@ -54,7 +54,7 @@ class Parser(object):
                     la.append(op_name)
                     binary_doc += ((
                         'value : ' if not binary_doc else '\n| ') +
-                        'value {0} value'.format(op_name))
+                        'value {} value'.format(op_name))
 
         # noinspection PyProtectedMember
         def p_binary(this, p):
