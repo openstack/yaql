@@ -89,7 +89,7 @@ OP_U                 : 19
 QUOTED_STRING        : 23
 TRUE                 : 25
 ]                    : 36 37
-error                : 
+error                :
 }                    : 38
 
 Nonterminals, with rules where they appear
