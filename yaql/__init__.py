@@ -12,8 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os.path
-import pkg_resources
+import pbr.version
 
 from yaql.language import contexts
 from yaql.language import conventions
@@ -39,15 +38,11 @@ _default_context = None
 
 
 def detect_version():
+    version_info = pbr.version.VersionInfo('yaql')
     try:
-        dist = pkg_resources.get_distribution('yaql')
-        location = os.path.normcase(dist.location)
-        this_location = os.path.normcase(__file__)
-        if not this_location.startswith(os.path.join(location, 'yaql')):
-            raise pkg_resources.DistributionNotFound()
-        return dist.version
-    except pkg_resources.DistributionNotFound:
-        return 'Undefined (package was not installed with setuptools)'
+        return version_info.version_string()
+    except AttributeError:
+        return 'Undefined (package was not installed)'
 
 
 __version__ = detect_version()
