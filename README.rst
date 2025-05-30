@@ -36,6 +36,9 @@ Run some queries:
     yaql> $.customers.groupBy($.sex)
     ...
     yaql> $.customers.where($.orders.len() >= 1 or name = "John")
+    ...
+    yaql> let(min_orders => $.min_orders)
+    ...   -> $.customers.where($.orders.len() >= $min_orders)
 
 Project Resources
 -----------------
