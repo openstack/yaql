@@ -31,7 +31,7 @@ classifiers = [
 Homepage = "http://yaql.readthedocs.io"
 Repository = "https://opendev.org/openstack/yaql/"
 
-[project.entry-points.console_scripts]
+[project.scripts]
 yaql = "yaql.cli.run:main"
 
 [tool.setuptools]
