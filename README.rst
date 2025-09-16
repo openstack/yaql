@@ -48,8 +48,11 @@ Project Resources
 * Project status, bugs, and blueprints are tracked on
   `Launchpad <https://launchpad.net/yaql>`_
 
+* The yaql._ply module is a copy of
+  the `ply library <https://github.com/dabeaz/ply>`_ .
 
 License
 -------
 
-Apache License Version 2.0 http://www.apache.org/licenses/LICENSE-2.0
+Apache License Version 2.0 http://www.apache.org/licenses/LICENSE-2.0 ,
+unless otherwise noted

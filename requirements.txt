@@ -1,3 +1,2 @@
 pbr>=1.8
 python-dateutil>=2.4.2
-ply

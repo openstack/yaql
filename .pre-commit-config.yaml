@@ -28,3 +28,4 @@ repos:
     hooks:
       - id: pyupgrade
         args: [--py3-only]
+        exclude: ^yaql/_ply

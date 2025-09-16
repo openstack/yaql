@@ -14,10 +14,9 @@
 
 import collections
 import re
-import uuid
 
-from ply import lex
-from ply import yacc
+from yaql._ply import lex
+from yaql._ply import yacc
 
 from yaql.language import exceptions
 from yaql.language import expressions
@@ -241,7 +240,6 @@ class YaqlFactory:
                             reflags=re.UNICODE | re.VERBOSE)
         ply_parser = yacc.yacc(
             module=self._create_parser(lexer_rules, operators),
-            debug=False if not options else options.get('yaql.debug', False),
-            tabmodule='m' + uuid.uuid4().hex, write_tables=False)
+            debug=False if not options else options.get('yaql.debug', False))
 
         return YaqlEngine(ply_lexer, ply_parser, options, self)

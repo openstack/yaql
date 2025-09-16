@@ -34,7 +34,7 @@ class TestEngine(tests.TestCase):
             yaql.factory.YaqlFactory().create(options=debug_opts)
             sys.stderr.seek(0)
             err_out = sys.stderr.read()
-            self.assertEqual('Generating LALR tables\n', err_out)
+            self.assertEqual('', err_out)
         finally:
             # put stderr back
             sys.stderr = copy
