@@ -94,7 +94,7 @@ class Constant(Expression):
 
     def __str__(self):
         if isinstance(self.value, str):
-            return "'{}'".format(self.value)
+            return f"'{self.value}'"
         return str(self.value)
 
     def __call__(self, receiver, context, engine):
@@ -124,7 +124,7 @@ class MappingRuleExpression(Expression):
         self.uses_receiver = False
 
     def __str__(self):
-        return '{} => {}'.format(self.source, self.destination)
+        return f'{self.source} => {self.destination}'
 
     def __call__(self, receiver, context, engine):
         return utils.MappingRule(

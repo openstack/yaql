@@ -54,7 +54,7 @@ class Parser:
                     la.append(op_name)
                     binary_doc += ((
                         'value : ' if not binary_doc else '\n| ') +
-                        'value {} value'.format(op_name))
+                        f'value {op_name} value')
 
         # noinspection PyProtectedMember
         def p_binary(this, p):

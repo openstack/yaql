@@ -32,19 +32,19 @@ class MethodResolutionError(ResolutionError):
 class NoFunctionRegisteredException(FunctionResolutionError):
     def __init__(self, name):
         super().__init__(
-            'Unknown function "{}"'.format(name))
+            f'Unknown function "{name}"')
 
 
 class NoMethodRegisteredException(MethodResolutionError):
     def __init__(self, name, receiver):
         super().__init__(
-            'Unknown method "{}" for receiver {}'.format(name, receiver))
+            f'Unknown method "{name}" for receiver {receiver}')
 
 
 class NoMatchingFunctionException(FunctionResolutionError):
     def __init__(self, name):
         super().__init__(
-            'No function "{}" matches supplied arguments'.format(name))
+            f'No function "{name}" matches supplied arguments')
 
 
 class NoMatchingMethodException(MethodResolutionError):
@@ -57,20 +57,20 @@ class NoMatchingMethodException(MethodResolutionError):
 class AmbiguousFunctionException(FunctionResolutionError):
     def __init__(self, name):
         super().__init__(
-            'Ambiguous function "{}"'.format(name))
+            f'Ambiguous function "{name}"')
 
 
 class AmbiguousMethodException(MethodResolutionError):
     def __init__(self, name, receiver):
         super().__init__(
-            'Ambiguous method "{}" for receiver {}'.format(name, receiver))
+            f'Ambiguous method "{name}" for receiver {receiver}')
 
 
 class ArgumentException(YaqlException):
     def __init__(self, argument_name):
         self.parameter_name = argument_name
         super().__init__(
-            'Invalid argument {}'.format(argument_name))
+            f'Invalid argument {argument_name}')
 
 
 class MappingTranslationException(YaqlException):
@@ -147,7 +147,7 @@ class WrappedException(YaqlException):
 class CollectionTooLargeException(YaqlException):
     def __init__(self, count):
         super().__init__(
-            'Collection length exceeds {} elements'.format(count))
+            f'Collection length exceeds {count} elements')
 
 
 class MemoryQuotaExceededException(YaqlException):

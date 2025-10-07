@@ -329,7 +329,7 @@ def get_property(func, obj, name):
         yaql> now().year
         2016
     """
-    func_name = '#property#{}'.format(name)
+    func_name = f'#property#{name}'
     return func(func_name, obj)
 
 

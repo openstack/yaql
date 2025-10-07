@@ -27,5 +27,5 @@ repos:
     rev: v3.19.1
     hooks:
       - id: pyupgrade
-        args: [--py3-only]
+        args: [--py310-plus]
         exclude: ^yaql/_ply

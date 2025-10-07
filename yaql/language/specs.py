@@ -461,7 +461,7 @@ def meta(name, value):
 
 def yaql_property(source_type):
     def decorator(func):
-        @name('#property#{}'.format(get_function_definition(func).name))
+        @name(f'#property#{get_function_definition(func).name}')
         @parameter('obj', source_type)
         def wrapper(obj):
             return func(obj)

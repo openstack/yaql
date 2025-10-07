@@ -33,7 +33,7 @@ def _get_modules_names(package):
     return sorted(
         map(operator.itemgetter(1),
             pkgutil.walk_packages(package.__path__,
-                                  '{}.'.format(package.__name__))))
+                                  f'{package.__name__}.')))
 
 
 def _get_functions_names(module):
@@ -89,7 +89,7 @@ def write_method_doc(method, output):
                 else:
                     call_as = 'function'
 
-                call_as_str = '    :callAs: {}\n'.format(call_as)
+                call_as_str = f'    :callAs: {call_as}\n'
                 text = doc[:position] + call_as_str + doc[position:]
             except ValueError:
                 text = doc
@@ -168,7 +168,7 @@ def generate_doc(source):
     try:
         package = importlib.import_module(source)
     except ImportError:
-        return 'Error: No such module {}'.format(source)
+        return f'Error: No such module {source}'
     out = io.StringIO()
     try:
         if hasattr(package, '__path__'):
