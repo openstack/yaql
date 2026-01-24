@@ -118,7 +118,7 @@ YaqlFactory = factory.YaqlFactory
 
 
 def eval(expression, data=None):
-    global _cached_engine, _cached_expressions, _default_context
+    global _cached_engine, _default_context
 
     if _cached_engine is None:
         _cached_engine = YaqlFactory().create()
