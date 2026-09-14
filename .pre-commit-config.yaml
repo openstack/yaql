@@ -19,7 +19,7 @@ repos:
       - id: check-yaml
         files: .*\.(yaml|yml)$
   - repo: https://opendev.org/openstack/hacking
-    rev: 8.0.0
+    rev: 8.1.0
     hooks:
       - id: hacking
         additional_dependencies: []
