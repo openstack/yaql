@@ -24,6 +24,7 @@ def create_marker(msg):
     class MarkerClass:
         def __repr__(self):
             return msg
+
     return MarkerClass()
 
 
@@ -36,21 +37,26 @@ def is_iterator(obj):
 
 
 def is_iterable(obj):
-    return (
-        isinstance(obj, collections.abc.Iterable) and
-        not isinstance(obj, (str, MappingType))
+    return isinstance(obj, collections.abc.Iterable) and not isinstance(
+        obj, (str, MappingType)
     )
 
 
 def is_sequence(obj):
     return isinstance(obj, collections.abc.Sequence) and not isinstance(
-        obj, str)
+        obj, str
+    )
 
 
 def is_mutable(obj):
-    return isinstance(obj, (collections.abc.MutableSequence,
-                            collections.abc.MutableSet,
-                            collections.abc.MutableMapping))
+    return isinstance(
+        obj,
+        (
+            collections.abc.MutableSequence,
+            collections.abc.MutableSet,
+            collections.abc.MutableMapping,
+        ),
+    )
 
 
 SequenceType = collections.abc.Sequence
@@ -72,8 +78,9 @@ def convert_input_data(obj, rec=None):
     elif isinstance(obj, SequenceType):
         return tuple(rec(t, rec) for t in obj)
     elif isinstance(obj, MappingType):
-        return FrozenDict((rec(key, rec), rec(value, rec))
-                          for key, value in obj.items())
+        return FrozenDict(
+            (rec(key, rec), rec(value, rec)) for key, value in obj.items()
+        )
     elif isinstance(obj, MutableSetType):
         return frozenset(rec(t, rec) for t in obj)
     elif isinstance(obj, IterableType):
@@ -89,16 +96,19 @@ def convert_output_data(obj, limit_func, engine, rec=None):
         result = {}
         for key, value in limit_func(obj.items()):
             result[rec(key, limit_func, engine, rec)] = rec(
-                value, limit_func, engine, rec)
+                value, limit_func, engine, rec
+            )
         return result
     elif isinstance(obj, SetType):
         set_type = list if convert_sets_to_lists(engine) else set
-        return set_type(rec(t, limit_func, engine, rec)
-                        for t in limit_func(obj))
+        return set_type(
+            rec(t, limit_func, engine, rec) for t in limit_func(obj)
+        )
     elif isinstance(obj, (tuple, list)):
         seq_type = list if convert_tuples_to_lists(engine) else type(obj)
-        return seq_type(rec(t, limit_func, engine, rec)
-                        for t in limit_func(obj))
+        return seq_type(
+            rec(t, limit_func, engine, rec) for t in limit_func(obj)
+        )
     elif is_iterable(obj):
         return list(rec(t, limit_func, engine, rec) for t in limit_func(obj))
     else:
@@ -199,6 +209,7 @@ def limit_iterable(iterable, limit_or_engine):
             if 0 <= max_count <= i:
                 raise exceptions.CollectionTooLargeException(max_count)
             yield t
+
     return limiting_iterator()
 
 
@@ -221,10 +232,12 @@ def to_extension_method(name, context):
     layers = context.collect_functions(
         name,
         lambda t, ctx: not t.is_function or not t.is_method,
-        use_convention=True)
+        use_convention=True,
+    )
     if len(layers) > 1:
         raise ValueError(
-            'Multi layer functions are not supported by this helper method')
+            'Multi layer functions are not supported by this helper method'
+        )
     if len(layers) > 0:
         for spec in layers[0]:
             spec = spec.clone()

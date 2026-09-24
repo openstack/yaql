@@ -19,19 +19,23 @@ from yaql.language import exceptions
 
 
 NEVER_MATCHING_RE = '(?!x)x'
-ESCAPE_SEQUENCE_RE = re.compile(r'''
+ESCAPE_SEQUENCE_RE = re.compile(
+    r'''
     ( \\U........      # 8-digit hex escapes
     | \\u....          # 4-digit hex escapes
     | \\x..            # 2-digit hex escapes
     | \\[0-7]{1,3}     # Octal escapes
     | \\N\{[^}]+\}     # Unicode characters by name
     | \\[\\'"abfnrtv]  # Single-character escapes
-    )''', re.UNICODE | re.VERBOSE)
+    )''',
+    re.UNICODE | re.VERBOSE,
+)
 
 
 def decode_escapes(s):
     def decode_match(match):
         return codecs.decode(match.group(0), 'unicode-escape')
+
     return ESCAPE_SEQUENCE_RE.sub(decode_match, s)
 
 
@@ -40,17 +44,9 @@ class Lexer:
     t_ignore = ' \t\r\n'
 
     literals = '()],}'
-    keywords = {
-        'true': 'TRUE',
-        'false': 'FALSE',
-        'null': 'NULL'
-    }
+    keywords = {'true': 'TRUE', 'false': 'FALSE', 'null': 'NULL'}
 
-    keyword_to_val = {
-        'TRUE': True,
-        'FALSE': False,
-        'NULL': None
-    }
+    keyword_to_val = {'TRUE': True, 'FALSE': False, 'NULL': None}
 
     def __init__(self, yaql_operators):
         self._operators_table = yaql_operators.operators
@@ -62,7 +58,7 @@ class Lexer:
             'DOLLAR',
             'INDEXER',
             'MAPPING',
-            'MAP'
+            'MAP',
         ] + list(self.keywords.values())
         for op_symbol, op_record in self._operators_table.items():
             if op_symbol in ('[]', '{}'):
@@ -70,12 +66,17 @@ class Lexer:
             lexem_name = op_record[2]
             setattr(self, 't_' + lexem_name, re.escape(op_symbol))
             self.tokens.append(lexem_name)
-        self.t_MAPPING = re.escape(yaql_operators.name_value_op) \
-            if yaql_operators.name_value_op else NEVER_MATCHING_RE
-        self.t_INDEXER = '\\[' \
-            if '[]' in self._operators_table else NEVER_MATCHING_RE
-        self.t_MAP = '{' \
-            if '{}' in self._operators_table else NEVER_MATCHING_RE
+        self.t_MAPPING = (
+            re.escape(yaql_operators.name_value_op)
+            if yaql_operators.name_value_op
+            else NEVER_MATCHING_RE
+        )
+        self.t_INDEXER = (
+            '\\[' if '[]' in self._operators_table else NEVER_MATCHING_RE
+        )
+        self.t_MAP = (
+            '{' if '{}' in self._operators_table else NEVER_MATCHING_RE
+        )
 
     @staticmethod
     def t_DOLLAR(t):

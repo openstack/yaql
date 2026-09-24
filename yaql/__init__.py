@@ -51,9 +51,11 @@ __version__ = detect_version()
 def _setup_context(data, context, finalizer, convention):
     if context is None:
         context = contexts.Context(
-            convention=convention or conventions.CamelCaseConvention())
+            convention=convention or conventions.CamelCaseConvention()
+        )
 
     if finalizer is None:
+
         @specs.parameter('iterator', yaqltypes.Iterable())
         @specs.name('#iter')
         def limit(iterator):
@@ -77,13 +79,26 @@ def _setup_context(data, context, finalizer, convention):
     return context
 
 
-def create_context(data=utils.NO_VALUE, context=None, system=True,
-                   common=True, boolean=True, strings=True,
-                   math=True, collections=True, queries=True,
-                   regex=True, branching=True,
-                   no_sets=False, finalizer=None, delegates=False,
-                   convention=None, datetime=True, yaqlized=True,
-                   group_by_agg_fallback=True):
+def create_context(
+    data=utils.NO_VALUE,
+    context=None,
+    system=True,
+    common=True,
+    boolean=True,
+    strings=True,
+    math=True,
+    collections=True,
+    queries=True,
+    regex=True,
+    branching=True,
+    no_sets=False,
+    finalizer=None,
+    delegates=False,
+    convention=None,
+    datetime=True,
+    yaqlized=True,
+    group_by_agg_fallback=True,
+):
 
     context = _setup_context(data, context, finalizer, convention)
     if system:
@@ -132,4 +147,5 @@ def eval(expression, data=None):
         _default_context = create_context()
 
     return parsed_expression.evaluate(
-        data=data, context=_default_context.create_child_context())
+        data=data, context=_default_context.create_child_context()
+    )

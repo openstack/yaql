@@ -47,8 +47,10 @@ class TestQueries(yaql.tests.TestCase):
         data = [1, 2, 3, 4, 5, 6]
         self.assertEqual(
             [4],
-            self.eval('$.where($ < 4).select($ * $).skip(1).limit(1)',
-                      data=data))
+            self.eval(
+                '$.where($ < 4).select($ * $).skip(1).limit(1)', data=data
+            ),
+        )
 
     def test_distinct(self):
         data = [1, 2, 3, 2, 4, 8]
@@ -58,15 +60,19 @@ class TestQueries(yaql.tests.TestCase):
     def test_distinct_structures(self):
         data = [{'a': 1}, {'b': 2}, {'a': 1}]
         self.assertEqual(
-            [{'a': 1}, {'b': 2}],
-            self.eval('$.distinct()', data=data))
+            [{'a': 1}, {'b': 2}], self.eval('$.distinct()', data=data)
+        )
 
     def test_distinct_with_selector(self):
         data = [['a', 1], ['b', 2], ['c', 1], ['d', 3], ['e', 2]]
-        self.assertCountEqual([['a', 1], ['b', 2], ['d', 3]],
-                              self.eval('$.distinct($[1])', data=data))
-        self.assertCountEqual([['a', 1], ['b', 2], ['d', 3]],
-                              self.eval('distinct($, $[1])', data=data))
+        self.assertCountEqual(
+            [['a', 1], ['b', 2], ['d', 3]],
+            self.eval('$.distinct($[1])', data=data),
+        )
+        self.assertCountEqual(
+            [['a', 1], ['b', 2], ['d', 3]],
+            self.eval('distinct($, $[1])', data=data),
+        )
 
     def test_any(self):
         self.assertFalse(self.eval('$.any()', data=[]))
@@ -81,23 +87,29 @@ class TestQueries(yaql.tests.TestCase):
 
     def test_enumerate(self):
         data = [1, 2, 3]
-        self.assertEqual([[0, 1], [1, 2], [2, 3]],
-                         self.eval('$.enumerate()', data=data))
-        self.assertEqual([[3, 1], [4, 2], [5, 3]],
-                         self.eval('$.enumerate(3)', data=data))
-        self.assertEqual([[0, 1], [1, 2], [2, 3]],
-                         self.eval('enumerate($)', data=data))
-        self.assertEqual([[3, 1], [4, 2], [5, 3]],
-                         self.eval('enumerate($, 3)', data=data))
+        self.assertEqual(
+            [[0, 1], [1, 2], [2, 3]], self.eval('$.enumerate()', data=data)
+        )
+        self.assertEqual(
+            [[3, 1], [4, 2], [5, 3]], self.eval('$.enumerate(3)', data=data)
+        )
+        self.assertEqual(
+            [[0, 1], [1, 2], [2, 3]], self.eval('enumerate($)', data=data)
+        )
+        self.assertEqual(
+            [[3, 1], [4, 2], [5, 3]], self.eval('enumerate($, 3)', data=data)
+        )
 
     def test_concat(self):
         data = [1, 2, 3]
         self.assertEqual(
             [1, 2, 3, 2, 4, 6],
-            self.eval('$.select($).concat($.select(2 * $))', data=data))
+            self.eval('$.select($).concat($.select(2 * $))', data=data),
+        )
         self.assertEqual(
             [1, 2, 3, 2, 4, 6, 1, 2, 3],
-            self.eval('concat($, $.select(2 * $), $)', data=data))
+            self.eval('concat($, $.select(2 * $), $)', data=data),
+        )
 
     def test_len(self):
         data = [1, 2, 3]
@@ -106,7 +118,10 @@ class TestQueries(yaql.tests.TestCase):
         self.assertEqual(3, self.eval('$.count()', data=data))
         self.assertRaises(
             exceptions.FunctionResolutionError,
-            self.eval, 'count($)', data=data)
+            self.eval,
+            'count($)',
+            data=data,
+        )
 
     def test_sum(self):
         data = range(4)
@@ -117,13 +132,15 @@ class TestQueries(yaql.tests.TestCase):
     def test_memorize(self):
         generator_func = lambda: (i for i in range(3))  # noqa: E731
         self.assertRaises(
-            TypeError,
-            self.eval, '$.len() + $.sum()', data=generator_func())
+            TypeError, self.eval, '$.len() + $.sum()', data=generator_func()
+        )
 
         self.assertEqual(
             6,
-            self.eval('let($.memorize()) -> $.len() + $.sum()',
-                      data=generator_func()))
+            self.eval(
+                'let($.memorize()) -> $.len() + $.sum()', data=generator_func()
+            ),
+        )
 
     def test_first(self):
         self.assertEqual(2, self.eval('list(2, 3).first()'))
@@ -150,49 +167,56 @@ class TestQueries(yaql.tests.TestCase):
         self.assertEqual([4, 3, 2], self.eval('range(4, 1, -1)'))
 
     def test_select_many(self):
-        self.assertEqual([0, 0, 1, 0, 1, 2],
-                         self.eval('range(4).selectMany(range($))'))
+        self.assertEqual(
+            [0, 0, 1, 0, 1, 2], self.eval('range(4).selectMany(range($))')
+        )
 
     def test_select_many_scalar(self):
         # check that string is not interpreted as a sequence and that
         # selectMany works when selector returns scalar
-        self.assertEqual(
-            ['xx', 'xx'],
-            self.eval('range(2).selectMany(xx)'))
+        self.assertEqual(['xx', 'xx'], self.eval('range(2).selectMany(xx)'))
 
     def test_order_by(self):
         self.assertEqual(
-            [1, 2, 3, 4],
-            self.eval('$.orderBy($)', data=[4, 2, 1, 3]))
+            [1, 2, 3, 4], self.eval('$.orderBy($)', data=[4, 2, 1, 3])
+        )
 
         self.assertEqual(
             [4, 3, 2, 1],
-            self.eval('$.orderByDescending($)', data=[4, 2, 1, 3]))
+            self.eval('$.orderByDescending($)', data=[4, 2, 1, 3]),
+        )
 
     def test_order_by_multilevel(self):
         self.assertEqual(
             [[1, 0], [1, 5], [2, 2]],
             self.eval(
-                '$.orderBy($[0]).thenBy($[1])',
-                data=[[2, 2], [1, 5], [1, 0]]))
+                '$.orderBy($[0]).thenBy($[1])', data=[[2, 2], [1, 5], [1, 0]]
+            ),
+        )
 
         self.assertEqual(
             [[1, 5], [1, 0], [2, 2]],
             self.eval(
                 '$.orderBy($[0]).thenByDescending($[1])',
-                data=[[2, 2], [1, 5], [1, 0]]))
+                data=[[2, 2], [1, 5], [1, 0]],
+            ),
+        )
 
         self.assertEqual(
             [[2, 2], [1, 0], [1, 5]],
             self.eval(
                 '$.orderByDescending($[0]).thenBy($[1])',
-                data=[[2, 2], [1, 5], [1, 0]]))
+                data=[[2, 2], [1, 5], [1, 0]],
+            ),
+        )
 
         self.assertEqual(
             [[2, 2], [1, 5], [1, 0]],
             self.eval(
                 '$.orderByDescending($[0]).thenByDescending($[1])',
-                data=[[2, 2], [1, 5], [1, 0]]))
+                data=[[2, 2], [1, 5], [1, 0]],
+            ),
+        )
 
     def test_group_by(self):
         data = {'a': 1, 'b': 2, 'c': 1, 'd': 3, 'e': 2}
@@ -200,31 +224,40 @@ class TestQueries(yaql.tests.TestCase):
             [
                 [1, [['a', 1], ['c', 1]]],
                 [2, [['b', 2], ['e', 2]]],
-                [3, [['d', 3]]]
+                [3, [['d', 3]]],
             ],
-            self.eval('$.items().orderBy($[0]).groupBy($[1])', data=data))
+            self.eval('$.items().orderBy($[0]).groupBy($[1])', data=data),
+        )
 
         self.assertCountEqual(
             [[1, ['a', 'c']], [2, ['b', 'e']], [3, ['d']]],
-            self.eval('$.items().orderBy($[0]).groupBy($[1], $[0])',
-                      data=data))
+            self.eval(
+                '$.items().orderBy($[0]).groupBy($[1], $[0])', data=data
+            ),
+        )
 
         self.assertCountEqual(
             [[1, 'ac'], [2, 'be'], [3, 'd']],
-            self.eval('$.items().orderBy($[0]).'
-                      'groupBy($[1], $[0], $.sum())', data=data))
+            self.eval(
+                '$.items().orderBy($[0]).groupBy($[1], $[0], $.sum())',
+                data=data,
+            ),
+        )
 
         self.assertCountEqual(
             [[1, ['a', 1, 'c', 1]], [2, ['b', 2, 'e', 2]], [3, ['d', 3]]],
-            self.eval('$.items().orderBy($[0]).'
-                      'groupBy($[1],,  $.sum())',
-                      data=data))
+            self.eval(
+                '$.items().orderBy($[0]).groupBy($[1],,  $.sum())', data=data
+            ),
+        )
 
         self.assertCountEqual(
             [[1, ['a', 1, 'c', 1]], [2, ['b', 2, 'e', 2]], [3, ['d', 3]]],
-            self.eval('$.items().orderBy($[0]).'
-                      'groupBy($[1], aggregator => $.sum())',
-                      data=data))
+            self.eval(
+                '$.items().orderBy($[0]).groupBy($[1], aggregator => $.sum())',
+                data=data,
+            ),
+        )
 
     def test_group_by_old_syntax(self):
         # Test the syntax used in 1.1.1 and earlier, where the aggregator
@@ -235,75 +268,80 @@ class TestQueries(yaql.tests.TestCase):
 
         self.assertCountEqual(
             [[1, 'ac'], [2, 'be'], [3, 'd']],
-            self.eval('$.items().orderBy($[0]).'
-                      'groupBy($[1], $[0], [$[0], $[1].sum()])', data=data))
+            self.eval(
+                '$.items().orderBy($[0]).'
+                'groupBy($[1], $[0], [$[0], $[1].sum()])',
+                data=data,
+            ),
+        )
 
         self.assertCountEqual(
             [[1, ['a', 1, 'c', 1]], [2, ['b', 2, 'e', 2]], [3, ['d', 3]]],
-            self.eval('$.items().orderBy($[0]).'
-                      'groupBy($[1],,  [$[0], $[1].sum()])',
-                      data=data))
+            self.eval(
+                '$.items().orderBy($[0]).groupBy($[1],,  [$[0], $[1].sum()])',
+                data=data,
+            ),
+        )
 
         self.assertCountEqual(
             [[1, ['a', 1, 'c', 1]], [2, ['b', 2, 'e', 2]], [3, ['d', 3]]],
-            self.eval('$.items().orderBy($[0]).'
-                      'groupBy($[1], aggregator => [$[0], $[1].sum()])',
-                      data=data))
+            self.eval(
+                '$.items().orderBy($[0]).'
+                'groupBy($[1], aggregator => [$[0], $[1].sum()])',
+                data=data,
+            ),
+        )
 
     def test_join(self):
         self.assertEqual(
             [[2, 1], [3, 1], [3, 2], [4, 1], [4, 2], [4, 3]],
-            self.eval('$.join($, $1 > $2, [$1, $2])', data=[1, 2, 3, 4]))
+            self.eval('$.join($, $1 > $2, [$1, $2])', data=[1, 2, 3, 4]),
+        )
 
         self.assertEqual(
             [[1, 3], [1, 4], [2, 3], [2, 4]],
-            self.eval('[1,2].join([3, 4], true, [$1, $2])'))
+            self.eval('[1,2].join([3, 4], true, [$1, $2])'),
+        )
 
     def test_zip(self):
-        self.assertEqual(
-            [[1, 4], [2, 5]],
-            self.eval('[1, 2, 3].zip([4, 5])'))
+        self.assertEqual([[1, 4], [2, 5]], self.eval('[1, 2, 3].zip([4, 5])'))
 
         self.assertEqual(
             [[1, 4, 6], [2, 5, 7]],
-            self.eval('[1, 2, 3].zip([4, 5], [6, 7, 8])'))
+            self.eval('[1, 2, 3].zip([4, 5], [6, 7, 8])'),
+        )
 
     def test_zip_longest(self):
         self.assertEqual(
             [[1, 4], [2, 5], [3, None]],
-            self.eval('[1, 2, 3].zipLongest([4, 5])'))
+            self.eval('[1, 2, 3].zipLongest([4, 5])'),
+        )
 
         self.assertEqual(
             [[1, 4, 6], [2, 5, None], [3, None, None]],
-            self.eval('[1, 2, 3].zipLongest([4, 5], [6])'))
+            self.eval('[1, 2, 3].zipLongest([4, 5], [6])'),
+        )
 
         self.assertEqual(
             [[1, 4], [2, 5], [3, 0]],
-            self.eval('[1, 2, 3].zipLongest([4, 5], default => 0)'))
+            self.eval('[1, 2, 3].zipLongest([4, 5], default => 0)'),
+        )
 
     def test_repeat(self):
-        self.assertEqual(
-            [None, None],
-            self.eval('null.repeat(2)'))
+        self.assertEqual([None, None], self.eval('null.repeat(2)'))
 
-        self.assertEqual(
-            [1, 1, 1, 1, 1],
-            self.eval('1.repeat().limit(5)'))
+        self.assertEqual([1, 1, 1, 1, 1], self.eval('1.repeat().limit(5)'))
 
     def test_cycle(self):
-        self.assertEqual(
-            [1, 2, 1, 2, 1],
-            self.eval('[1, 2].cycle().take(5)'))
+        self.assertEqual([1, 2, 1, 2, 1], self.eval('[1, 2].cycle().take(5)'))
 
     def test_take_while(self):
         self.assertEqual(
-            [1, 2, 3],
-            self.eval('[1, 2, 3, 4, 5].takeWhile($ < 4)'))
+            [1, 2, 3], self.eval('[1, 2, 3, 4, 5].takeWhile($ < 4)')
+        )
 
     def test_skip_while(self):
-        self.assertEqual(
-            [4, 5],
-            self.eval('[1, 2, 3, 4, 5].skipWhile($ < 4)'))
+        self.assertEqual([4, 5], self.eval('[1, 2, 3, 4, 5].skipWhile($ < 4)'))
 
     def test_index_of(self):
         self.assertEqual(1, self.eval('[1, 2, 3, 2, 1].indexOf(2)'))
@@ -320,86 +358,73 @@ class TestQueries(yaql.tests.TestCase):
     def test_last_index_where(self):
         self.assertEqual(3, self.eval('[1, 2, 3, 2, 1].lastIndexWhere($ = 2)'))
         self.assertEqual(
-            -1, self.eval('[1, 2, 3, 2, 1].lastIndexWhere($ = 22)'))
+            -1, self.eval('[1, 2, 3, 2, 1].lastIndexWhere($ = 22)')
+        )
 
     def test_slice(self):
         self.assertEqual(
-            [[1, 2], [3, 4], [5]],
-            self.eval('range(1, 6).slice(2)'))
+            [[1, 2], [3, 4], [5]], self.eval('range(1, 6).slice(2)')
+        )
         self.assertEqual(
-            [[1, 2], [3, 4], [5]],
-            self.eval('[1,2,3,4,5].slice(2)'))
+            [[1, 2], [3, 4], [5]], self.eval('[1,2,3,4,5].slice(2)')
+        )
 
     def test_split_where(self):
         self.assertEqual(
-            [[], [2, 3], [5]],
-            self.eval('range(1, 6).splitWhere($ mod 3 = 1)'))
+            [[], [2, 3], [5]], self.eval('range(1, 6).splitWhere($ mod 3 = 1)')
+        )
 
     def test_split_at(self):
         self.assertEqual(
-            [[1, 2], [3, 4, 5]],
-            self.eval('range(1, 6).splitAt(2)'))
+            [[1, 2], [3, 4, 5]], self.eval('range(1, 6).splitAt(2)')
+        )
 
     def test_slice_where(self):
         self.assertEqual(
             [['a', 'a'], ['b'], ['a', 'a']],
-            self.eval('[a,a,b,a,a].sliceWhere($ != a)'))
+            self.eval('[a,a,b,a,a].sliceWhere($ != a)'),
+        )
 
     def test_aggregate(self):
-        self.assertEqual(
-            'aabaa',
-            self.eval('[a,a,b,a,a].aggregate($1 + $2)'))
+        self.assertEqual('aabaa', self.eval('[a,a,b,a,a].aggregate($1 + $2)'))
 
-        self.assertRaises(
-            TypeError,
-            self.eval, '[].aggregate($1 + $2)')
+        self.assertRaises(TypeError, self.eval, '[].aggregate($1 + $2)')
 
-        self.assertEqual(
-            1,
-            self.eval('[].aggregate($1 + $2, 1)'))
+        self.assertEqual(1, self.eval('[].aggregate($1 + $2, 1)'))
 
-        self.assertEqual(
-            'aabaa',
-            self.eval('[a,a,b,a,a].reduce($1 + $2)'))
+        self.assertEqual('aabaa', self.eval('[a,a,b,a,a].reduce($1 + $2)'))
 
-        self.assertEqual(
-            0,
-            self.eval('[].reduce(max($1, $2), 0)'))
+        self.assertEqual(0, self.eval('[].reduce(max($1, $2), 0)'))
 
     def test_accumulate(self):
         self.assertEqual(
             ['a', 'aa', 'aab', 'aaba', 'aabaa'],
-            self.eval('[a,a,b,a,a].accumulate($1 + $2)'))
+            self.eval('[a,a,b,a,a].accumulate($1 + $2)'),
+        )
 
-        self.assertEqual(
-            [1],
-            self.eval('[].accumulate($1 + $2, 1)'))
+        self.assertEqual([1], self.eval('[].accumulate($1 + $2, 1)'))
 
     def test_default_if_empty(self):
-        self.assertEqual(
-            [1, 2],
-            self.eval('[].defaultIfEmpty([1, 2])'))
+        self.assertEqual([1, 2], self.eval('[].defaultIfEmpty([1, 2])'))
+
+        self.assertEqual([3, 4], self.eval('[3, 4].defaultIfEmpty([1, 2])'))
 
         self.assertEqual(
-            [3, 4],
-            self.eval('[3, 4].defaultIfEmpty([1, 2])'))
+            [1, 2], self.eval('[].select($).defaultIfEmpty([1, 2])')
+        )
 
         self.assertEqual(
-            [1, 2],
-            self.eval('[].select($).defaultIfEmpty([1, 2])'))
-
-        self.assertEqual(
-            [3, 4],
-            self.eval('[3, 4].select($).defaultIfEmpty([1, 2])'))
+            [3, 4], self.eval('[3, 4].select($).defaultIfEmpty([1, 2])')
+        )
 
     def test_generate(self):
         self.assertEqual(
-            [0, 2, 4, 6, 8],
-            self.eval('generate(0, $ < 10, $ + 2)'))
+            [0, 2, 4, 6, 8], self.eval('generate(0, $ < 10, $ + 2)')
+        )
 
         self.assertEqual(
-            [0, 4, 16, 36, 64],
-            self.eval('generate(0, $ < 10, $ + 2, $ * $)'))
+            [0, 4, 16, 36, 64], self.eval('generate(0, $ < 10, $ + 2, $ * $)')
+        )
 
     def test_generate_many(self):
         friends = {
@@ -412,63 +437,58 @@ class TestQueries(yaql.tests.TestCase):
             ['John', 'Jim', 'Jay', 'Jax', 'Jacob', 'Jonathan', 'Jenifer'],
             self.eval(
                 'generateMany(John, $data.get($, []), decycle => true)',
-                friends))
+                friends,
+            ),
+        )
 
         self.assertEqual(
             ['John', 'Jim', 'Jay', 'Jax', 'Jacob', 'Jonathan', 'Jenifer'],
             self.eval(
                 'generateMany(John, $data.get($, []), '
-                'decycle => true, depthFirst => true)', friends))
+                'decycle => true, depthFirst => true)',
+                friends,
+            ),
+        )
 
         self.assertEqual(
-            ['Jay'],
-            self.eval('generateMany(Jay, $data.get($, []))', friends))
+            ['Jay'], self.eval('generateMany(Jay, $data.get($, []))', friends)
+        )
 
         self.assertEqual(
             ['JAX', 'JOHN', 'JACOB', 'JONATHAN', 'JIM', 'JENIFER', 'JAY'],
             self.eval(
                 'generateMany(Jax, $data.get($, []), $.toUpper(), '
-                'decycle => true)', friends))
+                'decycle => true)',
+                friends,
+            ),
+        )
 
     def test_max(self):
-        self.assertEqual(
-            0,
-            self.eval('[].max(0)'))
+        self.assertEqual(0, self.eval('[].max(0)'))
 
-        self.assertRaises(
-            TypeError,
-            self.eval, '[].max()')
+        self.assertRaises(TypeError, self.eval, '[].max()')
 
-        self.assertEqual(
-            234,
-            self.eval('[44, 234, 23].max()'))
+        self.assertEqual(234, self.eval('[44, 234, 23].max()'))
 
     def test_min(self):
-        self.assertEqual(
-            0,
-            self.eval('[].min(0)'))
+        self.assertEqual(0, self.eval('[].min(0)'))
 
-        self.assertRaises(
-            TypeError,
-            self.eval, '[].min()')
+        self.assertRaises(TypeError, self.eval, '[].min()')
 
-        self.assertEqual(
-            23,
-            self.eval('[44, 234, 23].min()'))
+        self.assertEqual(23, self.eval('[44, 234, 23].min()'))
 
     def test_reverse(self):
         self.assertEqual(
-            [9, 4, 1],
-            self.eval('range(1, 4).select($*$).reverse()'))
+            [9, 4, 1], self.eval('range(1, 4).select($*$).reverse()')
+        )
 
     def test_merge_with(self):
         dict1 = {'a': 1, 'b': 'x', 'c': [1, 2], 'x': {'a': 1}}
         dict2 = {'d': 5, 'b': 'y', 'c': [2, 3], 'x': {'b': 2}}
         self.assertEqual(
             {'a': 1, 'c': [1, 2, 3], 'b': 'y', 'd': 5, 'x': {'a': 1, 'b': 2}},
-            self.eval(
-                '$.d1.mergeWith($.d2)',
-                data={'d1': dict1, 'd2': dict2}))
+            self.eval('$.d1.mergeWith($.d2)', data={'d1': dict1, 'd2': dict2}),
+        )
 
         dict1 = {'a': 1, 'b': 2, 'c': [1, 2]}
         dict2 = {'d': 5, 'b': 3, 'c': [2, 3]}
@@ -476,61 +496,65 @@ class TestQueries(yaql.tests.TestCase):
             {'a': 1, 'c': [1, 2, 2, 3], 'b': 3, 'd': 5},
             self.eval(
                 '$.d1.mergeWith($.d2, $1 + $2)',
-                data={'d1': dict1, 'd2': dict2}))
+                data={'d1': dict1, 'd2': dict2},
+            ),
+        )
 
         self.assertEqual(
             {'a': 1, 'b': 3, 'c': [2, 3], 'd': 5},
             self.eval(
                 '$.d1.mergeWith($.d2, $1 + $2, maxLevels => 1)',
-                data={'d1': dict1, 'd2': dict2}))
+                data={'d1': dict1, 'd2': dict2},
+            ),
+        )
 
         self.assertEqual(
             {'a': 1, 'b': 2, 'c': [1, 2, 3], 'd': 5},
             self.eval(
                 '$.d1.mergeWith($.d2,, min($1, $2))',
-                data={'d1': dict1, 'd2': dict2}))
+                data={'d1': dict1, 'd2': dict2},
+            ),
+        )
 
     def test_is_iterable(self):
-        self.assertEqual(
-            True,
-            self.eval('isIterable([])'))
-        self.assertEqual(
-            True,
-            self.eval('isIterable([1,2])'))
-        self.assertEqual(
-            True,
-            self.eval('isIterable(set(1,2))'))
-        self.assertEqual(
-            False,
-            self.eval('isIterable(1)'))
-        self.assertEqual(
-            False,
-            self.eval('isIterable("foo")'))
-        self.assertEqual(
-            False,
-            self.eval('isIterable({"a" => 1})'))
+        self.assertEqual(True, self.eval('isIterable([])'))
+        self.assertEqual(True, self.eval('isIterable([1,2])'))
+        self.assertEqual(True, self.eval('isIterable(set(1,2))'))
+        self.assertEqual(False, self.eval('isIterable(1)'))
+        self.assertEqual(False, self.eval('isIterable("foo")'))
+        self.assertEqual(False, self.eval('isIterable({"a" => 1})'))
 
     def test_infinite_collections(self):
         self.assertRaises(
             exceptions.CollectionTooLargeException,
-            self.eval, 'len(list(sequence()))')
+            self.eval,
+            'len(list(sequence()))',
+        )
 
         self.assertRaises(
             exceptions.CollectionTooLargeException,
-            self.eval, 'list(sequence())')
+            self.eval,
+            'list(sequence())',
+        )
 
         self.assertRaises(
             exceptions.CollectionTooLargeException,
-            self.eval, 'len(dict(sequence().select([$, $])))')
+            self.eval,
+            'len(dict(sequence().select([$, $])))',
+        )
 
         self.assertRaises(
             exceptions.CollectionTooLargeException,
-            self.eval, 'dict(sequence().select([$, $]))')
+            self.eval,
+            'dict(sequence().select([$, $]))',
+        )
+
+        self.assertRaises(
+            exceptions.CollectionTooLargeException, self.eval, 'sequence()'
+        )
 
         self.assertRaises(
             exceptions.CollectionTooLargeException,
-            self.eval, 'sequence()')
-
-        self.assertRaises(
-            exceptions.CollectionTooLargeException,
-            self.eval, 'set(sequence())')
+            self.eval,
+            'set(sequence())',
+        )

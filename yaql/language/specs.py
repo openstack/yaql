@@ -24,8 +24,9 @@ NO_DEFAULT = utils.create_marker('<NoValue>')
 class ParameterDefinition:
     __slots__ = ('value_type', 'name', 'position', 'default', 'alias')
 
-    def __init__(self, name, value_type=None, position=None, alias=None,
-                 default=None):
+    def __init__(
+        self, name, value_type=None, position=None, alias=None, default=None
+    ):
         self.value_type = value_type
         self.name = name
         self.position = position
@@ -33,20 +34,40 @@ class ParameterDefinition:
         self.alias = alias
 
     def __repr__(self):
-        return '{} => position={} value_type={} default={}'.format(
-            self.name, self.position, self.value_type, self.default)
+        return (
+            f'{self.name} => position={self.position} '
+            f'value_type={self.value_type} default={self.default}'
+        )
 
     def clone(self):
-        return ParameterDefinition(self.name, self.value_type,
-                                   self.position, self.alias, self.default)
+        return ParameterDefinition(
+            self.name, self.value_type, self.position, self.alias, self.default
+        )
 
 
 class FunctionDefinition:
-    __slots__ = ('is_method', 'is_function', 'name', 'parameters', 'payload',
-                 'doc', 'no_kwargs', 'meta')
+    __slots__ = (
+        'is_method',
+        'is_function',
+        'name',
+        'parameters',
+        'payload',
+        'doc',
+        'no_kwargs',
+        'meta',
+    )
 
-    def __init__(self, name, payload, parameters=None, doc='', meta=None,
-                 is_function=True, is_method=False, no_kwargs=False):
+    def __init__(
+        self,
+        name,
+        payload,
+        parameters=None,
+        doc='',
+        meta=None,
+        is_function=True,
+        is_method=False,
+        no_kwargs=False,
+    ):
         self.is_method = is_method
         self.is_function = is_function
         self.name = name
@@ -61,14 +82,22 @@ class FunctionDefinition:
             if receiver is not utils.NO_VALUE:
                 args = (receiver,) + args
             return self.get_delegate(receiver, engine, context, args, kwargs)()
+
         return func
 
     def clone(self):
         parameters = {key: p.clone() for key, p in self.parameters.items()}
 
         res = FunctionDefinition(
-            self.name, self.payload, parameters, self.doc,
-            self.meta, self.is_function, self.is_method, self.no_kwargs)
+            self.name,
+            self.payload,
+            parameters,
+            self.doc,
+            self.meta,
+            self.is_function,
+            self.is_method,
+            self.no_kwargs,
+        )
         return res
 
     def strip_hidden_parameters(self):
@@ -87,13 +116,15 @@ class FunctionDefinition:
             del fd.parameters[key]
         return fd
 
-    def set_parameter(self, name, value_type=None, nullable=None,
-                      alias=None, overwrite=False):
+    def set_parameter(
+        self, name, value_type=None, nullable=None, alias=None, overwrite=False
+    ):
         if isinstance(name, ParameterDefinition):
             if name.name in self.parameters and not overwrite:
                 raise exceptions.DuplicateParameterDecoratorException(
                     function_name=self.name or self.payload.__name__,
-                    param_name=name.name)
+                    param_name=name.name,
+                )
             self.parameters[name.name] = name
             return name
 
@@ -118,7 +149,8 @@ class FunctionDefinition:
         elif name not in spec.args:
             raise exceptions.NoParameterFoundException(
                 function_name=self.name or self.payload.__name__,
-                param_name=name)
+                param_name=name,
+            )
         else:
             position = spec.args.index(name)
 
@@ -133,30 +165,32 @@ class FunctionDefinition:
         if arg_name in self.parameters and not overwrite:
             raise exceptions.DuplicateParameterDecoratorException(
                 function_name=self.name or self.payload.__name__,
-                param_name=name)
+                param_name=name,
+            )
 
         yaql_type = value_type
         p_nullable = nullable
         if value_type is None:
             if p_nullable is None:
                 p_nullable = True
-            base_type = object \
-                if default in (None, NO_DEFAULT, utils.NO_VALUE) \
+            base_type = (
+                object
+                if default in (None, NO_DEFAULT, utils.NO_VALUE)
                 else type(default)
+            )
             yaql_type = yaqltypes.PythonType(base_type, p_nullable)
         elif not isinstance(value_type, yaqltypes.SmartType):
             if p_nullable is None:
                 p_nullable = default is None
             yaql_type = yaqltypes.PythonType(value_type, p_nullable)
 
-        pd = ParameterDefinition(
-            name, yaql_type, position, alias, default
-        )
+        pd = ParameterDefinition(name, yaql_type, position, alias, default)
         self.parameters[arg_name] = pd
         return pd
 
-    def insert_parameter(self, name, value_type=None, nullable=None,
-                         alias=None, overwrite=False):
+    def insert_parameter(
+        self, name, value_type=None, nullable=None, alias=None, overwrite=False
+    ):
         pd = self.set_parameter(name, value_type, nullable, alias, overwrite)
         for p in self.parameters.values():
             if p is pd:
@@ -167,14 +201,16 @@ class FunctionDefinition:
     def map_args(self, args, kwargs, context, engine):
         kwargs = dict(kwargs)
         positional_args = len(args) * [
-            self.parameters.get('*', utils.NO_VALUE)]
+            self.parameters.get('*', utils.NO_VALUE)
+        ]
         max_dst_positional_args = len(args) + len(self.parameters)
         positional_fix_table = max_dst_positional_args * [0]
         keyword_args = {}
 
         for p in self.parameters.values():
             if p.position is not None and isinstance(
-                    p.value_type, yaqltypes.HiddenParameterType):
+                p.value_type, yaqltypes.HiddenParameterType
+            ):
                 for index in range(p.position + 1, len(positional_fix_table)):
                     positional_fix_table[index] += 1
 
@@ -184,8 +220,10 @@ class FunctionDefinition:
                 arg_position = p.position - positional_fix_table[p.position]
                 if isinstance(p.value_type, yaqltypes.HiddenParameterType):
                     continue
-                elif arg_position < len(args) and args[arg_position] \
-                        is not utils.NO_VALUE:
+                elif (
+                    arg_position < len(args)
+                    and args[arg_position] is not utils.NO_VALUE
+                ):
                     if arg_name in kwargs:
                         return None
                     positional_args[arg_position] = p
@@ -224,7 +262,8 @@ class FunctionDefinition:
                 return None
         for kwd in kwargs:
             if not keyword_args[kwd].value_type.check(
-                    kwargs[kwd], context, engine):
+                kwargs[kwd], context, engine
+            ):
                 return None
 
         return tuple(positional_args), keyword_args
@@ -237,9 +276,11 @@ class FunctionDefinition:
             def convert_arg_func(context2):
                 try:
                     return param.value_type.convert(
-                        val, receiver, context2, self, engine)
+                        val, receiver, context2, self, engine
+                    )
                 except exceptions.ArgumentValueException:
                     raise exceptions.ArgumentException(param.name)
+
             return convert_arg_func
 
         kwargs = kwargs.copy()
@@ -255,7 +296,8 @@ class FunctionDefinition:
 
         for p in self.parameters.values():
             if p.position is not None and isinstance(
-                    p.value_type, yaqltypes.HiddenParameterType):
+                p.value_type, yaqltypes.HiddenParameterType
+            ):
                 for index in range(p.position + 1, positional):
                     positional_fix_table[index] += 1
 
@@ -265,17 +307,20 @@ class FunctionDefinition:
                 if isinstance(p.value_type, yaqltypes.HiddenParameterType):
                     positional_args[p.position] = checked(None, p)
                     positional -= 1
-                elif p.position - positional_fix_table[p.position] < len(
-                        args) and args[p.position - positional_fix_table[
-                            p.position]] is not utils.NO_VALUE:
+                elif (
+                    p.position - positional_fix_table[p.position] < len(args)
+                    and args[p.position - positional_fix_table[p.position]]
+                    is not utils.NO_VALUE
+                ):
                     if arg_name in kwargs:
                         raise exceptions.ArgumentException(p.name)
                     positional_args[p.position] = checked(
-                        args[p.position - positional_fix_table[
-                            p.position]], p)
+                        args[p.position - positional_fix_table[p.position]], p
+                    )
                 elif arg_name in kwargs:
                     positional_args[p.position] = checked(
-                        kwargs.pop(arg_name), p)
+                        kwargs.pop(arg_name), p
+                    )
                 elif p.default is not NO_DEFAULT:
                     positional_args[p.position] = checked(p.default, p)
                 else:
@@ -293,7 +338,8 @@ class FunctionDefinition:
             if '*' in self.parameters:
                 argdef = self.parameters['*']
                 positional_args.extend(
-                    map(lambda t: checked(t, argdef), args[positional:]))
+                    map(lambda t: checked(t, argdef), args[positional:])
+                )
             else:
                 raise exceptions.ArgumentException('*')
         if len(kwargs) > 0:
@@ -307,10 +353,13 @@ class FunctionDefinition:
         def func():
             new_context = context.create_child_context()
             result = self.payload(
-                *tuple(map(lambda t: t(new_context),
-                           positional_args)),
-                **dict(map(lambda t: (t[0], t[1](new_context)),
-                           keyword_args.items()))
+                *tuple(map(lambda t: t(new_context), positional_args)),
+                **dict(
+                    map(
+                        lambda t: (t[0], t[1](new_context)),
+                        keyword_args.items(),
+                    )
+                ),
             )
             return result
 
@@ -320,13 +369,16 @@ class FunctionDefinition:
         min_position = len(self.parameters)
         min_arg = None
         for p in self.parameters.values():
-            if p.position is not None and p.position < min_position and \
-                    not isinstance(p.value_type,
-                                   yaqltypes.HiddenParameterType):
+            if (
+                p.position is not None
+                and p.position < min_position
+                and not isinstance(p.value_type, yaqltypes.HiddenParameterType)
+            ):
                 min_position = p.position
                 min_arg = p
         return min_arg and not isinstance(
-            min_arg.value_type, yaqltypes.LazyParameterType)
+            min_arg.value_type, yaqltypes.LazyParameterType
+        )
 
 
 def _get_function_definition(func):
@@ -355,8 +407,9 @@ def convert_function_name(function_name, convention):
         finish = function_name.find(function_name[0], 1)
         if finish <= 1:
             return function_name
-        return function_name[:finish + 1] + convention.convert_function_name(
-            function_name[finish + 1:])
+        return function_name[: finish + 1] + convention.convert_function_name(
+            function_name[finish + 1 :]
+        )
     return convention.convert_function_name(function_name)
 
 
@@ -369,8 +422,14 @@ def convert_parameter_name(parameter_name, convention):
     return convention.convert_parameter_name(parameter_name)
 
 
-def get_function_definition(func, name=None, function=None, method=None,
-                            convention=None, parameter_type_func=None):
+def get_function_definition(
+    func,
+    name=None,
+    function=None,
+    method=None,
+    convention=None,
+    parameter_type_func=None,
+):
     if parameter_type_func is None:
         parameter_type_func = _infer_parameter_type
     fd = _get_function_definition(func).clone()
@@ -406,19 +465,22 @@ def _parameter(name, value_type=None, nullable=None, alias=None):
         fd = _get_function_definition(func)
         fd.set_parameter(name, value_type, nullable, alias)
         return func
+
     return wrapper
 
 
 def parameter(name, value_type=None, nullable=None, alias=None):
     if value_type is not None and isinstance(
-            value_type, yaqltypes.HiddenParameterType):
+        value_type, yaqltypes.HiddenParameterType
+    ):
         raise ValueError('Use inject() for hidden parameters')
     return _parameter(name, value_type, nullable=nullable, alias=alias)
 
 
 def inject(name, value_type=None, nullable=None, alias=None):
     if value_type is not None and not isinstance(
-            value_type, yaqltypes.HiddenParameterType):
+        value_type, yaqltypes.HiddenParameterType
+    ):
         raise ValueError('Use parameter() for normal function parameters')
     return _parameter(name, value_type, nullable=nullable, alias=alias)
 
@@ -428,6 +490,7 @@ def name(function_name):
         fd = _get_function_definition(func)
         fd.name = function_name
         return func
+
     return wrapper
 
 
@@ -456,6 +519,7 @@ def meta(name, value):
         fd = _get_function_definition(func)
         fd.meta[name] = value
         return func
+
     return wrapper
 
 
@@ -465,5 +529,7 @@ def yaql_property(source_type):
         @parameter('obj', source_type)
         def wrapper(obj):
             return func(obj)
+
         return wrapper
+
     return decorator

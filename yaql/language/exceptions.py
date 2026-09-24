@@ -31,52 +31,46 @@ class MethodResolutionError(ResolutionError):
 
 class NoFunctionRegisteredException(FunctionResolutionError):
     def __init__(self, name):
-        super().__init__(
-            f'Unknown function "{name}"')
+        super().__init__(f'Unknown function "{name}"')
 
 
 class NoMethodRegisteredException(MethodResolutionError):
     def __init__(self, name, receiver):
-        super().__init__(
-            f'Unknown method "{name}" for receiver {receiver}')
+        super().__init__(f'Unknown method "{name}" for receiver {receiver}')
 
 
 class NoMatchingFunctionException(FunctionResolutionError):
     def __init__(self, name):
-        super().__init__(
-            f'No function "{name}" matches supplied arguments')
+        super().__init__(f'No function "{name}" matches supplied arguments')
 
 
 class NoMatchingMethodException(MethodResolutionError):
     def __init__(self, name, receiver):
         super().__init__(
-            'No method "{}" for receiver {} matches '
-            'supplied arguments'.format(name, receiver))
+            f'No method "{name}" for receiver {receiver} matches '
+            'supplied arguments'
+        )
 
 
 class AmbiguousFunctionException(FunctionResolutionError):
     def __init__(self, name):
-        super().__init__(
-            f'Ambiguous function "{name}"')
+        super().__init__(f'Ambiguous function "{name}"')
 
 
 class AmbiguousMethodException(MethodResolutionError):
     def __init__(self, name, receiver):
-        super().__init__(
-            f'Ambiguous method "{name}" for receiver {receiver}')
+        super().__init__(f'Ambiguous method "{name}" for receiver {receiver}')
 
 
 class ArgumentException(YaqlException):
     def __init__(self, argument_name):
         self.parameter_name = argument_name
-        super().__init__(
-            f'Invalid argument {argument_name}')
+        super().__init__(f'Invalid argument {argument_name}')
 
 
 class MappingTranslationException(YaqlException):
     def __init__(self):
-        super().__init__(
-            'Cannot convert mapping to keyword argument')
+        super().__init__('Cannot convert mapping to keyword argument')
 
 
 class ArgumentValueException(YaqlException):
@@ -86,23 +80,25 @@ class ArgumentValueException(YaqlException):
 
 class DuplicateParameterDecoratorException(YaqlException):
     def __init__(self, function_name, param_name):
-        message = "Function '{0}' has multiple " \
-                  "decorators for parameter '{1}'". \
-            format(function_name, param_name)
+        message = (
+            f"Function '{function_name}' has multiple "
+            f"decorators for parameter '{param_name}'"
+        )
         super().__init__(message)
 
 
 class InvalidMethodException(YaqlException):
     def __init__(self, function_name):
-        message = "Function '{0}' cannot be called as a method". \
-            format(function_name)
+        message = f"Function '{function_name}' cannot be called as a method"
         super().__init__(message)
 
 
 class NoParameterFoundException(YaqlException):
     def __init__(self, function_name, param_name):
-        message = "Function '{0}' has no parameter called '{1}'". \
-            format(function_name, param_name)
+        message = (
+            f"Function '{function_name}' has no parameter "
+            "called '{param_name}'"
+        )
         super().__init__(message)
 
 
@@ -119,23 +115,27 @@ class YaqlGrammarException(YaqlParsingException):
         if position is None:
             msg = 'Parse error: unexpected end of statement'
         else:
-            msg = "Parse error: unexpected '{}' at position {} of " \
-                  "expression '{}'".format(value, position, expr)
+            msg = (
+                f"Parse error: unexpected '{value}' at position {position} of "
+                f"expression '{expr}'"
+            )
         super().__init__(value, position, msg)
 
 
 class YaqlLexicalException(YaqlParsingException):
     def __init__(self, value, position):
-        msg = "Lexical error: illegal character '{}' at position {}" \
-            .format(value, position)
+        msg = (
+            f"Lexical error: illegal character '{value}' "
+            f"at position {position}"
+        )
         super().__init__(value, position, msg)
 
 
 class InvalidOperatorTableException(YaqlException):
     def __init__(self, op):
-        super(). \
-            __init__("Invalid records in operator table for operator "
-                     "'{}".format(op))
+        super().__init__(
+            f"Invalid records in operator table for operator '{op}"
+        )
 
 
 class WrappedException(YaqlException):
@@ -146,11 +146,9 @@ class WrappedException(YaqlException):
 
 class CollectionTooLargeException(YaqlException):
     def __init__(self, count):
-        super().__init__(
-            f'Collection length exceeds {count} elements')
+        super().__init__(f'Collection length exceeds {count} elements')
 
 
 class MemoryQuotaExceededException(YaqlException):
     def __init__(self):
-        super().__init__(
-            'Expression consumed too much memory')
+        super().__init__('Expression consumed too much memory')

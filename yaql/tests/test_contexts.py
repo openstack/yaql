@@ -83,8 +83,9 @@ class TestContexts(testtools.TestCase):
         self.assertIsInstance(functions, set)
         self.assertThat(functions, testtools.matchers.HasLength(2))
         self.assertThat(
-            functions, matchers.AllMatch(matchers.IsInstance(
-                specs.FunctionDefinition)))
+            functions,
+            matchers.AllMatch(matchers.IsInstance(specs.FunctionDefinition)),
+        )
         functions, is_exclusive = context2.get_functions('g')
         self.assertFalse(is_exclusive)
         functions, is_exclusive = context2.get_functions('f')
@@ -304,7 +305,8 @@ class TestContexts(testtools.TestCase):
         context2['key3'] = 'context3'
 
         return contexts.LinkedContext(
-            parent_context=context1, linked_context=context3)
+            parent_context=context1, linked_context=context3
+        )
 
     def test_linked_context_data(self):
         mc = self.create_linked_context()

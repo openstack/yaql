@@ -666,7 +666,7 @@ def substring(string, start, length=-1):
         length = len(string)
     if start < 0:
         start += len(string)
-    return string[start:start + length]
+    return string[start : start + length]
 
 
 @specs.parameter('string', yaqltypes.String())
@@ -818,11 +818,19 @@ def to_char_array(string):
 
 
 def characters(
-        digits=False, hexdigits=False,
-        ascii_lowercase=False, ascii_uppercase=False,
-        ascii_letters=False, letters=False,
-        octdigits=False, punctuation=False, printable=False,
-        lowercase=False, uppercase=False, whitespace=False):
+    digits=False,
+    hexdigits=False,
+    ascii_lowercase=False,
+    ascii_uppercase=False,
+    ascii_letters=False,
+    letters=False,
+    octdigits=False,
+    punctuation=False,
+    printable=False,
+    lowercase=False,
+    uppercase=False,
+    whitespace=False,
+):
     """:yaql:characters
 
     Returns a list of all distinct items of specified types.

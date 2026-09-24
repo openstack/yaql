@@ -18,7 +18,6 @@ any type, empty strings, empty dict, empty list, empty set, zero timespan.
 All other values are interpreted as true.
 """
 
-
 from yaql.language import specs
 from yaql.language import yaqltypes
 

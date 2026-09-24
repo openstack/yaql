@@ -27,42 +27,46 @@ TS = datetime.timedelta
 class TestDatetime(yaql.tests.TestCase):
     def test_build_datetime_components(self):
         dt = DT(2015, 8, 29, tzinfo=tz.tzutc())
+        self.assertEqual(dt, self.eval('datetime(2015, 8, 29)'))
         self.assertEqual(
-            dt, self.eval('datetime(2015, 8, 29)'))
-        self.assertEqual(
-            dt, self.eval('datetime(year => 2015, month => 8, day => 29,'
-                          'hour => 0, minute => 0, second => 0, '
-                          'microsecond => 0)'))
+            dt,
+            self.eval(
+                'datetime(year => 2015, month => 8, day => 29,'
+                'hour => 0, minute => 0, second => 0, '
+                'microsecond => 0)'
+            ),
+        )
 
     def test_build_datetime_iso(self):
         self.assertEqual(
             DT(2015, 8, 29, tzinfo=tz.tzutc()),
-            self.eval('datetime("2015-8-29")')
+            self.eval('datetime("2015-8-29")'),
         )
         self.assertEqual(
             DT(2008, 9, 3, 20, 56, 35, 450686, tzinfo=tz.tzutc()),
-            self.eval('datetime("2008-09-03T20:56:35.450686")')
+            self.eval('datetime("2008-09-03T20:56:35.450686")'),
         )
         self.assertEqual(
             DT(2008, 9, 3, 20, 56, 35, 450686, tzinfo=tz.tzutc()),
-            self.eval('datetime("2008-09-03T20:56:35.450686Z")')
+            self.eval('datetime("2008-09-03T20:56:35.450686Z")'),
         )
         self.assertEqual(
             DT(2008, 9, 3, 0, 0, tzinfo=tz.tzutc()),
-            self.eval('datetime("20080903")')
+            self.eval('datetime("20080903")'),
         )
         dt = self.eval('datetime("2008-09-03T20:56:35.450686+03:00")')
         self.assertEqual(
-            DT(2008, 9, 3, 20, 56, 35, 450686),
-            dt.replace(tzinfo=None)
+            DT(2008, 9, 3, 20, 56, 35, 450686), dt.replace(tzinfo=None)
         )
         self.assertEqual(TS(hours=3), dt.utcoffset())
 
     def test_build_datetime_string(self):
         self.assertEqual(
             DT(2006, 11, 21, 16, 30, tzinfo=tz.tzutc()),
-            self.eval('datetime("Tuesday, 21. November 2006 04:30PM", '
-                      '"%A, %d. %B %Y %I:%M%p")')
+            self.eval(
+                'datetime("Tuesday, 21. November 2006 04:30PM", '
+                '"%A, %d. %B %Y %I:%M%p")'
+            ),
         )
 
     def test_datetime_fields(self):
@@ -85,15 +89,22 @@ class TestDatetime(yaql.tests.TestCase):
         self.assertEqual(TS(0), self.eval('timespan()'))
         self.assertEqual(
             TS(1, 7384, 5006),
-            self.eval('timespan(days => 1, hours => 2, minutes => 3, '
-                      'seconds => 4, milliseconds => 5, microseconds => 6)'))
+            self.eval(
+                'timespan(days => 1, hours => 2, minutes => 3, '
+                'seconds => 4, milliseconds => 5, microseconds => 6)'
+            ),
+        )
         self.assertEqual(
             TS(1, 7384, 4994),
-            self.eval('timespan(days => 1, hours => 2, minutes => 3, '
-                      'seconds =>4, milliseconds => 5, microseconds => -6)'))
+            self.eval(
+                'timespan(days => 1, hours => 2, minutes => 3, '
+                'seconds =>4, milliseconds => 5, microseconds => -6)'
+            ),
+        )
 
         self.assertEqual(
-            TS(microseconds=-1000), self.eval('timespan(milliseconds => -1)'))
+            TS(microseconds=-1000), self.eval('timespan(milliseconds => -1)')
+        )
 
     def test_datetime_from_timestamp(self):
         dt = DT(2006, 11, 21, 16, 30, tzinfo=tz.tzutc())
@@ -103,7 +114,8 @@ class TestDatetime(yaql.tests.TestCase):
         dt = DT(2006, 11, 21, 16, 30, tzinfo=tz.tzutc())
         self.assertEqual(
             DT(2009, 11, 21, 16, 40, tzinfo=tz.tzutc()),
-            self.eval('$.replace(year => 2009, minute => 40)', dt))
+            self.eval('$.replace(year => 2009, minute => 40)', dt),
+        )
 
     def test_timespan_fields(self):
         ts = TS(1, 51945, 5000)
@@ -119,8 +131,7 @@ class TestDatetime(yaql.tests.TestCase):
         self.assertIsInstance(self.eval('now(utctz())'), DT)
         self.assertIsInstance(self.eval('now(localtz())'), DT)
         self.assertThat(
-            self.eval('now(utctz()) - now()'),
-            matchers.LessThan(TS(seconds=1))
+            self.eval('now(utctz()) - now()'), matchers.LessThan(TS(seconds=1))
         )
         self.assertTrue(self.eval('now(localtz()).offset = localtz()'))
 
@@ -134,9 +145,11 @@ class TestDatetime(yaql.tests.TestCase):
         self.assertTrue(self.eval('($dt2 - $dt1) + $dt1 = $dt2'))
         self.assertTrue(self.eval('$dt1 + ($dt2 - $dt1) = $dt2'))
         self.assertThat(
-            self.eval('($dt2 - $dt1) * 2'), matchers.LessThan(2 * delta))
+            self.eval('($dt2 - $dt1) * 2'), matchers.LessThan(2 * delta)
+        )
         self.assertThat(
-            self.eval('2.1 * ($dt2 - $dt1)'), matchers.LessThan(2 * delta))
+            self.eval('2.1 * ($dt2 - $dt1)'), matchers.LessThan(2 * delta)
+        )
         self.assertTrue(self.eval('-($dt1 - $dt2) = +($dt2 - $dt1)'))
         self.assertTrue(self.eval('$dt2 > $dt1'))
         self.assertTrue(self.eval('$dt2 >= $dt1'))
@@ -147,7 +160,8 @@ class TestDatetime(yaql.tests.TestCase):
         self.assertEqual(-1, self.eval('($dt2 - $dt1) / ($dt1 - $dt2)'))
         self.assertTrue(self.eval('$dt2 - ($dt2 - $dt1) = $dt1'))
         self.assertEqual(
-            0, self.eval('($dt2 - $dt1) - ($dt2 - $dt1)').total_seconds())
+            0, self.eval('($dt2 - $dt1) - ($dt2 - $dt1)').total_seconds()
+        )
 
         delta2 = self.eval('($dt2 - $dt1) / 2.1')
         self.assertThat(delta2, matchers.LessThan(delta / 2))

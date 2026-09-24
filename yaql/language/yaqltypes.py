@@ -47,8 +47,9 @@ class SmartType(metaclass=abc.ABCMeta):
             return False
         return True
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         if not self.check(value, context, engine, *args, **kwargs):
             raise exceptions.ArgumentValueException()
         utils.limit_memory_usage(engine, (1, value))
@@ -70,8 +71,7 @@ class GenericType(SmartType):
         if isinstance(value, expressions.Constant):
             value = value.value
 
-        if not super().check(
-                value, context, engine, *args, **kwargs):
+        if not super().check(value, context, engine, *args, **kwargs):
             return False
         if value is None or isinstance(value, expressions.Expression):
             return True
@@ -79,16 +79,19 @@ class GenericType(SmartType):
             return True
         return self.checker(value, context, *args, **kwargs)
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         if isinstance(value, expressions.Constant):
             value = value.value
         super().convert(
-            value, receiver, context, function_spec, engine, *args, **kwargs)
+            value, receiver, context, function_spec, engine, *args, **kwargs
+        )
         if value is None or not self.converter:
             return value
-        return self.converter(value, receiver, context, function_spec, engine,
-                              *args, **kwargs)
+        return self.converter(
+            value, receiver, context, function_spec, engine, *args, **kwargs
+        )
 
 
 class PythonType(GenericType):
@@ -104,9 +107,11 @@ class PythonType(GenericType):
 
         super().__init__(
             nullable,
-            lambda value, context, *args, **kwargs: isinstance(
-                value, self.python_type) and all(
-                map(lambda t: t(value), self.validators)))
+            lambda value, context, *args, **kwargs: (
+                isinstance(value, self.python_type)
+                and all(map(lambda t: t(value), self.validators))
+            ),
+        )
 
     def is_specialization_of(self, other):
         if not isinstance(other, PythonType):
@@ -115,10 +120,9 @@ class PythonType(GenericType):
             len(self.python_type)
             len(other.python_type)
         except Exception:
-            return (
-                issubclass(self.python_type, other.python_type)
-                and not issubclass(other.python_type, self.python_type)
-            )
+            return issubclass(
+                self.python_type, other.python_type
+            ) and not issubclass(other.python_type, self.python_type)
         else:
             return False
 
@@ -132,10 +136,12 @@ class MappingRule(LazyParameterType, SmartType):
     def check(self, value, context, *args, **kwargs):
         return isinstance(value, expressions.MappingRuleExpression)
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         super().convert(
-            value, receiver, context, function_spec, engine, *args, **kwargs)
+            value, receiver, context, function_spec, engine, *args, **kwargs
+        )
         wrap = lambda func: lambda: func(receiver, context, engine)  # noqa
 
         return utils.MappingRule(wrap(value.source), wrap(value.destination))
@@ -147,10 +153,12 @@ class String(PythonType):
     def __init__(self, nullable=False):
         super().__init__(str, nullable=nullable)
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         value = super().convert(
-            value, receiver, context, function_spec, engine, *args, **kwargs)
+            value, receiver, context, function_spec, engine, *args, **kwargs
+        )
         return None if value is None else str(value)
 
 
@@ -159,8 +167,10 @@ class Integer(PythonType):
 
     def __init__(self, nullable=False):
         super().__init__(
-            int, nullable=nullable,
-            validators=[lambda t: not isinstance(t, bool)])
+            int,
+            nullable=nullable,
+            validators=[lambda t: not isinstance(t, bool)],
+        )
 
 
 class DateTime(PythonType):
@@ -185,21 +195,25 @@ class Iterable(PythonType):
 
     def __init__(self, validators=None, nullable=False):
         super().__init__(
-            collections.abc.Iterable, nullable,
-            [lambda t: not isinstance(t, (str, utils.MappingType))] + (
-                validators or []))
+            collections.abc.Iterable,
+            nullable,
+            [lambda t: not isinstance(t, (str, utils.MappingType))]
+            + (validators or []),
+        )
 
     def check(self, value, context, engine, *args, **kwargs):
         if isinstance(value, utils.MappingType) and engine.options.get(
-                'yaql.iterableDicts', False):
+            'yaql.iterableDicts', False
+        ):
             return True
-        return super().check(
-            value, context, engine, *args, **kwargs)
+        return super().check(value, context, engine, *args, **kwargs)
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         res = super().convert(
-            value, receiver, context, function_spec, engine, *args, **kwargs)
+            value, receiver, context, function_spec, engine, *args, **kwargs
+        )
         return None if res is None else utils.limit_iterable(res, engine)
 
 
@@ -209,7 +223,8 @@ class Iterator(Iterable):
     def __init__(self, validators=None, nullable=False):
         super().__init__(
             validators=[utils.is_iterator] + (validators or []),
-            nullable=nullable)
+            nullable=nullable,
+        )
 
 
 class Sequence(PythonType):
@@ -217,9 +232,10 @@ class Sequence(PythonType):
 
     def __init__(self, validators=None, nullable=False):
         super().__init__(
-            collections.abc.Sequence, nullable, [
-                lambda t: not isinstance(t, (str, dict))] + (
-                    validators or []))
+            collections.abc.Sequence,
+            nullable,
+            [lambda t: not isinstance(t, (str, dict))] + (validators or []),
+        )
 
 
 class Number(PythonType):
@@ -227,8 +243,10 @@ class Number(PythonType):
 
     def __init__(self, nullable=False):
         super().__init__(
-            (int, float), nullable,
-            validators=[lambda t: not isinstance(t, bool)])
+            (int, float),
+            nullable,
+            validators=[lambda t: not isinstance(t, bool)],
+        )
 
 
 class Lambda(LazyParameterType, SmartType):
@@ -240,8 +258,11 @@ class Lambda(LazyParameterType, SmartType):
         self.method = method
 
     def check(self, value, context, *args, **kwargs):
-        if self.method and isinstance(
-                value, expressions.Expression) and not value.uses_receiver:
+        if (
+            self.method
+            and isinstance(value, expressions.Expression)
+            and not value.uses_receiver
+        ):
             return False
         return super().check(value, context, *args, **kwargs)
 
@@ -262,11 +283,25 @@ class Lambda(LazyParameterType, SmartType):
             result = value
         return result
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *convert_args, **convert_kwargs):
+    def convert(
+        self,
+        value,
+        receiver,
+        context,
+        function_spec,
+        engine,
+        *convert_args,
+        **convert_kwargs,
+    ):
         super().convert(
-            value, receiver, context, function_spec, engine,
-            *convert_args, **convert_kwargs)
+            value,
+            receiver,
+            context,
+            function_spec,
+            engine,
+            *convert_args,
+            **convert_kwargs,
+        )
         if value is None:
             return None
         elif callable(value) and hasattr(value, '__unwrapped__'):
@@ -277,18 +312,23 @@ class Lambda(LazyParameterType, SmartType):
                 new_receiver, new_context = args[:2]
                 args = args[2:]
             elif self.method and not self.with_context:
-                new_receiver, new_context = \
-                    args[0], context.create_child_context()
+                new_receiver, new_context = (
+                    args[0],
+                    context.create_child_context(),
+                )
                 args = args[1:]
             elif not self.method and self.with_context:
                 new_receiver, new_context = utils.NO_VALUE, args[0]
                 args = args[1:]
             else:
-                new_receiver, new_context = \
-                    utils.NO_VALUE, context.create_child_context()
+                new_receiver, new_context = (
+                    utils.NO_VALUE,
+                    context.create_child_context(),
+                )
 
-            return self._call(value, new_receiver, new_context,
-                              engine, args, kwargs)
+            return self._call(
+                value, new_receiver, new_context, engine, args, kwargs
+            )
 
         func.__unwrapped__ = value
         return func
@@ -309,21 +349,30 @@ class Super(HiddenParameterType, SmartType):
             if spec in context:
                 return context
             context = context.parent
-        raise exceptions.NoFunctionRegisteredException(
-            spec.name)
+        raise exceptions.NoFunctionRegisteredException(spec.name)
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *convert_args, **convert_kwargs):
+    def convert(
+        self,
+        value,
+        receiver,
+        context,
+        function_spec,
+        engine,
+        *convert_args,
+        **convert_kwargs,
+    ):
         if callable(value) and hasattr(value, '__unwrapped__'):
             value = value.__unwrapped__
 
         def func(*args, **kwargs):
             function_context = self._find_function_context(
-                function_spec, context)
+                function_spec, context
+            )
             parent_function_context = function_context.parent
             if parent_function_context is None:
                 raise exceptions.NoFunctionRegisteredException(
-                    function_spec.name)
+                    function_spec.name
+                )
 
             new_name = function_spec.name
             if self.with_name:
@@ -344,7 +393,9 @@ class Super(HiddenParameterType, SmartType):
                 new_context = context.create_child_context()
 
             return parent_function_context(
-                new_name, engine, new_receiver, new_context)(*args, **kwargs)
+                new_name, engine, new_receiver, new_context
+            )(*args, **kwargs)
+
         func.__unwrapped__ = value
         return func
 
@@ -355,24 +406,34 @@ class Context(HiddenParameterType, SmartType):
     def __init__(self):
         super().__init__(False)
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         return context
 
 
 class Delegate(HiddenParameterType, SmartType):
     __slots__ = ('name', 'with_context', 'method', 'use_convention')
 
-    def __init__(self, name=None, with_context=False, method=False,
-                 use_convention=True):
+    def __init__(
+        self, name=None, with_context=False, method=False, use_convention=True
+    ):
         super().__init__(False)
         self.name = name
         self.with_context = with_context
         self.method = method
         self.use_convention = use_convention
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *convert_args, **convert_kwargs):
+    def convert(
+        self,
+        value,
+        receiver,
+        context,
+        function_spec,
+        engine,
+        *convert_args,
+        **convert_kwargs,
+    ):
         if callable(value) and hasattr(value, '__unwrapped__'):
             value = value.__unwrapped__
 
@@ -393,8 +454,9 @@ class Delegate(HiddenParameterType, SmartType):
                 new_context = context.create_child_context()
 
             return new_context(
-                name, engine, new_receiver,
-                use_convention=self.use_convention)(*args, **kwargs)
+                name, engine, new_receiver, use_convention=self.use_convention
+            )(*args, **kwargs)
+
         func.__unwrapped__ = value
         return func
 
@@ -405,8 +467,9 @@ class Receiver(HiddenParameterType, SmartType):
     def __init__(self):
         super().__init__(False)
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         return receiver
 
 
@@ -416,8 +479,9 @@ class Engine(HiddenParameterType, SmartType):
     def __init__(self):
         super().__init__(False)
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         return engine
 
 
@@ -427,8 +491,9 @@ class FunctionDefinition(HiddenParameterType, SmartType):
     def __init__(self):
         super().__init__(False)
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         return function_spec
 
 
@@ -440,14 +505,16 @@ class Constant(SmartType):
         super().__init__(nullable)
 
     def check(self, value, context, *args, **kwargs):
-        return super().check(
-            value, context, *args, **kwargs) and (
-            value is None or isinstance(value, expressions.Constant))
+        return super().check(value, context, *args, **kwargs) and (
+            value is None or isinstance(value, expressions.Constant)
+        )
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         super().convert(
-            value, receiver, context, function_spec, engine, *args, **kwargs)
+            value, receiver, context, function_spec, engine, *args, **kwargs
+        )
         return value.value if self.expand else value
 
 
@@ -463,12 +530,14 @@ class YaqlExpression(LazyParameterType, SmartType):
     def check(self, value, context, *args, **kwargs):
         if not self._expression_types:
             return isinstance(value, expressions.Expression)
-        return any(t == type(value) for t in self._expression_types)
+        return any(t is type(value) for t in self._expression_types)
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         super().convert(
-            value, receiver, context, function_spec, engine, *args, **kwargs)
+            value, receiver, context, function_spec, engine, *args, **kwargs
+        )
         return value
 
 
@@ -479,9 +548,9 @@ class StringConstant(Constant):
         super().__init__(nullable)
 
     def check(self, value, context, *args, **kwargs):
-        return super().check(
-            value, context, *args, **kwargs) and (
-            value is None or isinstance(value.value, str))
+        return super().check(value, context, *args, **kwargs) and (
+            value is None or isinstance(value.value, str)
+        )
 
 
 class Keyword(Constant):
@@ -501,9 +570,9 @@ class BooleanConstant(Constant):
         super().__init__(nullable, expand)
 
     def check(self, value, context, *args, **kwargs):
-        return super().check(
-            value, context, *args, **kwargs) and (
-            value is None or type(value.value) is bool)
+        return super().check(value, context, *args, **kwargs) and (
+            value is None or type(value.value) is bool
+        )
 
 
 class NumericConstant(Constant):
@@ -513,11 +582,11 @@ class NumericConstant(Constant):
         super().__init__(nullable, expand)
 
     def check(self, value, context, *args, **kwargs):
-        return super().check(
-            value, context, *args, **kwargs) and (
-            value is None or
-            isinstance(value.value, (int, float)) and
-            type(value.value) is not bool)
+        return super().check(value, context, *args, **kwargs) and (
+            value is None
+            or isinstance(value.value, (int, float))
+            and type(value.value) is not bool
+        )
 
 
 class SmartTypeAggregation(SmartType, metaclass=abc.ABCMeta):
@@ -542,7 +611,8 @@ class AnyOf(SmartTypeAggregation):
     def _check_match(self, value, context, engine, *args, **kwargs):
         for type_to_check in self.types:
             check_result = type_to_check.check(
-                value, context, engine, *args, **kwargs)
+                value, context, engine, *args, **kwargs
+            )
             if check_result:
                 return type_to_check
 
@@ -554,11 +624,13 @@ class AnyOf(SmartTypeAggregation):
             return self.nullable
 
         check_result = self._check_match(
-            value, context, engine, *args, **kwargs)
+            value, context, engine, *args, **kwargs
+        )
         return True if check_result else False
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         if isinstance(value, expressions.Constant):
             value = value.value
 
@@ -569,11 +641,18 @@ class AnyOf(SmartTypeAggregation):
                 suitable_type = None
         else:
             suitable_type = self._check_match(
-                value, context, engine, *args, **kwargs)
+                value, context, engine, *args, **kwargs
+            )
         if suitable_type:
             return suitable_type.convert(
-                value, receiver, context, function_spec,
-                engine, *args, **kwargs)
+                value,
+                receiver,
+                context,
+                function_spec,
+                engine,
+                *args,
+                **kwargs,
+            )
         raise exceptions.ArgumentValueException()
 
 
@@ -583,7 +662,8 @@ class Chain(SmartTypeAggregation):
     def _check_match(self, value, context, engine, *args, **kwargs):
         for type_to_check in self.types:
             check_result = type_to_check.check(
-                value, context, engine, *args, **kwargs)
+                value, context, engine, *args, **kwargs
+            )
             if check_result:
                 return type_to_check
 
@@ -596,13 +676,15 @@ class Chain(SmartTypeAggregation):
 
         for type_to_check in self.types:
             if not type_to_check.check(
-                    value, context, engine, *args, **kwargs):
+                value, context, engine, *args, **kwargs
+            ):
                 return False
 
         return True
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         if isinstance(value, expressions.Constant):
             value = value.value
 
@@ -613,8 +695,14 @@ class Chain(SmartTypeAggregation):
 
         for smart_type in self.types:
             value = smart_type.convert(
-                value, receiver, context, function_spec,
-                engine, *args, **kwargs)
+                value,
+                receiver,
+                context,
+                function_spec,
+                engine,
+                *args,
+                **kwargs,
+            )
         return value
 
 
@@ -630,13 +718,13 @@ class NotOfType(SmartType):
     def check(self, value, context, engine, *args, **kwargs):
         if isinstance(value, expressions.Constant):
             value = value.value
-        if not super().check(
-                value, context, engine, *args, **kwargs):
+        if not super().check(value, context, engine, *args, **kwargs):
             return False
         if value is None or isinstance(value, expressions.Expression):
             return True
         return not self.smart_type.check(
-            value, context, engine, *args, **kwargs)
+            value, context, engine, *args, **kwargs
+        )
 
 
 class YaqlInterface(HiddenParameterType, SmartType):
@@ -645,6 +733,7 @@ class YaqlInterface(HiddenParameterType, SmartType):
     def __init__(self):
         super().__init__(False)
 
-    def convert(self, value, receiver, context, function_spec, engine,
-                *args, **kwargs):
+    def convert(
+        self, value, receiver, context, function_spec, engine, *args, **kwargs
+    ):
         return yaql_interface.YaqlInterface(context, engine, receiver)

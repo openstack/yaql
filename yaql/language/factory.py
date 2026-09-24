@@ -25,16 +25,21 @@ from yaql.language import parser
 from yaql.language import utils
 
 
-OperatorType = collections.namedtuple('OperatorType', [
-    'PREFIX_UNARY', 'SUFFIX_UNARY',
-    'BINARY_LEFT_ASSOCIATIVE', 'BINARY_RIGHT_ASSOCIATIVE',
-    'NAME_VALUE_PAIR'
-])(
+OperatorType = collections.namedtuple(
+    'OperatorType',
+    [
+        'PREFIX_UNARY',
+        'SUFFIX_UNARY',
+        'BINARY_LEFT_ASSOCIATIVE',
+        'BINARY_RIGHT_ASSOCIATIVE',
+        'NAME_VALUE_PAIR',
+    ],
+)(
     PREFIX_UNARY='PREFIX_UNARY',
     SUFFIX_UNARY='SUFFIX_UNARY',
     BINARY_LEFT_ASSOCIATIVE='BINARY_LEFT_ASSOCIATIVE',
     BINARY_RIGHT_ASSOCIATIVE='BINARY_RIGHT_ASSOCIATIVE',
-    NAME_VALUE_PAIR='NAME_VALUE_PAIR'
+    NAME_VALUE_PAIR='NAME_VALUE_PAIR',
 )
 
 
@@ -72,7 +77,8 @@ class YaqlEngine:
             return self.copy(options)(expression)
 
         return expressions.Statement(
-            self.parser.parse(expression, lexer=self.lexer), self)
+            self.parser.parse(expression, lexer=self.lexer), self
+        )
 
     def copy(self, options):
         opt = dict(self._options)
@@ -86,8 +92,9 @@ class YaqlFactory:
         self._allow_delegates = allow_delegates
         self.operators = self._standard_operators()
         if keyword_operator:
-            self.operators.insert(0, (keyword_operator,
-                                      OperatorType.NAME_VALUE_PAIR))
+            self.operators.insert(
+                0, (keyword_operator, OperatorType.NAME_VALUE_PAIR)
+            )
 
     @property
     def keyword_operator(self):
@@ -136,11 +143,19 @@ class YaqlFactory:
             ('->', OperatorType.BINARY_RIGHT_ASSOCIATIVE),
         ]
 
-    def insert_operator(self, existing_operator, existing_operator_binary,
-                        new_operator, new_operator_type, create_group,
-                        new_operator_alias=None):
-        binary_types = (OperatorType.BINARY_RIGHT_ASSOCIATIVE,
-                        OperatorType.BINARY_LEFT_ASSOCIATIVE)
+    def insert_operator(
+        self,
+        existing_operator,
+        existing_operator_binary,
+        new_operator,
+        new_operator_type,
+        create_group,
+        new_operator_alias=None,
+    ):
+        binary_types = (
+            OperatorType.BINARY_RIGHT_ASSOCIATIVE,
+            OperatorType.BINARY_LEFT_ASSOCIATIVE,
+        )
         unary_types = (OperatorType.PREFIX_UNARY, OperatorType.SUFFIX_UNARY)
         position = 0
         if existing_operator is not None:
@@ -155,22 +170,26 @@ class YaqlFactory:
                 position = i
                 break
             if position < 0:
-                raise ValueError('Operator {} is not found'.format(
-                    existing_operator))
-            while position < len(self.operators) and len(
-                    self.operators[position]) > 1:
+                raise ValueError(f'Operator {existing_operator} is not found')
+            while (
+                position < len(self.operators)
+                and len(self.operators[position]) > 1
+            ):
                 position += 1
         if create_group:
             if position == len(self.operators):
                 self.operators.append(())
                 position += 1
             else:
-                while position < len(self.operators) and len(
-                        self.operators[position]) < 2:
+                while (
+                    position < len(self.operators)
+                    and len(self.operators[position]) < 2
+                ):
                     position += 1
                 self.operators.insert(position, ())
         self.operators.insert(
-            position, (new_operator, new_operator_type, new_operator_alias))
+            position, (new_operator, new_operator_type, new_operator_alias)
+        )
 
     @staticmethod
     def _name_generator():
@@ -221,7 +240,11 @@ class YaqlFactory:
             else:
                 name = name or 'OP_' + next(name_generator)
             operators[record[0]] = (
-                up, bp, name, record[2] if len(record) > 2 else None)
+                up,
+                bp,
+                name,
+                record[2] if len(record) > 2 else None,
+            )
         return YaqlOperators(operators, name_value_op)
 
     # noinspection PyMethodMayBeStatic
@@ -236,10 +259,12 @@ class YaqlFactory:
         names = self._name_generator()
         operators = self._build_operator_table(names)
         lexer_rules = self._create_lexer(operators)
-        ply_lexer = lex.lex(object=lexer_rules,
-                            reflags=re.UNICODE | re.VERBOSE)
+        ply_lexer = lex.lex(
+            object=lexer_rules, reflags=re.UNICODE | re.VERBOSE
+        )
         ply_parser = yacc.yacc(
             module=self._create_parser(lexer_rules, operators),
-            debug=False if not options else options.get('yaql.debug', False))
+            debug=False if not options else options.get('yaql.debug', False),
+        )
 
         return YaqlEngine(ply_lexer, ply_parser, options, self)

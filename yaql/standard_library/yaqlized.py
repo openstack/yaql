@@ -21,8 +21,10 @@ The first way to yaqlize object is using function call:
 
     class A(object):
         foo = 256
+
         def bar(self):
             print('yaqlization works with methods too')
+
 
     sample_object = A()
     yaqlization.yaqlize(sample_object)
@@ -34,6 +36,7 @@ The second way is using decorator:
     @yaqlization.yaqlize
     class A(object):
         foo = 256
+
         def bar(self):
             print('yaqlization works with methods too')
 
@@ -43,7 +46,6 @@ of methods/attributes/keys that are exposed to the yaql.
 
 This module provides implemented operators on Yaqlized objects.
 """
-
 
 import re
 
@@ -59,8 +61,12 @@ REGEX_TYPE = type(re.compile('.'))
 
 
 class Yaqlized(yaqltypes.GenericType):
-    def __init__(self, can_access_attributes=False, can_call_methods=False,
-                 can_index=False):
+    def __init__(
+        self,
+        can_access_attributes=False,
+        can_call_methods=False,
+        can_index=False,
+    ):
         def check_value(value, context, *args, **kwargs):
             settings = yaqlization.get_yaqlization_settings(value)
             if settings is None:
@@ -156,7 +162,8 @@ def op_dot(receiver, expr, context, engine):
     args = tuple(arg(utils.NO_VALUE, context, engine) for arg in args)
     for key, value in kwargs.items():
         kwargs[arg_mappings.get(key, key)] = value(
-            utils.NO_VALUE, context, engine)
+            utils.NO_VALUE, context, engine
+        )
     res = func(*args, **kwargs)
     _auto_yaqlize(res, settings)
     return res

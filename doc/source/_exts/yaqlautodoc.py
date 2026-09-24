@@ -31,16 +31,21 @@ def _get_modules_names(package):
     """Get names of modules in package"""
 
     return sorted(
-        map(operator.itemgetter(1),
-            pkgutil.walk_packages(package.__path__,
-                                  f'{package.__name__}.')))
+        map(
+            operator.itemgetter(1),
+            pkgutil.walk_packages(package.__path__, f'{package.__name__}.'),
+        )
+    )
 
 
 def _get_functions_names(module):
     """Get names of the functions in the current module"""
 
-    return [name for name in dir(module) if
-            isinstance(getattr(module, name, None), types.FunctionType)]
+    return [
+        name
+        for name in dir(module)
+        if isinstance(getattr(module, name, None), types.FunctionType)
+    ]
 
 
 def write_method_doc(method, output):
@@ -57,7 +62,7 @@ def write_method_doc(method, output):
         doc = method.__doc__
         try:
             # strip TAG
-            doc = doc[doc.index(TAG) + len(TAG):]
+            doc = doc[doc.index(TAG) + len(TAG) :]
 
             # embolden function name
             line_break = doc.index('\n')
@@ -73,14 +78,19 @@ def write_method_doc(method, output):
             # add :callAs: parameter
             try:
                 signature_index = doc.index(':signature:')
-                position = doc.index('    :', signature_index +
-                                     len(':signature:'))
+                position = doc.index(
+                    '    :', signature_index + len(':signature:')
+                )
                 if hasattr(method, '__yaql_function__'):
-                    if (method.__yaql_function__.name and
-                            'operator' in method.__yaql_function__.name):
+                    if (
+                        method.__yaql_function__.name
+                        and 'operator' in method.__yaql_function__.name
+                    ):
                         call_as = 'operator'
-                    elif (method.__yaql_function__.is_function and
-                            method.__yaql_function__.is_method):
+                    elif (
+                        method.__yaql_function__.is_function
+                        and method.__yaql_function__.is_method
+                    ):
                         call_as = 'function or method'
                     elif method.__yaql_function__.is_method:
                         call_as = 'method'
@@ -180,7 +190,8 @@ def generate_doc(source):
 
     except Exception as e:
         return '.. code-block:: python\n\n    Error: {}\n    {}\n\n'.format(
-            str(e), '\n    '.join([''] + traceback.format_exc().split('\n')))
+            str(e), '\n    '.join([''] + traceback.format_exc().split('\n'))
+        )
 
 
 class YaqlDocNode(nodes.General, nodes.Element):

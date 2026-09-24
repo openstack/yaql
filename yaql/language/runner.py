@@ -22,8 +22,17 @@ from yaql.language import utils
 from yaql.language import yaqltypes
 
 
-def call(name, context, args, kwargs, engine, receiver=utils.NO_VALUE,
-         data_context=None, use_convention=False, function_filter=None):
+def call(
+    name,
+    context,
+    args,
+    kwargs,
+    engine,
+    receiver=utils.NO_VALUE,
+    data_context=None,
+    use_convention=False,
+    function_filter=None,
+):
 
     if data_context is None:
         data_context = context
@@ -37,7 +46,8 @@ def call(name, context, args, kwargs, engine, receiver=utils.NO_VALUE,
         predicate = lambda fd, ctx: fd.is_method and function_filter(fd, ctx)
 
     all_overloads = context.collect_functions(
-        name, predicate, use_convention=use_convention)
+        name, predicate, use_convention=use_convention
+    )
 
     if not all_overloads:
         if receiver is utils.NO_VALUE:
@@ -46,14 +56,16 @@ def call(name, context, args, kwargs, engine, receiver=utils.NO_VALUE,
             raise exceptions.NoMethodRegisteredException(name, receiver)
     else:
         delegate = choose_overload(
-            name, all_overloads, engine, receiver, data_context, args, kwargs)
+            name, all_overloads, engine, receiver, data_context, args, kwargs
+        )
         try:
             result = delegate()
             utils.limit_memory_usage(engine, (1, result))
             return result
         except StopIteration as e:
             raise exceptions.WrappedException(e).with_traceback(
-                sys.exc_info()[2])
+                sys.exc_info()[2]
+            )
 
 
 def choose_overload(name, candidates, engine, receiver, context, args, kwargs):
@@ -107,8 +119,11 @@ def choose_overload(name, candidates, engine, receiver, context, args, kwargs):
 
     arg_evaluator = lambda i, arg: (  # noqa: E731
         arg(utils.NO_VALUE, context, engine)
-        if (i not in lazy_params and isinstance(arg, expressions.Expression)
-            and not isinstance(arg, expressions.Constant))
+        if (
+            i not in lazy_params
+            and isinstance(arg, expressions.Expression)
+            and not isinstance(arg, expressions.Constant)
+        )
         else arg
     )
 

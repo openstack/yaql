@@ -42,29 +42,34 @@ class TestEngine(tests.TestCase):
     def test_no_function_registered(self):
         self.assertRaises(
             exceptions.NoFunctionRegisteredException,
-            self.eval, 'kjhfksjdhfk()')
+            self.eval,
+            'kjhfksjdhfk()',
+        )
 
     def test_no_method_registered(self):
         self.assertRaises(
             exceptions.NoMethodRegisteredException,
-            self.eval, '[1,2].kjhfksjdhfk($)')
+            self.eval,
+            '[1,2].kjhfksjdhfk($)',
+        )
 
     def test_no_matching_function(self):
         self.assertRaises(
-            exceptions.NoMatchingFunctionException,
-            self.eval, 'len(1, 2, 3)')
+            exceptions.NoMatchingFunctionException, self.eval, 'len(1, 2, 3)'
+        )
 
     def test_mapping_translation_exception(self):
-        self.context.register_function(
-            lambda *args, **kwargs: 1, name='f')
+        self.context.register_function(lambda *args, **kwargs: 1, name='f')
         self.assertRaises(
-            exceptions.MappingTranslationException,
-            self.eval, 'f(2+2 => 4)')
+            exceptions.MappingTranslationException, self.eval, 'f(2+2 => 4)'
+        )
 
     def test_no_matching_method(self):
         self.assertRaises(
             exceptions.NoMatchingMethodException,
-            self.eval, '[1, 2].select(1, 2, 3)')
+            self.eval,
+            '[1, 2].select(1, 2, 3)',
+        )
 
     def test_duplicate_parameters(self):
         def raises():
@@ -74,8 +79,8 @@ class TestEngine(tests.TestCase):
                 return p
 
         self.assertRaises(
-            exceptions.DuplicateParameterDecoratorException,
-            raises)
+            exceptions.DuplicateParameterDecoratorException, raises
+        )
 
     def test_invalid_parameter(self):
         def raises():
@@ -83,28 +88,24 @@ class TestEngine(tests.TestCase):
             def f(p):
                 return p
 
-        self.assertRaises(
-            exceptions.NoParameterFoundException,
-            raises)
+        self.assertRaises(exceptions.NoParameterFoundException, raises)
 
     def test_lexical_error(self):
-        self.assertRaises(
-            exceptions.YaqlLexicalException,
-            self.eval, '1 ? 2')
+        self.assertRaises(exceptions.YaqlLexicalException, self.eval, '1 ? 2')
 
     def test_grammar_error(self):
-        self.assertRaises(
-            exceptions.YaqlGrammarException,
-            self.eval, '1 2')
+        self.assertRaises(exceptions.YaqlGrammarException, self.eval, '1 2')
 
-        self.assertRaises(
-            exceptions.YaqlGrammarException,
-            self.eval, '(2')
+        self.assertRaises(exceptions.YaqlGrammarException, self.eval, '(2')
 
     def test_invalid_method(self):
         self.assertRaises(
             exceptions.InvalidMethodException,
-            self.context.register_function, lambda: 1, name='f', method=True)
+            self.context.register_function,
+            lambda: 1,
+            name='f',
+            method=True,
+        )
 
         @specs.parameter('x', yaqltypes.Lambda())
         def func(x):
@@ -112,7 +113,11 @@ class TestEngine(tests.TestCase):
 
         self.assertRaises(
             exceptions.InvalidMethodException,
-            self.context.register_function, func, name='f2', method=True)
+            self.context.register_function,
+            func,
+            name='f2',
+            method=True,
+        )
 
     def test_function_definition(self):
         def func(a, b, *args, **kwargs):
@@ -122,19 +127,18 @@ class TestEngine(tests.TestCase):
 
         self.assertEqual(
             (1, 2, (5, 7), {'kw1': 'x', 'kw2': None}),
-            fd(self.engine, self.context)(
-                1, 2, 5, 7, kw1='x', kw2=None))
+            fd(self.engine, self.context)(1, 2, 5, 7, kw1='x', kw2=None),
+        )
 
-        self.assertEqual(
-            (1, 5, (), {}),
-            fd(self.engine, self.context)(1, b=5))
+        self.assertEqual((1, 5, (), {}), fd(self.engine, self.context)(1, b=5))
 
     def test_eval(self):
         self.assertEqual(
             120,
             yaql.eval(
                 'let(inp => $) -> [1, 2, 3].select($ + $inp).reduce($1 * $2)',
-                data=3)
+                data=3,
+            ),
         )
 
     def test_skip_args(self):
@@ -147,29 +151,38 @@ class TestEngine(tests.TestCase):
         self.assertEqual([11, 22, 33], self.eval('func()'))
         self.assertEqual([11, 1, 4], self.eval('func(,1, c=>4)'))
         self.assertRaises(
-            exceptions.NoMatchingFunctionException,
-            self.eval, 'func(,1, b=>4)')
+            exceptions.NoMatchingFunctionException, self.eval, 'func(,1, b=>4)'
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'func(,1,, c=>4)')
+            self.eval,
+            'func(,1,, c=>4)',
+        )
 
     def test_no_trailing_commas(self):
-        self.assertRaises(exceptions.YaqlGrammarException,
-                          self.eval, 'func(1,,)')
-        self.assertRaises(exceptions.YaqlGrammarException,
-                          self.eval, 'func(,1,)')
-        self.assertRaises(exceptions.YaqlGrammarException,
-                          self.eval, 'func(,,)')
-        self.assertRaises(exceptions.YaqlGrammarException,
-                          self.eval, 'func(,)')
+        self.assertRaises(
+            exceptions.YaqlGrammarException, self.eval, 'func(1,,)'
+        )
+        self.assertRaises(
+            exceptions.YaqlGrammarException, self.eval, 'func(,1,)'
+        )
+        self.assertRaises(
+            exceptions.YaqlGrammarException, self.eval, 'func(,,)'
+        )
+        self.assertRaises(
+            exceptions.YaqlGrammarException, self.eval, 'func(,)'
+        )
 
     def test_no_varargs_after_kwargs(self):
-        self.assertRaises(exceptions.YaqlGrammarException,
-                          self.eval, 'func(x=>y, t)')
-        self.assertRaises(exceptions.YaqlGrammarException,
-                          self.eval, 'func(x=>y, ,t)')
-        self.assertRaises(exceptions.YaqlGrammarException,
-                          self.eval, 'func(a, x=>y, ,t)')
+        self.assertRaises(
+            exceptions.YaqlGrammarException, self.eval, 'func(x=>y, t)'
+        )
+        self.assertRaises(
+            exceptions.YaqlGrammarException, self.eval, 'func(x=>y, ,t)'
+        )
+        self.assertRaises(
+            exceptions.YaqlGrammarException, self.eval, 'func(a, x=>y, ,t)'
+        )
 
     def test_super(self):
         @specs.parameter('string', yaqltypes.String())
@@ -191,12 +204,12 @@ class TestEngine(tests.TestCase):
 
         context.register_function(call_func)
         self.assertEqual(
-            [1, 2],
-            self.eval('callFunc(list, 1, 2)', context=context))
+            [1, 2], self.eval('callFunc(list, 1, 2)', context=context)
+        )
 
         self.assertEqual(
-            6,
-            self.eval("callFunc('#operator_*', 2, 3)", context=context))
+            6, self.eval("callFunc('#operator_*', 2, 3)", context=context)
+        )
 
     def test_keyword_constant_function(self):
         @specs.parameter('arg', yaqltypes.Keyword())
@@ -209,13 +222,23 @@ class TestEngine(tests.TestCase):
         self.assertEqual('qw', self.eval('foo(qw)', context=context))
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo($)', context=context, data='asd')
+            self.eval,
+            'foo($)',
+            context=context,
+            data='asd',
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo("q w")', context=context)
+            self.eval,
+            'foo("q w")',
+            context=context,
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo(null)', context=context)
+            self.eval,
+            'foo(null)',
+            context=context,
+        )
 
     def test_constant_function(self):
         @specs.parameter('arg', yaqltypes.Constant(True))
@@ -231,7 +254,11 @@ class TestEngine(tests.TestCase):
         self.assertIsNone(self.eval('foo(null)', context=context))
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo($)', context=context, data='asd')
+            self.eval,
+            'foo($)',
+            context=context,
+            data='asd',
+        )
 
     def test_string_constant_function(self):
         @specs.parameter('arg', yaqltypes.StringConstant())
@@ -245,13 +272,23 @@ class TestEngine(tests.TestCase):
         self.assertEqual('q w', self.eval('foo("q w")', context=context))
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo($)', context=context, data='asd')
+            self.eval,
+            'foo($)',
+            context=context,
+            data='asd',
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo(123)', context=context)
+            self.eval,
+            'foo(123)',
+            context=context,
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo(null)', context=context)
+            self.eval,
+            'foo(null)',
+            context=context,
+        )
 
     def test_numeric_constant_function(self):
         @specs.parameter('arg', yaqltypes.NumericConstant())
@@ -265,13 +302,23 @@ class TestEngine(tests.TestCase):
         self.assertEqual(12.4, self.eval('foo(12.4)', context=context))
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo($)', context=context, data=5)
+            self.eval,
+            'foo($)',
+            context=context,
+            data=5,
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo("123")', context=context)
+            self.eval,
+            'foo("123")',
+            context=context,
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo(null)', context=context)
+            self.eval,
+            'foo(null)',
+            context=context,
+        )
 
     def test_boolean_constant_function(self):
         @specs.parameter('arg', yaqltypes.BooleanConstant())
@@ -284,21 +331,31 @@ class TestEngine(tests.TestCase):
         self.assertTrue(self.eval('foo(true)', context=context))
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo($)', context=context, data=True)
+            self.eval,
+            'foo($)',
+            context=context,
+            data=True,
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo("true")', context=context)
+            self.eval,
+            'foo("true")',
+            context=context,
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo(null)', context=context)
+            self.eval,
+            'foo(null)',
+            context=context,
+        )
 
     def test_high_precedence_operator_insertion(self):
         # Test that insertion of high precedence operator doesn't
         # make turn ($.a)[0] into $.(a[0])
         engine_factory = factory.YaqlFactory(allow_delegates=True)
         engine_factory.insert_operator(
-            None, True, ':',
-            factory.OperatorType.BINARY_LEFT_ASSOCIATIVE, True)
+            None, True, ':', factory.OperatorType.BINARY_LEFT_ASSOCIATIVE, True
+        )
         engine = engine_factory.create()
         data = {'a': [1]}
         expr = engine('$.a[0]')

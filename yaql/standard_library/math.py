@@ -14,6 +14,7 @@
 """
 The Math module describes implemented math operations on numbers.
 """
+
 import random
 
 from yaql.language import specs

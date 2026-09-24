@@ -34,27 +34,30 @@ class Parser:
             self._aliases[op_name] = op_alias
             if up:
                 la = precedence_dict.setdefault(
-                    (abs(up), 'l' if up > 0 else 'r'), [])
+                    (abs(up), 'l' if up > 0 else 'r'), []
+                )
                 la.append('UNARY_' + op_name if bp else op_name)
-                unary_doc += ('value : ' if not unary_doc else '\n| ')
+                unary_doc += 'value : ' if not unary_doc else '\n| '
                 spec_prefix = '{0} value' if up > 0 else 'value {0}'
                 if bp:
                     unary_doc += (spec_prefix + ' %prec UNARY_{0}').format(
-                        op_name)
+                        op_name
+                    )
                 else:
                     unary_doc += spec_prefix.format(op_name)
             if bp:
                 la = precedence_dict.setdefault(
-                    (abs(bp), 'l' if bp > 0 else 'r'), [])
+                    (abs(bp), 'l' if bp > 0 else 'r'), []
+                )
                 if op_name == 'INDEXER':
                     la.extend(('LIST', 'INDEXER'))
                 elif op_name == 'MAP':
                     la.append('MAP')
                 else:
                     la.append(op_name)
-                    binary_doc += ((
-                        'value : ' if not binary_doc else '\n| ') +
-                        f'value {op_name} value')
+                    binary_doc += (
+                        'value : ' if not binary_doc else '\n| '
+                    ) + f'value {op_name} value'
 
         # noinspection PyProtectedMember
         def p_binary(this, p):
@@ -81,8 +84,7 @@ class Parser:
                 value = precedence_dict.get((i, oa))
                 if value:
                     precedence.append(
-                        (('left',) if oa == 'l' else ('right',)) +
-                        tuple(value)
+                        (('left',) if oa == 'l' else ('right',)) + tuple(value)
                     )
         precedence.insert(0, ('left', ','))
         precedence.reverse()
@@ -230,6 +232,7 @@ class Parser:
     def p_error(p):
         if p:
             raise exceptions.YaqlGrammarException(
-                p.lexer.lexdata, p.value, p.lexpos)
+                p.lexer.lexdata, p.value, p.lexpos
+            )
         else:
             raise exceptions.YaqlGrammarException(None, None, None)

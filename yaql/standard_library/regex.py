@@ -213,22 +213,21 @@ def _publish_match(context, match):
     rec = {
         'value': match.group(),
         'start': match.start(0),
-        'end': match.end(0)
+        'end': match.end(0),
     }
     context['$1'] = rec
     for i, t in enumerate(match.groups(), 1):
-        rec = {
-            'value': t,
-            'start': match.start(i),
-            'end': match.end(i)
-        }
+        rec = {'value': t, 'start': match.start(i), 'end': match.end(i)}
         context['$' + str(i + 1)] = rec
 
-    for key, value, in match.groupdict().values():
+    for (
+        key,
+        value,
+    ) in match.groupdict().values():
         rec = {
             'value': value,
             'start': match.start(value),
-            'end': match.end(value)
+            'end': match.end(value),
         }
         context['$' + key] = rec
 
@@ -489,10 +488,12 @@ def replace_by(context, regexp, string, repl, count=0):
                                                       $.value = "adc" => yy))
         "xxyy"
     """
+
     def repl_func(match):
         new_context = context.create_child_context()
         _publish_match(context, match)
         return repl(new_context)
+
     return regexp.sub(repl_func, string, count)
 
 

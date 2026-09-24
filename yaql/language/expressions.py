@@ -129,7 +129,8 @@ class MappingRuleExpression(Expression):
     def __call__(self, receiver, context, engine):
         return utils.MappingRule(
             self.source(receiver, context, engine),
-            self.destination(receiver, context, engine))
+            self.destination(receiver, context, engine),
+        )
 
 
 class Statement(Function):

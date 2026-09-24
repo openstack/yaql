@@ -21,10 +21,15 @@ class YaqlFactory(factory.YaqlFactory):
     def __init__(self, allow_delegates=False):
         # noinspection PyTypeChecker
         super().__init__(
-            keyword_operator=None, allow_delegates=allow_delegates)
+            keyword_operator=None, allow_delegates=allow_delegates
+        )
         self.insert_operator(
-            'or', True, '=>',
-            factory.OperatorType.BINARY_LEFT_ASSOCIATIVE, True)
+            'or',
+            True,
+            '=>',
+            factory.OperatorType.BINARY_LEFT_ASSOCIATIVE,
+            True,
+        )
 
     def create(self, options=None):
         options = dict(options or {})

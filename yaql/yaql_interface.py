@@ -44,7 +44,10 @@ class YaqlInterface:
             limit_func = context('#iter', self.engine)
             return utils.convert_output_data(
                 context(item, self.engine, self.sender)(*args, **kwargs),
-                limit_func, self.engine)
+                limit_func,
+                self.engine,
+            )
+
         return stub
 
     def __call__(self, __expression, *args, **kwargs):

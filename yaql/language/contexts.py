@@ -54,12 +54,26 @@ class ContextBase(metaclass=abc.ABCMeta):
     def __contains__(self, item):
         return False
 
-    def __call__(self, name, engine, receiver=utils.NO_VALUE,
-                 data_context=None, use_convention=False,
-                 function_filter=None):
+    def __call__(
+        self,
+        name,
+        engine,
+        receiver=utils.NO_VALUE,
+        data_context=None,
+        use_convention=False,
+        function_filter=None,
+    ):
         return lambda *args, **kwargs: runner.call(
-            name, self, args, kwargs, engine, receiver,
-            data_context, use_convention, function_filter)
+            name,
+            self,
+            args,
+            kwargs,
+            engine,
+            receiver,
+            data_context,
+            use_convention,
+            function_filter,
+        )
 
     @abc.abstractmethod
     def get_functions(self, name, predicate=None, use_convention=False):
@@ -77,7 +91,8 @@ class ContextBase(metaclass=abc.ABCMeta):
             if predicate:
                 context_predicate = lambda fd: predicate(fd, p)  # noqa: E731
             layer_overloads, is_exclusive = p.get_functions(
-                name, context_predicate, use_convention)
+                name, context_predicate, use_convention
+            )
             p = None if is_exclusive else p.parent
             if layer_overloads:
                 overloads.append(layer_overloads)
@@ -96,8 +111,9 @@ class ContextBase(metaclass=abc.ABCMeta):
 
 
 class Context(ContextBase):
-    def __init__(self, parent_context=None, data=utils.NO_VALUE,
-                 convention=None):
+    def __init__(
+        self, parent_context=None, data=utils.NO_VALUE, convention=None
+    ):
         super().__init__(parent_context, convention)
         self._functions = {}
         self._data = {}
@@ -114,7 +130,8 @@ class Context(ContextBase):
 
         if not isinstance(spec, specs.FunctionDefinition) and callable(spec):
             spec = specs.get_function_definition(
-                spec, *args, convention=self._convention, **kwargs)
+                spec, *args, convention=self._convention, **kwargs
+            )
 
         spec = self._import_function_definition(spec)
         if spec.is_method:
@@ -136,13 +153,13 @@ class Context(ContextBase):
             predicate = lambda x: True  # noqa: E731
         return (
             set(filter(predicate, self._functions.get(name, set()))),
-            name in self._exclusive_funcs
+            name in self._exclusive_funcs,
         )
 
     @staticmethod
     def _normalize_name(name):
         if not name.startswith('$'):
-            name = ('$' + name)
+            name = '$' + name
         if name == '$':
             name = '$1'
         return name
@@ -190,8 +207,7 @@ class MultiContext(ContextBase):
         elif len(parents) == 1:
             super().__init__(parents[0], convention)
         else:
-            super().__init__(MultiContext(parents),
-                             convention)
+            super().__init__(MultiContext(parents), convention)
 
     def register_function(self, spec, *args, **kwargs):
         self._context_list[0].register_function(spec, *args, **kwargs)
@@ -243,7 +259,8 @@ class MultiContext(ContextBase):
         is_exclusive = False
         for context in self._context_list:
             funcs, exclusive = context.get_functions(
-                name, predicate, use_convention)
+                name, predicate, use_convention
+            )
             result.update(funcs)
             if exclusive:
                 is_exclusive = True
@@ -257,8 +274,11 @@ class LinkedContext(ContextBase):
         self.linked_context = linked_context
         if linked_context.parent:
             super().__init__(
-                LinkedContext(parent_context, linked_context.parent,
-                              convention), convention)
+                LinkedContext(
+                    parent_context, linked_context.parent, convention
+                ),
+                convention,
+            )
         else:
             super().__init__(parent_context, convention)
 
@@ -270,7 +290,8 @@ class LinkedContext(ContextBase):
 
     def get_data(self, name, default=None, ask_parent=True):
         result = self.linked_context.get_data(
-            name, default=utils.NO_VALUE, ask_parent=False)
+            name, default=utils.NO_VALUE, ask_parent=False
+        )
         if result is utils.NO_VALUE:
             if not ask_parent or not self.parent:
                 return default
@@ -279,7 +300,8 @@ class LinkedContext(ContextBase):
 
     def get_functions(self, name, predicate=None, use_convention=False):
         return self.linked_context.get_functions(
-            name, predicate=predicate, use_convention=use_convention)
+            name, predicate=predicate, use_convention=use_convention
+        )
 
     def delete_function(self, spec):
         return self.linked_context.delete_function(spec)

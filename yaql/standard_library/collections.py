@@ -40,12 +40,14 @@ def list_(delegate, *args):
         yaql> list(1, "", range(2))
         [1, "", 0, 1]
     """
+
     def rec(seq):
         for t in seq:
             if utils.is_iterator(t):
                 yield from rec(t)
             else:
                 yield t
+
     return delegate(rec(args))
 
 
@@ -376,8 +378,9 @@ def dict_set_many_inline(engine, d, *args):
         {"a": 1, "c": 4, "b": 3}
     """
     utils.limit_memory_usage(engine, (1, d), *((1, arg) for arg in args))
-    return utils.FrozenDict(itertools.chain(
-        d.items(), ((t.source, t.destination) for t in args)))
+    return utils.FrozenDict(
+        itertools.chain(d.items(), ((t.source, t.destination) for t in args))
+    )
 
 
 @specs.parameter('d', utils.MappingType, alias='dict')
@@ -825,8 +828,12 @@ def replace(collection, position, value, count=1):
     """
     yielded = False
     for i, t in enumerate(collection):
-        if (count >= 0 and position <= i < position + count
-                or count < 0 and i >= position):
+        if (
+            count >= 0
+            and position <= i < position + count
+            or count < 0
+            and i >= position
+        ):
             if not yielded:
                 yielded = True
                 yield value
@@ -863,8 +870,12 @@ def replace_many(collection, position, values, count=1):
     """
     yielded = False
     for i, t in enumerate(collection):
-        if (count >= 0 and position <= i < position + count
-                or count < 0 and i >= position):
+        if (
+            count >= 0
+            and position <= i < position + count
+            or count < 0
+            and i >= position
+        ):
             if not yielded:
                 yield from values
                 yielded = True
@@ -924,9 +935,12 @@ def delete_keys_seq(d, keys):
 
 
 @specs.method
-@specs.parameter('collection', yaqltypes.Iterable(validators=[
-    lambda x: not isinstance(x, utils.SetType)]
-))
+@specs.parameter(
+    'collection',
+    yaqltypes.Iterable(
+        validators=[lambda x: not isinstance(x, utils.SetType)]
+    ),
+)
 @specs.parameter('value', nullable=True)
 @specs.parameter('position', int)
 @specs.name('insert')
@@ -1064,12 +1078,14 @@ def set_(delegate, *args):
         yaql> set(0, "", [1, 2])
         [0, "", [1, 2]]
     """
+
     def rec(seq):
         for t in seq:
             if utils.is_iterator(t):
                 yield from rec(t)
             else:
                 yield t
+
     return delegate(rec(args))
 
 
@@ -1381,5 +1397,6 @@ def register(context, no_sets=False):
         context.register_function(intersect)
         context.register_function(difference)
         context.register_function(
-            difference, name='#operator_-', function=True, method=False)
+            difference, name='#operator_-', function=True, method=False
+        )
         context.register_function(symmetric_difference)

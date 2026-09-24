@@ -879,11 +879,11 @@ class GroupAggregator:
                 self._failure_info = exc
             else:
                 if not (
-                    len(value_list) == 2 and
-                    isinstance(result, collections.abc.Sequence) and
-                    not isinstance(result, str) and
-                    len(result) == 2 and
-                    result[0] == value_list[0]
+                    len(value_list) == 2
+                    and isinstance(result, collections.abc.Sequence)
+                    and not isinstance(result, str)
+                    and len(result) == 2
+                    and result[0] == value_list[0]
                 ):
                     # We are not dealing with (correct) version 1.1.1 syntax,
                     # so don't bother trying to fall back if there's an error
@@ -912,8 +912,9 @@ def group_by_function(allow_aggregator_fallback):
     @specs.parameter('value_selector', yaqltypes.Lambda())
     @specs.parameter('aggregator', yaqltypes.Lambda())
     @specs.method
-    def group_by(engine, collection, key_selector, value_selector=None,
-                 aggregator=None):
+    def group_by(
+        engine, collection, key_selector, value_selector=None, aggregator=None
+    ):
         """:yaql:groupBy
 
         Returns a collection grouped by keySelector with applied valueSelector
@@ -1007,7 +1008,8 @@ def zip_longest(*collections, **kwargs):
         [[1, 4], [2, 5], [3, 100]]
     """
     return itertools.zip_longest(
-        *collections, fillvalue=kwargs.pop('default', None))
+        *collections, fillvalue=kwargs.pop('default', None)
+    )
 
 
 @specs.method
@@ -1457,16 +1459,20 @@ def _merge_dicts(dict1, dict2, list_merge_func, item_merger, max_levels=0):
             if max_levels != 1 and isinstance(value2, utils.MappingType):
                 if not isinstance(value1, utils.MappingType):
                     raise TypeError(
-                        'Cannot merge {} with {}'.format(
-                            type(value1), type(value2)))
+                        f'Cannot merge {type(value1)} with {type(value2)}'
+                    )
                 result[key] = _merge_dicts(
-                    value1, value2, list_merge_func, item_merger,
-                    0 if max_levels == 0 else max_levels - 1)
+                    value1,
+                    value2,
+                    list_merge_func,
+                    item_merger,
+                    0 if max_levels == 0 else max_levels - 1,
+                )
             elif max_levels != 1 and utils.is_sequence(value2):
                 if not utils.is_sequence(value1):
                     raise TypeError(
-                        'Cannot merge {} with {}'.format(
-                            type(value1), type(value2)))
+                        f'Cannot merge {type(value1)} with {type(value2)}'
+                    )
                 result[key] = list_merge_func(value1, value2)
             else:
                 result[key] = item_merger(value1, value2)
@@ -1484,8 +1490,15 @@ def _merge_dicts(dict1, dict2, list_merge_func, item_merger, max_levels=0):
 @specs.parameter('item_merger', yaqltypes.Lambda())
 @specs.parameter('max_levels', int)
 @specs.inject('to_list', yaqltypes.Delegate('to_list', method=True))
-def merge_with(engine, to_list, d, another, list_merger=None,
-               item_merger=None, max_levels=0):
+def merge_with(
+    engine,
+    to_list,
+    d,
+    another,
+    list_merger=None,
+    item_merger=None,
+    max_levels=0,
+):
     """:yaql:mergeWith
 
     Performs a deep merge of two dictionaries.
@@ -1527,7 +1540,8 @@ def merge_with(engine, to_list, d, another, list_merger=None,
     """
     if list_merger is None:
         list_merger = lambda lst1, lst2: to_list(  # noqa: E731
-            distinct(engine, lst1 + lst2))
+            distinct(engine, lst1 + lst2)
+        )
     if item_merger is None:
         item_merger = lambda x, y: y  # noqa: E731
     return _merge_dicts(d, another, list_merger, item_merger, max_levels)
@@ -1592,7 +1606,8 @@ def accumulate(collection, selector, seed=utils.NO_VALUE):
             seed = next(it)
         except StopIteration:
             raise TypeError(
-                'accumulate() of empty sequence with no initial value')
+                'accumulate() of empty sequence with no initial value'
+            )
     yield seed
     total = seed
     for x in it:
@@ -1604,8 +1619,9 @@ def accumulate(collection, selector, seed=utils.NO_VALUE):
 @specs.parameter('producer', yaqltypes.Lambda())
 @specs.parameter('selector', yaqltypes.Lambda())
 @specs.parameter('decycle', bool)
-def generate(engine, initial, predicate, producer, selector=None,
-             decycle=False):
+def generate(
+    engine, initial, predicate, producer, selector=None, decycle=False
+):
     """:yaql:generate
 
     Returns iterator to values beginning from initial value with every next
@@ -1655,8 +1671,9 @@ def generate(engine, initial, predicate, producer, selector=None,
 @specs.parameter('selector', yaqltypes.Lambda())
 @specs.parameter('decycle', bool)
 @specs.parameter('depth_first', bool)
-def generate_many(engine, initial, producer, selector=None, decycle=False,
-                  depth_first=False):
+def generate_many(
+    engine, initial, producer, selector=None, decycle=False, depth_first=False
+):
     """:yaql:generateMany
 
     Returns iterator to values beginning from initial queue of values with

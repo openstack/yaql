@@ -35,3 +35,15 @@ yaql = "yaql.cli.run:main"
 
 [tool.setuptools.packages.find]
 include = ["yaql*"]
+
+[tool.ruff]
+line-length = 79
+exclude = ["yaql/_ply/*"]
+
+[tool.ruff.format]
+quote-style = "preserve"
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = ["E4", "E5", "E7", "E9", "F", "G", "LOG", "UP"]
+external = ["H"]

@@ -42,109 +42,133 @@ class TestRegex(yaql.tests.TestCase):
 
     def test_search(self):
         self.assertEqual(
-            '24.16',
-            self.eval(r"regex(`(\d+)\.?(\d+)?`).search('a24.16b')"))
+            '24.16', self.eval(r"regex(`(\d+)\.?(\d+)?`).search('a24.16b')")
+        )
 
     def test_search_with_selector(self):
         self.assertEqual(
             '24.16 = 24(2-4) + 16(5-7)',
             self.eval(
-                r"regex(`(\d+)\.?(\d+)?`).search("r"'aa24.16bb', "
+                r"regex(`(\d+)\.?(\d+)?`).search("
+                r"'aa24.16bb', "
                 r"$.value + ' = ' + "
                 r"$2.value + '(' + str($2.start) + '-' + str($2.end) + ') + ' "
                 r"+ $3.value + '(' + str($3.start) + '-' + str($3.end) + ')')"
-            ))
+            ),
+        )
 
     def test_search_all(self):
         self.assertEqual(
-            ['24', '16'],
-            self.eval(r"regex(`\d+`).searchAll('a24.16b')"))
+            ['24', '16'], self.eval(r"regex(`\d+`).searchAll('a24.16b')")
+        )
 
     def test_search_all_with_selector(self):
         self.assertEqual(
             ['24!', '16!'],
-            self.eval(r"regex(`\d+`).searchAll('a24.16b', $.value+'!')"))
+            self.eval(r"regex(`\d+`).searchAll('a24.16b', $.value+'!')"),
+        )
 
     def test_split(self):
         self.assertEqual(
             ['Words', 'words', 'words', ''],
-            self.eval(r"regex(`\W+`).split('Words, words, words.')"))
+            self.eval(r"regex(`\W+`).split('Words, words, words.')"),
+        )
         self.assertEqual(
             ['Words', ', ', 'words', ', ', 'words', '.', ''],
-            self.eval(r"regex(`(\W+)`).split('Words, words, words.')"))
+            self.eval(r"regex(`(\W+)`).split('Words, words, words.')"),
+        )
         self.assertEqual(
             ['Words', 'words, words.'],
-            self.eval(r"regex(`\W+`).split('Words, words, words.', 1)"))
+            self.eval(r"regex(`\W+`).split('Words, words, words.', 1)"),
+        )
         self.assertEqual(
             ['0', '3', '9'],
-            self.eval(r"regex('[a-f]+', ignoreCase => true).split('0a3B9')"))
+            self.eval(r"regex('[a-f]+', ignoreCase => true).split('0a3B9')"),
+        )
 
     def test_split_on_string(self):
         self.assertEqual(
             ['Words', 'words', 'words', ''],
-            self.eval(r"'Words, words, words.'.split(regex(`\W+`))"))
+            self.eval(r"'Words, words, words.'.split(regex(`\W+`))"),
+        )
         self.assertEqual(
             ['Words', ', ', 'words', ', ', 'words', '.', ''],
-            self.eval(r"'Words, words, words.'.split(regex(`(\W+)`))"))
+            self.eval(r"'Words, words, words.'.split(regex(`(\W+)`))"),
+        )
         self.assertEqual(
             ['Words', 'words, words.'],
-            self.eval(r"'Words, words, words.'.split(regex(`\W+`), 1)"))
+            self.eval(r"'Words, words, words.'.split(regex(`\W+`), 1)"),
+        )
         self.assertEqual(
             ['0', '3', '9'],
-            self.eval(r"'0a3B9'.split(regex('[a-f]+', ignoreCase => true))"))
+            self.eval(r"'0a3B9'.split(regex('[a-f]+', ignoreCase => true))"),
+        )
 
     def test_replace(self):
         self.assertEqual(
-            'axxbxx',
-            self.eval(r"regex(`\d+`).replace(a12b23, xx)"))
+            'axxbxx', self.eval(r"regex(`\d+`).replace(a12b23, xx)")
+        )
         self.assertEqual(
-            'axxb23',
-            self.eval(r"regex(`\d+`).replace(a12b23, xx, 1)"))
+            'axxb23', self.eval(r"regex(`\d+`).replace(a12b23, xx, 1)")
+        )
 
     def test_replace_backref(self):
         self.assertEqual(
             'Foo_Bar_Foo',
-            self.eval(r"regex(`([a-z0-9])([A-Z])`).replace("
-                      "FooBarFoo, `\\1_\\2`)"))
+            self.eval(
+                r"regex(`([a-z0-9])([A-Z])`).replace("
+                "FooBarFoo, `\\1_\\2`)"
+            ),
+        )
 
     def test_replace_on_string(self):
         self.assertEqual(
-            'axxbxx',
-            self.eval(r"a12b23.replace(regex(`\d+`), xx)"))
+            'axxbxx', self.eval(r"a12b23.replace(regex(`\d+`), xx)")
+        )
         self.assertEqual(
-            'axxb23',
-            self.eval(r"a12b23.replace(regex(`\d+`), xx, 1)"))
+            'axxb23', self.eval(r"a12b23.replace(regex(`\d+`), xx, 1)")
+        )
 
     def test_replace_by(self):
         self.assertEqual(
             'axxbyy',
-            self.eval(r"regex(`\d+`).replaceBy(a12b23, "
-                      r"let(a => int($.value)) -> switch("
-                      r"$a < 20 => xx, true => yy))"))
+            self.eval(
+                r"regex(`\d+`).replaceBy(a12b23, "
+                r"let(a => int($.value)) -> switch("
+                r"$a < 20 => xx, true => yy))"
+            ),
+        )
 
         self.assertEqual(
             'axxb23',
-            self.eval(r"regex(`\d+`).replaceBy(a12b23, "
-                      r"let(a => int($.value)) -> switch("
-                      r"$a < 20 => xx, true => yy), 1)"))
+            self.eval(
+                r"regex(`\d+`).replaceBy(a12b23, "
+                r"let(a => int($.value)) -> switch("
+                r"$a < 20 => xx, true => yy), 1)"
+            ),
+        )
 
     def test_replace_by_on_string(self):
         self.assertEqual(
             'axxbyy',
-            self.eval(r"a12b23.replaceBy(regex(`\d+`), "
-                      r"with(int($.value)) -> switch("
-                      r"$ < 20 => xx, true => yy))"))
+            self.eval(
+                r"a12b23.replaceBy(regex(`\d+`), "
+                r"with(int($.value)) -> switch("
+                r"$ < 20 => xx, true => yy))"
+            ),
+        )
 
         self.assertEqual(
             'axxb23',
-            self.eval(r"a12b23.replaceBy(regex(`\d+`), "
-                      r"let(a => int($.value)) -> switch("
-                      r"$a < 20 => xx, true => yy), 1)"))
+            self.eval(
+                r"a12b23.replaceBy(regex(`\d+`), "
+                r"let(a => int($.value)) -> switch("
+                r"$a < 20 => xx, true => yy), 1)"
+            ),
+        )
 
     def test_escape_regex(self):
-        self.assertEqual(
-            '\\[',
-            self.eval(r"escapeRegex('[')"))
+        self.assertEqual('\\[', self.eval(r"escapeRegex('[')"))
 
     def test_is_regex(self):
         self.assertTrue(self.eval('isRegex(regex("a.b"))'))

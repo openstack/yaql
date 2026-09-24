@@ -29,14 +29,21 @@ class TestTypeAggregation(yaql.tests.TestCase):
         self.assertTrue(self.eval('foo($)', data=[1, 2]))
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo($)', data=123)
+            self.eval,
+            'foo($)',
+            data=123,
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo($)', data=True)
+            self.eval,
+            'foo($)',
+            data=True,
+        )
 
     def test_chain(self):
         @specs.parameter(
-            'arg', yaqltypes.Chain(yaqltypes.NotOfType(bool), int))
+            'arg', yaqltypes.Chain(yaqltypes.NotOfType(bool), int)
+        )
         def foo(arg):
             return True
 
@@ -44,14 +51,19 @@ class TestTypeAggregation(yaql.tests.TestCase):
         self.assertTrue(self.eval('foo($)', data=123))
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo($)', data=True)
+            self.eval,
+            'foo($)',
+            data=True,
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo($)', data='abc')
+            self.eval,
+            'foo($)',
+            data='abc',
+        )
 
     def test_any_of(self):
-        @specs.parameter(
-            'arg', yaqltypes.AnyOf(str, yaqltypes.Integer()))
+        @specs.parameter('arg', yaqltypes.AnyOf(str, yaqltypes.Integer()))
         def foo(arg):
             if isinstance(arg, str):
                 return 1
@@ -63,7 +75,13 @@ class TestTypeAggregation(yaql.tests.TestCase):
         self.assertEqual(2, self.eval('foo($)', data=123))
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo($)', data=True)
+            self.eval,
+            'foo($)',
+            data=True,
+        )
         self.assertRaises(
             exceptions.NoMatchingFunctionException,
-            self.eval, 'foo($)', data=[1, 2])
+            self.eval,
+            'foo($)',
+            data=[1, 2],
+        )

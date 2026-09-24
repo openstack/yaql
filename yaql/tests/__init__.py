@@ -27,7 +27,7 @@ class TestCase(testtools.TestCase):
         'yaql.limitIterators': 100,
         'yaql.memoryQuota': 20000,
         'yaql.convertTuplesToLists': True,
-        'yaql.convertSetsToLists': True
+        'yaql.convertSetsToLists': True,
     }
 
     legacy_engine_options = {
@@ -40,7 +40,8 @@ class TestCase(testtools.TestCase):
         if func is None:
             engine_factory = factory.YaqlFactory(allow_delegates=True)
             TestCase._default_engine = func = engine_factory.create(
-                options=self.engine_options)
+                options=self.engine_options
+            )
         return func
 
     def create_legacy_engine(self):
@@ -48,7 +49,8 @@ class TestCase(testtools.TestCase):
         if func is None:
             engine_factory = legacy.YaqlFactory()
             TestCase._default_legacy_engine = func = engine_factory.create(
-                options=self.legacy_engine_options)
+                options=self.legacy_engine_options
+            )
         return func
 
     @property

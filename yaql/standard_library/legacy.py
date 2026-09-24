@@ -273,7 +273,17 @@ def register(context, tuples):
     context.register_function(op_dot_context)
     context.register_function(dict_keyword_access)
 
-    for t in ('get', 'list', 'bool', 'int', 'float', 'select', 'where',
-              'join', 'sum', 'take_while'):
+    for t in (
+        'get',
+        'list',
+        'bool',
+        'int',
+        'float',
+        'select',
+        'where',
+        'join',
+        'sum',
+        'take_while',
+    ):
         for spec in utils.to_extension_method(t, context):
             context.register_function(spec)

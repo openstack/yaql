@@ -24,13 +24,13 @@ import yaql.tests
 class TestMiscellaneous(yaql.tests.TestCase):
     def test_pass_lambda_from_code(self):
         self.assertEqual(
-            [],
-            list(self.context('where', self.engine, [1, 2, 3])(False))
+            [], list(self.context('where', self.engine, [1, 2, 3])(False))
         )
         self.assertEqual(
             [2, 3],
-            list(self.context('where', self.engine, [1, 2, 3])(
-                lambda t: t > 1))
+            list(
+                self.context('where', self.engine, [1, 2, 3])(lambda t: t > 1)
+            ),
         )
 
     def test_bool_is_not_an_integer(self):
@@ -41,8 +41,8 @@ class TestMiscellaneous(yaql.tests.TestCase):
         self.context.register_function(foo)
         self.assertEqual(2, self.eval('foo(2)'))
         self.assertRaises(
-            exceptions.NoMatchingFunctionException,
-            self.eval, 'foo(true)')
+            exceptions.NoMatchingFunctionException, self.eval, 'foo(true)'
+        )
 
     def test_nullable_collections(self):
         @specs.parameter('arg', yaqltypes.Sequence())
@@ -74,29 +74,30 @@ class TestMiscellaneous(yaql.tests.TestCase):
 
         self.assertFalse(self.eval('foo1([1, 2])'))
         self.assertRaises(
-            exceptions.NoMatchingFunctionException,
-            self.eval, 'foo1(null)')
+            exceptions.NoMatchingFunctionException, self.eval, 'foo1(null)'
+        )
         self.assertFalse(self.eval('foo2([1, 2])'))
         self.assertTrue(self.eval('foo2(null)'))
 
         self.assertFalse(self.eval('bar1([1, 2])'))
         self.assertRaises(
-            exceptions.NoMatchingFunctionException,
-            self.eval, 'bar1(null)')
+            exceptions.NoMatchingFunctionException, self.eval, 'bar1(null)'
+        )
         self.assertFalse(self.eval('bar2([1, 2])'))
         self.assertTrue(self.eval('bar2(null)'))
 
         self.assertFalse(self.eval('baz1($)', data=iter([1, 2])))
         self.assertRaises(
-            exceptions.NoMatchingFunctionException,
-            self.eval, 'baz1(null)')
+            exceptions.NoMatchingFunctionException, self.eval, 'baz1(null)'
+        )
         self.assertFalse(self.eval('baz2($)', data=iter([1, 2])))
         self.assertTrue(self.eval('baz2(null)'))
 
     def test_load_data(self):
         context = {}
-        self.assertIsNone(load_data('/temporarydir/some_random_filename',
-                                    context))
+        self.assertIsNone(
+            load_data('/temporarydir/some_random_filename', context)
+        )
         self.assertEqual(context, {})
 
         with tempfile.NamedTemporaryFile() as f:

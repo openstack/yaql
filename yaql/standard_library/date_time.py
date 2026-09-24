@@ -48,8 +48,16 @@ def _get_tz(offset):
 @specs.parameter('second', int)
 @specs.parameter('microsecond', int)
 @specs.parameter('offset', TIMESPAN_TYPE)
-def build_datetime(year, month, day, hour=0, minute=0, second=0,
-                   microsecond=0, offset=ZERO_TIMESPAN):
+def build_datetime(
+    year,
+    month,
+    day,
+    hour=0,
+    minute=0,
+    second=0,
+    microsecond=0,
+    offset=ZERO_TIMESPAN,
+):
     """:yaql:datetime
 
     Returns datetime object built on year, month, day, hour, minute, second,
@@ -82,8 +90,9 @@ def build_datetime(year, month, day, hour=0, minute=0, second=0,
         [2015, 9, 29]
     """
     zone = _get_tz(offset)
-    return DATETIME_TYPE(year, month, day, hour, minute, second,
-                         microsecond, zone)
+    return DATETIME_TYPE(
+        year, month, day, hour, minute, second, microsecond, zone
+    )
 
 
 @specs.name('datetime')
@@ -151,8 +160,9 @@ def datetime_from_string(string, format__=None):
 @specs.parameter('seconds', yaqltypes.Integer())
 @specs.parameter('milliseconds', yaqltypes.Integer())
 @specs.parameter('microseconds', yaqltypes.Integer())
-def build_timespan(days=0, hours=0, minutes=0, seconds=0,
-                   milliseconds=0, microseconds=0):
+def build_timespan(
+    days=0, hours=0, minutes=0, seconds=0, milliseconds=0, microseconds=0
+):
     """:yaql:timespan
 
     Returns timespan object with specified args.
@@ -179,8 +189,13 @@ def build_timespan(days=0, hours=0, minutes=0, seconds=0,
         26.05
     """
     return TIMESPAN_TYPE(
-        days=days, hours=hours, minutes=minutes, seconds=seconds,
-        milliseconds=milliseconds, microseconds=microseconds)
+        days=days,
+        hours=hours,
+        minutes=minutes,
+        seconds=seconds,
+        milliseconds=milliseconds,
+        microseconds=microseconds,
+    )
 
 
 @specs.yaql_property(TIMESPAN_TYPE)
@@ -197,9 +212,11 @@ def microseconds(timespan):
         yaql> timespan(seconds => 1).microseconds
         1000000
     """
-    return (86400000000 * timespan.days +
-            1000000 * timespan.seconds +
-            timespan.microseconds)
+    return (
+        86400000000 * timespan.days
+        + 1000000 * timespan.seconds
+        + timespan.microseconds
+    )
 
 
 @specs.yaql_property(TIMESPAN_TYPE)
@@ -943,7 +960,8 @@ def date(dt):
         [2006, 11, 21, 0]
     """
     return DATETIME_TYPE(
-        year=dt.year, month=dt.month, day=dt.day, tzinfo=dt.tzinfo)
+        year=dt.year, month=dt.month, day=dt.day, tzinfo=dt.tzinfo
+    )
 
 
 @specs.yaql_property(yaqltypes.DateTime())
@@ -1045,8 +1063,17 @@ def timestamp(dt):
 @specs.parameter('second', int)
 @specs.parameter('microsecond', int)
 @specs.parameter('offset', TIMESPAN_TYPE)
-def replace(dt, year=None, month=None, day=None, hour=None, minute=None,
-            second=None, microsecond=None, offset=None):
+def replace(
+    dt,
+    year=None,
+    month=None,
+    day=None,
+    hour=None,
+    minute=None,
+    second=None,
+    microsecond=None,
+    offset=None,
+):
     """:yaql:replace
 
     Returns datetime object with applied replacements.
@@ -1172,21 +1199,56 @@ def is_timespan(value):
 
 def register(context):
     functions = (
-        build_datetime, build_timespan, datetime_from_timestamp,
-        datetime_from_string, now, localtz, utctz, utc,
-        days, hours, minutes, seconds, milliseconds, microseconds,
-        datetime_plus_timespan, timespan_plus_datetime,
-        datetime_minus_timespan, datetime_minus_datetime,
-        timespan_plus_timespan, timespan_minus_timespan,
-        datetime_gt_datetime, datetime_gte_datetime,
-        datetime_lt_datetime, datetime_lte_datetime,
-        timespan_gt_timespan, timespan_gte_timespan,
-        timespan_lt_timespan, timespan_lte_timespan,
-        negative_timespan, positive_timespan,
-        timespan_by_num, num_by_timespan, div_timespans, div_timespan_by_num,
-        year, month, day, hour, minute, second, microsecond, weekday,
-        offset, timestamp, date, time, replace, format_, is_datetime,
-        is_timespan
+        build_datetime,
+        build_timespan,
+        datetime_from_timestamp,
+        datetime_from_string,
+        now,
+        localtz,
+        utctz,
+        utc,
+        days,
+        hours,
+        minutes,
+        seconds,
+        milliseconds,
+        microseconds,
+        datetime_plus_timespan,
+        timespan_plus_datetime,
+        datetime_minus_timespan,
+        datetime_minus_datetime,
+        timespan_plus_timespan,
+        timespan_minus_timespan,
+        datetime_gt_datetime,
+        datetime_gte_datetime,
+        datetime_lt_datetime,
+        datetime_lte_datetime,
+        timespan_gt_timespan,
+        timespan_gte_timespan,
+        timespan_lt_timespan,
+        timespan_lte_timespan,
+        negative_timespan,
+        positive_timespan,
+        timespan_by_num,
+        num_by_timespan,
+        div_timespans,
+        div_timespan_by_num,
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+        microsecond,
+        weekday,
+        offset,
+        timestamp,
+        date,
+        time,
+        replace,
+        format_,
+        is_datetime,
+        is_timespan,
     )
 
     for func in functions:

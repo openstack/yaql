@@ -66,7 +66,10 @@ class TestYaqlization(tests.TestCase):
         self.assertEqual('C', self.eval('$.clsmethod(c)', obj))
         self.assertRaises(
             exceptions.NoFunctionRegisteredException,
-            self.eval, 'm_foo($, 5, 2)', obj)
+            self.eval,
+            'm_foo($, 5, 2)',
+            obj,
+        )
         self.assertEqual(3, self.eval('$?.m_foo(5, 2)', obj))
         self.assertIsNone(self.eval('$?.m_foo(5, 2)', None))
 
@@ -80,14 +83,20 @@ class TestYaqlization(tests.TestCase):
         obj = self._get_sample_class()()
         self.assertRaises(
             exceptions.NoMethodRegisteredException,
-            self.eval, '$.m_foo(5, 2)', obj)
+            self.eval,
+            '$.m_foo(5, 2)',
+            obj,
+        )
 
     def test_method_call_forbidden(self):
         obj = self._get_sample_class()()
         yaqlization.yaqlize(obj, yaqlize_methods=False)
         self.assertRaises(
             exceptions.NoMethodRegisteredException,
-            self.eval, '$.m_foo(5, 2)', obj)
+            self.eval,
+            '$.m_foo(5, 2)',
+            obj,
+        )
 
     def test_property_access(self):
         obj = self._get_sample_class()()
@@ -167,7 +176,10 @@ class TestYaqlization(tests.TestCase):
 
         self.assertRaises(
             exceptions.NoFunctionRegisteredException,
-            self.eval, '$.get_d().d_attr', obj)
+            self.eval,
+            '$.get_d().d_attr',
+            obj,
+        )
 
         obj = self._get_sample_class()()
         yaqlization.yaqlize(obj, auto_yaqlize_result=True)

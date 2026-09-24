@@ -120,8 +120,7 @@ def unpack(sequence, context, *args):
     """
     lst = tuple(itertools.islice(sequence, len(args) + 1))
     if 0 < len(args) != len(lst):
-        raise ValueError('Cannot unpack {} elements into {}'.format(
-            len(lst), len(args)))
+        raise ValueError(f'Cannot unpack {len(lst)} elements into {len(args)}')
     if len(args) > 0:
         for i in range(len(lst)):
             context[args[i]] = lst[i]
@@ -197,6 +196,7 @@ def def_(name, func, context):
         yaql> def(sq, $*$) -> [1, 2, 3].select(sq($))
         [1, 4, 9]
     """
+
     @specs.name(name)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -264,8 +264,9 @@ def assert__(engine, obj, condition, message='Assertion failed'):
 
 
 @specs.name('#call')
-@specs.parameter('callable_', yaqltypes.PythonType(
-    object, False, validators=(callable,)))
+@specs.parameter(
+    'callable_', yaqltypes.PythonType(object, False, validators=(callable,))
+)
 def call(callable_, *args, **kwargs):
     """:yaql:call
 
@@ -358,7 +359,8 @@ def call_func(context, engine, name, args, kwargs, receiver=utils.NO_VALUE):
         10
     """
     return context(name, engine, receiver)(
-        *args, **utils.filter_parameters_dict(kwargs))
+        *args, **utils.filter_parameters_dict(kwargs)
+    )
 
 
 def register(context, delegates=False):

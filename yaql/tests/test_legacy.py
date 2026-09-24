@@ -24,7 +24,8 @@ class TestLegacyNewEngine(yaql.tests.TestCase):
     def test_dict(self):
         self.assertEqual(
             {'a': 'b', 1: 2, None: None},
-            self.eval('dict(1 => 2, a => b, null => null)'))
+            self.eval('dict(1 => 2, a => b, null => null)'),
+        )
 
         self.assertEqual({}, self.eval('dict()'))
 
@@ -90,8 +91,8 @@ class TestLegacyNewEngine(yaql.tests.TestCase):
 
     def test_as(self):
         self.assertEqual(
-            [3, 6],
-            self.eval('[1, 2].as(sum($) => a).select($ * $a)'))
+            [3, 6], self.eval('[1, 2].as(sum($) => a).select($ * $a)')
+        )
 
     def test_distinct(self):
         data = [1, 2, 3, 2, 4, 8]
@@ -100,21 +101,30 @@ class TestLegacyNewEngine(yaql.tests.TestCase):
 
         data = [{'a': 1}, {'b': 2}, {'a': 1}]
         self.assertEqual(
-            [{'a': 1}, {'b': 2}],
-            self.eval('$.distinct()', data=data))
+            [{'a': 1}, {'b': 2}], self.eval('$.distinct()', data=data)
+        )
 
     def test_keyword_dict_access(self):
         data = {'A': 12, 'b c': 44, '__d': 99, '_e': 999}
         self.assertEqual(12, self.eval('$.A', data=data))
         self.assertEqual(999, self.eval('$._e', data=data))
 
-        self.assertRaises(exceptions.NoMatchingFunctionException,
-                          self.eval, "$.'b c'", data=data)
-        self.assertRaises(exceptions.NoMatchingFunctionException,
-                          self.eval, '$.123', data=data)
+        self.assertRaises(
+            exceptions.NoMatchingFunctionException,
+            self.eval,
+            "$.'b c'",
+            data=data,
+        )
+        self.assertRaises(
+            exceptions.NoMatchingFunctionException,
+            self.eval,
+            '$.123',
+            data=data,
+        )
         self.assertIsNone(self.eval('$.b', data=data))
-        self.assertRaises(exceptions.YaqlLexicalException,
-                          self.eval, '$.__d', data=data)
+        self.assertRaises(
+            exceptions.YaqlLexicalException, self.eval, '$.__d', data=data
+        )
 
     def test_compare_not_comparable(self):
         self.assertTrue(self.eval('asd != true'))

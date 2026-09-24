@@ -74,7 +74,10 @@ class TestResolution(yaql.tests.TestCase):
 
         self.assertRaises(
             exceptions.AmbiguousFunctionException,
-            self.eval, 'f(12)', context=context1)
+            self.eval,
+            'f(12)',
+            context=context1,
+        )
 
     def test_single_layer_laziness_ambiguity(self):
         @specs.parameter('a', yaqltypes.Lambda())
@@ -94,7 +97,11 @@ class TestResolution(yaql.tests.TestCase):
 
         self.assertRaises(
             exceptions.AmbiguousFunctionException,
-            self.eval, 'f(2 * $)', data=3, context=context1)
+            self.eval,
+            'f(2 * $)',
+            data=3,
+            context=context1,
+        )
 
         self.assertEqual(25, self.eval('f(12, 13)', context=context1))
 
@@ -124,15 +131,17 @@ class TestResolution(yaql.tests.TestCase):
 
         self.assertRaises(
             exceptions.AmbiguousFunctionException,
-            self.eval, 'foo(12, 13)', context=context2)
+            self.eval,
+            'foo(12, 13)',
+            context=context2,
+        )
 
-        self.assertEqual(
-            1,
-            self.eval('bar(12, 13)', context=context2))
+        self.assertEqual(1, self.eval('bar(12, 13)', context=context2))
 
     def test_ambiguous_method(self):
         self.context.register_function(
-            lambda c, s: 1, name='select', method=True)
+            lambda c, s: 1, name='select', method=True
+        )
         self.assertRaises(
-            exceptions.AmbiguousMethodException,
-            self.eval, '[1,2].select($)')
+            exceptions.AmbiguousMethodException, self.eval, '[1,2].select($)'
+        )

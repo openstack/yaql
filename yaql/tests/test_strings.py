@@ -55,13 +55,14 @@ class TestStrings(yaql.tests.TestCase):
 
     def test_split(self):
         self.assertEqual(
-            ['some', 'text'],
-            self.eval("$.split('\\n')", data='some\ntext'))
+            ['some', 'text'], self.eval("$.split('\\n')", data='some\ntext')
+        )
 
     def test_rsplit(self):
         self.assertEqual(
             ['one\ntwo', 'three'],
-            self.eval("$.rightSplit('\\n', 1)", data='one\ntwo\nthree'))
+            self.eval("$.rightSplit('\\n', 1)", data='one\ntwo\nthree'),
+        )
 
     def test_join(self):
         self.assertEqual('some-text', self.eval("[some, text].join('-')"))
@@ -87,13 +88,14 @@ class TestStrings(yaql.tests.TestCase):
         self.assertEqual('AxxD', self.eval("ABxD.replace(B, x, 1)"))
 
     def test_replace_with_dict(self):
-        self.assertEqual(
-            'Az1D',
-            self.eval('AxyD.replace({x => z, y => 1})'))
+        self.assertEqual('Az1D', self.eval('AxyD.replace({x => z, y => 1})'))
 
         self.assertEqual(
-            'Ayfalse2D!', self.eval(
-                "A122Dnull.replace({1 => y, 2 => false, null => '!'}, 1)"))
+            'Ayfalse2D!',
+            self.eval(
+                "A122Dnull.replace({1 => y, 2 => false, null => '!'}, 1)"
+            ),
+        )
 
     def test_in(self):
         self.assertTrue(self.eval("B in ABC"))
@@ -108,7 +110,8 @@ class TestStrings(yaql.tests.TestCase):
     def test_join_seq(self):
         self.assertEqual(
             'text-1-null-true',
-            self.eval("[text, 1, null, true].select(str($)).join('-')"))
+            self.eval("[text, 1, null, true].select(str($)).join('-')"),
+        )
 
     def test_concat_plus(self):
         self.assertEqual('abc', self.eval("a +b + c"))
@@ -170,7 +173,8 @@ class TestStrings(yaql.tests.TestCase):
     def test_characters(self):
         self.assertCountEqual(
             ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-            self.eval('characters(octdigits => true, digits => true)'))
+            self.eval('characters(octdigits => true, digits => true)'),
+        )
 
     def test_starts_with(self):
         self.assertTrue(self.eval("ABC.startsWith(A)"))
@@ -178,7 +182,9 @@ class TestStrings(yaql.tests.TestCase):
         self.assertFalse(self.eval("ABC.startsWith(C)"))
         self.assertRaises(
             exceptions.NoMatchingMethodException,
-            self.eval, "ABC.startsWith(null)")
+            self.eval,
+            "ABC.startsWith(null)",
+        )
 
     def test_ends_with(self):
         self.assertTrue(self.eval("ABC.endsWith(C)"))
@@ -186,7 +192,9 @@ class TestStrings(yaql.tests.TestCase):
         self.assertFalse(self.eval("ABC.endsWith(B)"))
         self.assertRaises(
             exceptions.NoMatchingMethodException,
-            self.eval, "ABC.endsWith(null)")
+            self.eval,
+            "ABC.endsWith(null)",
+        )
 
     def test_hex(self):
         self.assertEqual('0xff', self.eval('hex(255)'))
