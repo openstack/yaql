@@ -220,7 +220,7 @@ def split(string, separator=None, max_splits=-1):
     delimiter.
 
     :signature: string.split(separator => null, maxSplits => -1)
-    :receiverArg string: value to be splitted
+    :receiverArg string: value to be split
     :argType string: string
     :arg separator: delimiter for splitting. null by default, which means
         splitting with whitespace characters
@@ -254,7 +254,7 @@ def right_split(string, separator=None, max_splits=-1):
     the rightmost ones.
 
     :signature: string.rightSplit(separator => null, maxSplits => -1)
-    :receiverArg string: value to be splitted
+    :receiverArg string: value to be split
     :argType string: string
     :arg separator: delimiter for splitting. null by default, which means
         splitting with whitespace characters
@@ -835,7 +835,7 @@ def characters(
                            uppercase => false, whitespace => false)
     :arg digits: include digits in output list if true, false by default
     :argType digits: boolean
-    :arg hexdigits: include hexademical digits in output list if true, false
+    :arg hexdigits: include hexadecimal digits in output list if true, false
         by default
     :argType hexdigits: boolean
     :arg asciiLowercase: include ASCII lowercase letters in output list if
@@ -981,7 +981,7 @@ def hex_(num):
     Returns a string with hexadecimal representation of num.
 
     :signature: hex(num)
-    :arg num: input number to be converted to hexademical
+    :arg num: input number to be converted to hexadecimal
     :argType num: number
     :returnType: string
 

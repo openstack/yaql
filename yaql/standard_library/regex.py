@@ -344,7 +344,7 @@ def split(regexp, string, max_split=0):
     :signature: regexp.split(string, maxSplit => 0)
     :receiverArg regexp: regex pattern
     :argType regexp: regex object
-    :arg string: string to be splitted
+    :arg string: string to be split
     :argType string: string
     :arg maxSplit: how many first splits to do. 0 by default, which means
         to split by all matches
@@ -372,7 +372,7 @@ def split_string(string, regexp, max_split=0):
     Splits string by regexp matches and returns list of strings.
 
     :signature: string.split(regexp, maxSplit => 0)
-    :receiverArg string: string to be splitted
+    :receiverArg string: string to be split
     :argType string: string
     :arg regexp: regex pattern
     :argType regexp: regex object

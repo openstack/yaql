@@ -220,7 +220,7 @@ YAQL supports these types out of the box:
 
    List creation: ``[1, 2, value, true]``
    Alternative syntax: ``list(1, 2, value, true)``
-   List elemenets can be accesessed by index: ``$list[0]``
+   List elements can be accesessed by index: ``$list[0]``
 
 * Dictionaries
 
