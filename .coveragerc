@@ -1,7 +1,0 @@
-[run]
-branch = True
-source = yaql
-omit = yaql/tests/*
-
-[report]
-ignore_errors = True
