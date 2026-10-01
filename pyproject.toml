@@ -36,6 +36,19 @@ yaql = "yaql.cli.run:main"
 [tool.setuptools.packages.find]
 include = ["yaql*"]
 
+[tool.coverage.run]
+source = [
+    "yaql"
+]
+branch = true
+omit = [
+    "yaql/_ply/*",
+    "yaql/tests/*",
+]
+
+[tool.coverage.report]
+ignore_errors = true
+show_missing = true
 [tool.ruff]
 line-length = 79
 exclude = ["yaql/_ply/*"]
